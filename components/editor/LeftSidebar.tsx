@@ -14,7 +14,6 @@ const PRESETS = [
     { label: '2U', w: 2, h: 1 },
     { label: '2.25U', w: 2.25, h: 1 },
     { label: '2.75U', w: 2.75, h: 1 },
-    { label: '2.75U', w: 2.75, h: 1 },
     { label: '6.25U Space', w: 6.25, h: 1 },
     { label: 'ISO Enter', w: 1.5, h: 2, variant: 'iso_enter' },
 ];

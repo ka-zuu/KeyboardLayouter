@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from 'react';
-import { Stage, Layer } from 'react-konva';
+import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
 import GridBackground from './GridBackground';
 import KeyObject from './KeyObject';
@@ -9,9 +9,13 @@ import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, updateKey, selectKey, clearSelection, selectedKeyIds, addKey } = useStore();
+    const { project, scale, pan, setZoom, setPan, updateKey, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey } = useStore();
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Selection State
+    const [isSelecting, setIsSelecting] = React.useState(false);
+    const [selectionBox, setSelectionBox] = React.useState<{ startX: number, startY: number, endX: number, endY: number } | null>(null);
 
     // Handle window resize
     const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
@@ -59,12 +63,135 @@ const MainCanvas = () => {
         setPan(newPos);
     };
 
-    const checkDeselect = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-        // deselect when clicked on empty area
+    const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        // If clicking on empty area (stage)
         const clickedOnEmpty = e.target === e.target.getStage();
-        if (clickedOnEmpty) {
-            clearSelection();
+        if (!clickedOnEmpty) return;
+
+        const isMiddleClick = 'button' in e.evt && (e.evt as MouseEvent).button === 1;
+        const isPanMode = e.evt.ctrlKey || e.evt.metaKey || (e.evt.shiftKey === false && e.evt.altKey) || isMiddleClick;
+        // Actually, Konva draggable handles drag start. 
+        // We want:
+        // Space + Drag -> Pan (Native Konva draggable)
+        // Middle Click -> Pan (Native Konva draggable?)
+        // Left Click + Drag -> Selection Box
+
+        // Note on Konva draggable: properties can be dynamic.
+        // We set draggable based on keys in return.
+
+        // Here we handle Selection Box Start
+        // If NOT panning (Space held), start selection
+        // Space key detection in JS events usually requires checking event.code or similar, 
+        // but that's keyboard event. Mouse event objects might have modifiers.
+        // Konva uses 'draggable' prop. If draggable is true, it eats the drag events?
+        // Let's rely on standard practice:
+        // We control 'draggable' prop on Stage.
+
+        // If we are NOT in Pan Mode (Space is not held), we start selection.
+        // But we don't know if Space is held here easily without global listener?
+        // Actually e.evt has shiftKey, ctrlKey, altKey, metaKey. No spaceKey.
+        // We need to track Space key state or use a different modifier for Pan?
+        // Proposal said: "Space + Drag".
+        // Use a global keydown/keyup listener to toggle a 'isSpacePressed' state?
+        // Or check e.evt.buttons?
+
+        // Alternative: Left Click = Selection. Middle Click = Pan.
+        // Also if User desires Space+Drag for Pan (common in tools).
+
+        // Let's implement global space tracker for simplicity in rendering draggable prop.
+
+        // However, here inside MouseDown:
+        // If not draggable (Space not held), and left click (button 0), start selection.
+        // Touch events don't have 'button', so we assume single touch is left click equivalent.
+        const isLeftClick = ('button' in e.evt) ? (e.evt as MouseEvent).button === 0 : true;
+
+        if (isLeftClick && !isSpacePressed) {
+            const stage = stageRef.current;
+            if (!stage) return;
+
+            // Clear selection if Shift not held (Standard behavior)
+            if (!e.evt.shiftKey) {
+                clearSelection();
+            }
+
+            const pos = stage.getRelativePointerPosition(); // Relative to stage (World coords)
+            // Wait, getRelativePointerPosition returns {x, y} with (x - stageX) / scale.
+            // That IS World Coordinates (U * PixelsPerU).
+            if (pos) {
+                setIsSelecting(true);
+                setSelectionBox({
+                    startX: pos.x,
+                    startY: pos.y,
+                    endX: pos.x,
+                    endY: pos.y
+                });
+            }
         }
+    };
+
+    const handleStageMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        if (!isSelecting || !selectionBox) return;
+
+        const stage = stageRef.current;
+        if (!stage) return;
+
+        const pos = stage.getRelativePointerPosition();
+        if (pos) {
+            setSelectionBox({
+                ...selectionBox,
+                endX: pos.x,
+                endY: pos.y
+            });
+        }
+    };
+
+    const handleStageMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        if (isSelecting && selectionBox) {
+            // Calculate Intersection
+            const stage = stageRef.current;
+            if (stage) {
+                // Normalize box
+                const x1 = Math.min(selectionBox.startX, selectionBox.endX);
+                const x2 = Math.max(selectionBox.startX, selectionBox.endX);
+                const y1 = Math.min(selectionBox.startY, selectionBox.endY);
+                const y2 = Math.max(selectionBox.startY, selectionBox.endY);
+
+                const newSelectedIds: string[] = [];
+
+                project.keys.forEach(key => {
+                    // Key Geometry
+                    // Key position is Top-Left in World Coords.
+                    const kx = key.position.x * PIXELS_PER_U;
+                    const ky = key.position.y * PIXELS_PER_U;
+                    const kw = key.size.w * PIXELS_PER_U;
+                    const kh = key.size.h * PIXELS_PER_U;
+
+                    // Simple AABB intersection
+                    // If rotated, it's harder. For now AABB.
+                    if (
+                        x1 < kx + kw &&
+                        x2 > kx &&
+                        y1 < ky + kh &&
+                        y2 > ky
+                    ) {
+                        newSelectedIds.push(key.id);
+                    }
+                });
+
+                // If Shift held, toggle or add? Standard is Add.
+                // Or if we implemented 'selectKey' with multi=true support already?
+                // But here we set a batch.
+                if (e.evt.shiftKey) {
+                    // Union with existing
+                    const combined = Array.from(new Set([...selectedKeyIds, ...newSelectedIds]));
+                    selectKeys(combined);
+                } else {
+                    selectKeys(newSelectedIds);
+                }
+            }
+        }
+        setIsSelecting(false);
+        setSelectionBox(null);
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -117,45 +244,84 @@ const MainCanvas = () => {
         }
     };
 
+    // Track Space key for Pan Mode
+    const [isSpacePressed, setIsSpacePressed] = React.useState(false);
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.code === 'Space' && !e.repeat) {
+                setIsSpacePressed(true);
+                // Optional: Change cursor?
+            }
+        };
+        const onKeyUp = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                setIsSpacePressed(false);
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('keyup', onKeyUp);
+        };
+    }, []);
+
     return (
         <div
-            className="w-full h-full bg-neutral-900 overflow-hidden"
-            ref={containerRef} // Logic depends on this receiving Drop events
+            className={`w-full h-full bg-neutral-900 overflow-hidden ${isSpacePressed ? 'cursor-grab' : 'cursor-default'}`}
+            ref={containerRef}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <Stage
-                width={dimensions.width}
-                height={dimensions.height}
-                scaleX={scale}
-                scaleY={scale}
-                x={pan.x}
-                y={pan.y}
-                onWheel={handleWheel}
-                onMouseDown={checkDeselect}
-                onTouchStart={checkDeselect}
-                draggable
-                onDragEnd={(e) => {
-                    if (e.target === stageRef.current) {
-                        setPan({ x: e.target.x(), y: e.target.y() });
-                    }
-                }}
-                ref={stageRef}
-                className="cursor-crosshair"
-            >
-                <Layer>
-                    <GridBackground width={dimensions.width} height={dimensions.height} />
-                    {project.keys.map((key) => (
-                        <KeyObject
-                            key={key.id}
-                            data={key}
-                            isSelected={selectedKeyIds.includes(key.id)}
-                            onSelect={selectKey}
-                            onDragEnd={(id, x, y) => updateKey(id, { position: { x, y } })}
-                        />
-                    ))}
-                </Layer>
-            </Stage>
+            {dimensions.width > 0 && dimensions.height > 0 && (
+                <Stage
+                    width={dimensions.width}
+                    height={dimensions.height}
+                    scaleX={scale}
+                    scaleY={scale}
+                    x={pan.x}
+                    y={pan.y}
+                    onWheel={handleWheel}
+                    onMouseDown={handleStageMouseDown}
+                    onMouseMove={handleStageMouseMove}
+                    onMouseUp={handleStageMouseUp}
+                    onTouchStart={handleStageMouseDown} // Basic Touch support for now
+                    draggable={isSpacePressed} // Only draggable if Space is pressed
+                    onDragEnd={(e) => {
+                        if (e.target === stageRef.current) {
+                            setPan({ x: e.target.x(), y: e.target.y() });
+                        }
+                    }}
+                    ref={stageRef}
+                // className not applying cursor correctly to canvas, handled by parent div for general cursor
+                >
+                    <Layer>
+                        <GridBackground width={dimensions.width} height={dimensions.height} />
+                        {project.keys.map((key) => (
+                            <KeyObject
+                                key={key.id}
+                                data={key}
+                                isSelected={selectedKeyIds.includes(key.id)}
+                                onSelect={selectKey}
+                                onDragEnd={(id, x, y) => updateKey(id, { position: { x, y } })}
+                            />
+                        ))}
+                        {/* Selection Box */}
+                        {isSelecting && selectionBox && (
+                            <Rect
+                                x={Math.min(selectionBox.startX, selectionBox.endX)}
+                                y={Math.min(selectionBox.startY, selectionBox.endY)}
+                                width={Math.abs(selectionBox.endX - selectionBox.startX)}
+                                height={Math.abs(selectionBox.endY - selectionBox.startY)}
+                                fill="rgba(66, 153, 225, 0.3)" // Blue 500 equivalent with opacity
+                                stroke="#4299e1"
+                                strokeWidth={1 / scale} // Keep stroke thin regardless of zoom? or 1 constant?
+                            />
+                        )}
+                    </Layer>
+                </Stage>
+            )}
         </div>
     );
 };

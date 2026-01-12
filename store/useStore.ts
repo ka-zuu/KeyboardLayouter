@@ -18,6 +18,7 @@ export interface EditorState {
   updateKey: (id: string, data: Partial<KeyData>) => void;
   removeKey: (id: string) => void;
   selectKey: (id: string, multi: boolean) => void;
+  selectKeys: (ids: string[]) => void;
   clearSelection: () => void;
   setZoom: (scale: number) => void;
   setPan: (pan: Position) => void;
@@ -98,6 +99,8 @@ export const useStore = create<EditorState>()(
                 : [...state.selectedKeyIds, id]
               : [id],
           })),
+
+        selectKeys: (ids) => set({ selectedKeyIds: ids }),
 
         clearSelection: () => set({ selectedKeyIds: [] }),
 
