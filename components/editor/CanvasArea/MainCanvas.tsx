@@ -64,59 +64,30 @@ const MainCanvas = () => {
     };
 
     const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        const stage = stageRef.current;
+        if (!stage) return;
+
         // If clicking on empty area (stage)
-        const clickedOnEmpty = e.target === e.target.getStage();
+        const clickedOnEmpty = e.target === stage;
         if (!clickedOnEmpty) return;
 
-        const isMiddleClick = 'button' in e.evt && (e.evt as MouseEvent).button === 1;
-        const isPanMode = e.evt.ctrlKey || e.evt.metaKey || (e.evt.shiftKey === false && e.evt.altKey) || isMiddleClick;
-        // Actually, Konva draggable handles drag start. 
-        // We want:
-        // Space + Drag -> Pan (Native Konva draggable)
-        // Middle Click -> Pan (Native Konva draggable?)
-        // Left Click + Drag -> Selection Box
+        // Middle Click Check
+        if ('button' in e.evt && (e.evt as MouseEvent).button === 1) {
+            setIsMiddleMousePressed(true);
+            return;
+        }
 
-        // Note on Konva draggable: properties can be dynamic.
-        // We set draggable based on keys in return.
-
-        // Here we handle Selection Box Start
-        // If NOT panning (Space held), start selection
-        // Space key detection in JS events usually requires checking event.code or similar, 
-        // but that's keyboard event. Mouse event objects might have modifiers.
-        // Konva uses 'draggable' prop. If draggable is true, it eats the drag events?
-        // Let's rely on standard practice:
-        // We control 'draggable' prop on Stage.
-
-        // If we are NOT in Pan Mode (Space is not held), we start selection.
-        // But we don't know if Space is held here easily without global listener?
-        // Actually e.evt has shiftKey, ctrlKey, altKey, metaKey. No spaceKey.
-        // We need to track Space key state or use a different modifier for Pan?
-        // Proposal said: "Space + Drag".
-        // Use a global keydown/keyup listener to toggle a 'isSpacePressed' state?
-        // Or check e.evt.buttons?
-
-        // Alternative: Left Click = Selection. Middle Click = Pan.
-        // Also if User desires Space+Drag for Pan (common in tools).
-
-        // Let's implement global space tracker for simplicity in rendering draggable prop.
-
-        // However, here inside MouseDown:
-        // If not draggable (Space not held), and left click (button 0), start selection.
+        // Left Click Selection
         // Touch events don't have 'button', so we assume single touch is left click equivalent.
         const isLeftClick = ('button' in e.evt) ? (e.evt as MouseEvent).button === 0 : true;
 
-        if (isLeftClick && !isSpacePressed) {
-            const stage = stageRef.current;
-            if (!stage) return;
-
+        if (isLeftClick && !isSpacePressed && !isMiddleMousePressed) {
             // Clear selection if Shift not held (Standard behavior)
             if (!e.evt.shiftKey) {
                 clearSelection();
             }
 
-            const pos = stage.getRelativePointerPosition(); // Relative to stage (World coords)
-            // Wait, getRelativePointerPosition returns {x, y} with (x - stageX) / scale.
-            // That IS World Coordinates (U * PixelsPerU).
+            const pos = stage.getRelativePointerPosition();
             if (pos) {
                 setIsSelecting(true);
                 setSelectionBox({
@@ -146,6 +117,7 @@ const MainCanvas = () => {
     };
 
     const handleStageMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        if (isMiddleMousePressed) setIsMiddleMousePressed(false);
         if (isSelecting && selectionBox) {
             // Calculate Intersection
             const stage = stageRef.current;
@@ -167,7 +139,6 @@ const MainCanvas = () => {
                     const kh = key.size.h * PIXELS_PER_U;
 
                     // Simple AABB intersection
-                    // If rotated, it's harder. For now AABB.
                     if (
                         x1 < kx + kw &&
                         x2 > kx &&
@@ -178,11 +149,7 @@ const MainCanvas = () => {
                     }
                 });
 
-                // If Shift held, toggle or add? Standard is Add.
-                // Or if we implemented 'selectKey' with multi=true support already?
-                // But here we set a batch.
                 if (e.evt.shiftKey) {
-                    // Union with existing
                     const combined = Array.from(new Set([...selectedKeyIds, ...newSelectedIds]));
                     selectKeys(combined);
                 } else {
@@ -244,14 +211,18 @@ const MainCanvas = () => {
         }
     };
 
-    // Track Space key for Pan Mode
+    // Track Space key and Middle Mouse for Pan Mode
     const [isSpacePressed, setIsSpacePressed] = React.useState(false);
+    const [isMiddleMousePressed, setIsMiddleMousePressed] = React.useState(false);
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
+            // Ignore inputs
+            const target = e.target as HTMLElement;
+            if (target.matches("input, textarea, select, [contenteditable]")) return;
+
             if (e.code === 'Space' && !e.repeat) {
                 setIsSpacePressed(true);
-                // Optional: Change cursor?
             }
         };
         const onKeyUp = (e: KeyboardEvent) => {
@@ -266,6 +237,8 @@ const MainCanvas = () => {
             window.removeEventListener('keyup', onKeyUp);
         };
     }, []);
+
+    const isDraggable = isSpacePressed || isMiddleMousePressed;
 
     return (
         <div
@@ -286,15 +259,15 @@ const MainCanvas = () => {
                     onMouseDown={handleStageMouseDown}
                     onMouseMove={handleStageMouseMove}
                     onMouseUp={handleStageMouseUp}
+                    onMouseLeave={() => setIsMiddleMousePressed(false)}
                     onTouchStart={handleStageMouseDown} // Basic Touch support for now
-                    draggable={isSpacePressed} // Only draggable if Space is pressed
+                    draggable={isDraggable}
                     onDragEnd={(e) => {
                         if (e.target === stageRef.current) {
                             setPan({ x: e.target.x(), y: e.target.y() });
                         }
                     }}
                     ref={stageRef}
-                // className not applying cursor correctly to canvas, handled by parent div for general cursor
                 >
                     <Layer>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
@@ -316,7 +289,7 @@ const MainCanvas = () => {
                                 height={Math.abs(selectionBox.endY - selectionBox.startY)}
                                 fill="rgba(66, 153, 225, 0.3)" // Blue 500 equivalent with opacity
                                 stroke="#4299e1"
-                                strokeWidth={1 / scale} // Keep stroke thin regardless of zoom? or 1 constant?
+                                strokeWidth={1 / scale}
                             />
                         )}
                     </Layer>
