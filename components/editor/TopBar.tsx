@@ -3,7 +3,8 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { useStore as useZustandStore } from 'zustand';
-import { Plus, Download, Upload, RotateCcw, RotateCw } from 'lucide-react';
+import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode } from 'lucide-react';
+import { generateQMKInfo } from '@/lib/qmk';
 
 const TopBar = () => {
     const { project, addKey, importProject } = useStore();
@@ -28,6 +29,17 @@ const TopBar = () => {
         const a = document.createElement('a');
         a.href = url;
         a.download = `${project.name.replace(/\s+/g, '_')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportQMK = () => {
+        const dataStr = generateQMKInfo(project);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'info.json';
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -109,6 +121,14 @@ const TopBar = () => {
                     title="Export JSON"
                 >
                     <Download size={18} />
+                </button>
+
+                <button
+                    onClick={handleExportQMK}
+                    className="p-2 text-gray-400 hover:text-green-400 transition-colors"
+                    title="Export QMK (info.json)"
+                >
+                    <FileCode size={18} />
                 </button>
             </div>
         </div>
