@@ -8,20 +8,20 @@ export interface Size {
   h: number;
 }
 
+export type KeyVariant = 'rect' | 'iso_enter' | 'stepped_caps' | 'bae';
+
 export interface KeyData {
   id: string;
   position: Position; // unit: U (1U = 19.05mm)
   size: Size; // unit: U
   angle: number; // degrees
-  rotationCenter: Position; // relative to key center (or absolute, TBD - simplified for MVP as relative or fixed)
-  // For MVP: let's assume rotationCenter is relative to key x,y or top-left. 
-  // Standard KLE rotates around the top-left of the key by default usually, or a specified point.
-  // We'll store it as {x,y} coordinate logic same as position.
+  rotationCenter: Position; // relative to key center
   visualLegend: string;
   matrix: {
     row: number;
     col: number;
   };
+  variant?: KeyVariant; // Optional for backward compatibility (default: 'rect')
   isSelected?: boolean;
 }
 

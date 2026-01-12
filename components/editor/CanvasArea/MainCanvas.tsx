@@ -109,6 +109,7 @@ const MainCanvas = () => {
                 rotationCenter: { x: 0, y: 0 },
                 visualLegend: data.label.includes('Space') ? '' : data.label.replace('U', ''),
                 matrix: { row: 0, col: 0 },
+                variant: data.variant || 'rect',
             });
 
         } catch (err) {

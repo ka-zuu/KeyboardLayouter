@@ -102,6 +102,22 @@ const RightSidebar = () => {
 
                 <hr className="border-gray-800" />
 
+                {/* Variant Selector */}
+                <div>
+                    <label className="text-xs text-gray-500 uppercase block mb-1">Shape</label>
+                    <select
+                        className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                        value={primaryKey.variant || 'rect'}
+                        onChange={(e) => updateKey(primaryKey.id, { variant: e.target.value as any })}
+                    >
+                        <option value="rect">Rectangle</option>
+                        <option value="iso_enter">ISO Enter</option>
+                        <option value="stepped_caps">Stepped Caps (TBD)</option>
+                    </select>
+                </div>
+
+                <hr className="border-gray-800" />
+
                 {/* Position */}
                 <div>
                     <label className="text-xs text-gray-500 uppercase block mb-1">Position (U)</label>
