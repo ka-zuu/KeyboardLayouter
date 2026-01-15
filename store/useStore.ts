@@ -15,6 +15,7 @@ export interface EditorState {
   // Actions
   setProjectName: (name: string) => void;
   addKey: (key: Omit<KeyData, 'id'>) => void;
+  addKeys: (count: number, baseKey: Omit<KeyData, 'id'>) => void;
   updateKey: (id: string, data: Partial<KeyData>) => void;
   removeKey: (id: string) => void;
   selectKey: (id: string, multi: boolean) => void;
@@ -64,6 +65,28 @@ export const useStore = create<EditorState>()(
               project: {
                 ...state.project,
                 keys: [...state.project.keys, newKey],
+                updatedAt: Date.now(),
+              },
+            };
+          }),
+
+        addKeys: (count, baseKey) =>
+          set((state) => {
+            const newKeys: KeyData[] = [];
+            for (let i = 0; i < count; i++) {
+              newKeys.push({
+                ...baseKey,
+                id: uuidv4(),
+                position: {
+                  x: baseKey.position.x + i * baseKey.size.w,
+                  y: baseKey.position.y,
+                },
+              });
+            }
+            return {
+              project: {
+                ...state.project,
+                keys: [...state.project.keys, ...newKeys],
                 updatedAt: Date.now(),
               },
             };
