@@ -17,6 +17,7 @@ export interface EditorState {
   addKey: (key: Omit<KeyData, 'id'>) => void;
   addKeys: (count: number, baseKey: Omit<KeyData, 'id'>) => void;
   updateKey: (id: string, data: Partial<KeyData>) => void;
+  updateKeys: (updates: { id: string; data: Partial<KeyData> }[]) => void;
   removeKey: (id: string) => void;
   selectKey: (id: string, multi: boolean) => void;
   selectKeys: (ids: string[]) => void;
@@ -100,6 +101,21 @@ export const useStore = create<EditorState>()(
               updatedAt: Date.now(),
             },
           })),
+
+        updateKeys: (updates) =>
+          set((state) => {
+            const updateMap = new Map(updates.map((u) => [u.id, u.data]));
+            return {
+              project: {
+                ...state.project,
+                keys: state.project.keys.map((k) => {
+                  const data = updateMap.get(k.id);
+                  return data ? { ...k, ...data } : k;
+                }),
+                updatedAt: Date.now(),
+              },
+            };
+          }),
 
         removeKey: (id) =>
           set((state) => ({

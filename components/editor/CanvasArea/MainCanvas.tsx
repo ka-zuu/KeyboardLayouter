@@ -10,7 +10,7 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, updateKey, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey } = useStore();
+    const { project, scale, pan, setZoom, setPan, updateKey, updateKeys, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey } = useStore();
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -297,7 +297,33 @@ const MainCanvas = () => {
                                 data={key}
                                 isSelected={selectedKeyIds.includes(key.id)}
                                 onSelect={selectKey}
-                                onDragEnd={(id, x, y) => updateKey(id, { position: { x, y } })}
+                                onDragEnd={(id, x, y) => {
+                                    if (selectedKeyIds.includes(id)) {
+                                        const draggedKey = project.keys.find(k => k.id === id);
+                                        if (!draggedKey) return;
+
+                                        const deltaX = x - draggedKey.position.x;
+                                        const deltaY = y - draggedKey.position.y;
+
+                                        const updates = selectedKeyIds.map(selectedId => {
+                                            const key = project.keys.find(k => k.id === selectedId);
+                                            if (!key) return null;
+                                            return {
+                                                id: selectedId,
+                                                data: {
+                                                    position: {
+                                                        x: key.position.x + deltaX,
+                                                        y: key.position.y + deltaY
+                                                    }
+                                                }
+                                            };
+                                        }).filter((u): u is { id: string; data: import('@/types/mkd').KeyData } => u !== null);
+
+                                        updateKeys(updates);
+                                    } else {
+                                        updateKey(id, { position: { x, y } });
+                                    }
+                                }}
                             />
                         ))}
                         {/* Selection Box */}
