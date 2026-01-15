@@ -70,6 +70,26 @@ export const useStore = create<EditorState>()(
             };
           }),
 
+        addKeys: (count: number, baseKey: Omit<KeyData, 'id'>) =>
+          set((state) => {
+            const newKeys: KeyData[] = Array.from({ length: count }, (_, i) => ({
+                ...baseKey,
+                id: uuidv4(),
+                position: {
+                  x: baseKey.position.x + i * baseKey.size.w,
+                  y: baseKey.position.y,
+                },
+            }));
+            
+            return {
+              project: {
+                ...state.project,
+                keys: [...state.project.keys, ...newKeys],
+                updatedAt: Date.now(),
+              },
+            };
+          }),
+
         updateKey: (id, data) =>
           set((state) => ({
             project: {

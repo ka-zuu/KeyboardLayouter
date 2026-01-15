@@ -9,7 +9,9 @@ import { generateQMKInfo } from '@/lib/qmk';
 const TopBar = () => {
     const { project, addKey, importProject } = useStore();
     // Use the zustand helper to consume the temporal store
-    const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state: any) => state);
+    const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state) => state);
+
+    const [addCount, setAddCount] = React.useState(1);
 
     const handleAddKey = () => {
         addKey({
@@ -98,6 +100,21 @@ const TopBar = () => {
                     >
                         <RotateCw size={16} />
                     </button>
+                </div>
+
+                <div className="flex items-center gap-1 bg-gray-800 rounded px-2 py-1 mr-2 border border-gray-700">
+                    <span className="text-xs text-gray-400">Count:</span>
+                    <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={addCount}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value) || 1;
+                            setAddCount(Math.min(20, Math.max(1, val)));
+                        }}
+                        className="w-12 bg-transparent text-white text-sm focus:outline-none text-center"
+                    />
                 </div>
 
                 <button
