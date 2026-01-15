@@ -19,6 +19,7 @@ export interface EditorState {
   updateKey: (id: string, data: Partial<KeyData>) => void;
   removeKey: (id: string) => void;
   selectKey: (id: string, multi: boolean) => void;
+  selectKeys: (ids: string[]) => void;
   clearSelection: () => void;
   setZoom: (scale: number) => void;
   setPan: (pan: Position) => void;
@@ -70,19 +71,16 @@ export const useStore = create<EditorState>()(
             };
           }),
 
-        addKeys: (count, baseKey) =>
+        addKeys: (count: number, baseKey: Omit<KeyData, 'id'>) =>
           set((state) => {
-            const newKeys: KeyData[] = [];
-            for (let i = 0; i < count; i++) {
-              newKeys.push({
+            const newKeys: KeyData[] = Array.from({ length: count }, (_, i) => ({
                 ...baseKey,
                 id: uuidv4(),
                 position: {
                   x: baseKey.position.x + i * baseKey.size.w,
                   y: baseKey.position.y,
                 },
-              });
-            }
+            }));
             return {
               project: {
                 ...state.project,
@@ -121,6 +119,8 @@ export const useStore = create<EditorState>()(
                 : [...state.selectedKeyIds, id]
               : [id],
           })),
+
+        selectKeys: (ids) => set({ selectedKeyIds: ids }),
 
         clearSelection: () => set({ selectedKeyIds: [] }),
 

@@ -109,7 +109,10 @@ const TopBar = () => {
                         min={1}
                         max={20}
                         value={addCount}
-                        onChange={(e) => setAddCount(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value) || 1;
+                            setAddCount(Math.min(20, Math.max(1, val)));
+                        }}
                         className="w-12 bg-transparent text-white text-sm focus:outline-none text-center"
                     />
                 </div>
