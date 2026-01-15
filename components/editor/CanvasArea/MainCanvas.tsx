@@ -6,6 +6,7 @@ import { useStore } from '@/store/useStore';
 import GridBackground from './GridBackground';
 import KeyObject from './KeyObject';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
+import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
@@ -119,32 +120,41 @@ const MainCanvas = () => {
     const handleStageMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
         if (isMiddleMousePressed) setIsMiddleMousePressed(false);
         if (isSelecting && selectionBox) {
-            // Calculate Intersection
             const stage = stageRef.current;
             if (stage) {
-                // Normalize box
+                // Normalize Selection Box (which is a polygon)
                 const x1 = Math.min(selectionBox.startX, selectionBox.endX);
                 const x2 = Math.max(selectionBox.startX, selectionBox.endX);
                 const y1 = Math.min(selectionBox.startY, selectionBox.endY);
                 const y2 = Math.max(selectionBox.startY, selectionBox.endY);
 
+                const selectionRectPoints = [
+                    { x: x1, y: y1 },
+                    { x: x2, y: y1 },
+                    { x: x2, y: y2 },
+                    { x: x1, y: y2 }
+                ];
+
                 const newSelectedIds: string[] = [];
 
                 project.keys.forEach(key => {
-                    // Key Geometry
-                    // Key position is Top-Left in World Coords.
                     const kx = key.position.x * PIXELS_PER_U;
                     const ky = key.position.y * PIXELS_PER_U;
                     const kw = key.size.w * PIXELS_PER_U;
                     const kh = key.size.h * PIXELS_PER_U;
 
-                    // Simple AABB intersection
-                    if (
-                        x1 < kx + kw &&
-                        x2 > kx &&
-                        y1 < ky + kh &&
-                        y2 > ky
-                    ) {
+                    // Get Key Polygon (Rotated)
+                    const keyPoints = getRotatedRectPoints(
+                        kx,
+                        ky,
+                        kw,
+                        kh,
+                        key.angle,
+                        key.rotationCenter.x * PIXELS_PER_U,
+                        key.rotationCenter.y * PIXELS_PER_U
+                    );
+
+                    if (doPolygonsIntersect(selectionRectPoints, keyPoints)) {
                         newSelectedIds.push(key.id);
                     }
                 });
@@ -230,11 +240,19 @@ const MainCanvas = () => {
                 setIsSpacePressed(false);
             }
         };
+        // Reset on Blur
+        const onBlur = () => {
+            setIsSpacePressed(false);
+            setIsMiddleMousePressed(false);
+        };
+
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
+        window.addEventListener('blur', onBlur);
         return () => {
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('keyup', onKeyUp);
+            window.removeEventListener('blur', onBlur);
         };
     }, []);
 
