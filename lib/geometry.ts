@@ -1,5 +1,5 @@
 /**
- * Point interface
+ * Point interface representing a 2D coordinate.
  */
 export interface Point {
     x: number;
@@ -8,40 +8,61 @@ export interface Point {
 
 /**
  * Check if two polygons intersect using the Separating Axis Theorem (SAT).
- * @param a Array of points representing the first polygon (vertices).
- * @param b Array of points representing the second polygon (vertices).
+ * 
+ * SAT states that if two convex polygons do not intersect, then there exists a line (axis)
+ * such that the projections of the two polygons onto this line do not overlap.
+ * We test the normals of each edge of both polygons as potential separating axes.
+ * 
+ * @param polygonA Array of points representing the first polygon (vertices).
+ * @param polygonB Array of points representing the second polygon (vertices).
  * @returns true if they intersect, false otherwise.
  */
-export function doPolygonsIntersect(a: Point[], b: Point[]): boolean {
-    const polygons = [a, b];
-    let minA, maxA, projected, i, i1, j, minB, maxB;
+export function doPolygonsIntersect(polygonA: Point[], polygonB: Point[]): boolean {
+    const polygons = [polygonA, polygonB];
 
-    for (i = 0; i < polygons.length; i++) {
+    // Iterate over both polygons to test axes derived from their edges
+    for (let i = 0; i < polygons.length; i++) {
         const polygon = polygons[i];
-        for (i1 = 0; i1 < polygon.length; i1++) {
-            const i2 = (i1 + 1) % polygon.length;
-            const p1 = polygon[i1];
-            const p2 = polygon[i2];
+        
+        // Iterate over vertices to get edges
+        for (let j = 0; j < polygon.length; j++) {
+            const k = (j + 1) % polygon.length;
+            const p1 = polygon[j];
+            const p2 = polygon[k];
 
+            // Get the normal vector of the edge (perpendicular to the edge)
+            // Edge vector = (p2.x - p1.x, p2.y - p1.y)
+            // Normal vector = (-(p2.y - p1.y), p2.x - p1.x) or (p2.y - p1.y, -(p2.x - p1.x))
+            // Here we use { x: p2.y - p1.y, y: p1.x - p2.x }
             const normal = { x: p2.y - p1.y, y: p1.x - p2.x };
 
-            minA = maxA = undefined;
-            for (j = 0; j < a.length; j++) {
-                projected = normal.x * a[j].x + normal.y * a[j].y;
+            // Project both polygons onto the normal axis
+            let minA: number | undefined = undefined;
+            let maxA: number | undefined = undefined;
+            
+            for (const p of polygonA) {
+                const projected = normal.x * p.x + normal.y * p.y;
                 if (minA === undefined || projected < minA) minA = projected;
                 if (maxA === undefined || projected > maxA) maxA = projected;
             }
 
-            minB = maxB = undefined;
-            for (j = 0; j < b.length; j++) {
-                projected = normal.x * b[j].x + normal.y * b[j].y;
+            let minB: number | undefined = undefined;
+            let maxB: number | undefined = undefined;
+
+            for (const p of polygonB) {
+                const projected = normal.x * p.x + normal.y * p.y;
                 if (minB === undefined || projected < minB) minB = projected;
                 if (maxB === undefined || projected > maxB) maxB = projected;
             }
 
-            if (maxA! < minB! || maxB! < minA!) return false;
+            // Check for overlap on this axis
+            // If there is no overlap, then we found a separating axis, so they don't intersect.
+            if (maxA! < minB! || maxB! < minA!) {
+                return false;
+            }
         }
     }
+    // No separating axis found, so they must intersect
     return true;
 }
 
@@ -54,15 +75,15 @@ export function doPolygonsIntersect(a: Point[], b: Point[]): boolean {
  * @param angle rotation angle in degrees
  * @param cx rotation center x (relative to x)
  * @param cy rotation center y (relative to y)
- * @returns Array of 4 points
+ * @returns Array of 4 points representing the corners of the rotated rectangle
  */
 export function getRotatedRectPoints(x: number, y: number, w: number, h: number, angle: number, cx: number = 0, cy: number = 0): Point[] {
     if (angle === 0) {
         return [
-            { x: x, y: y },
-            { x: x + w, y: y },
-            { x: x + w, y: y + h },
-            { x: x, y: y + h }
+            { x: x, y: y },              // Top-Left
+            { x: x + w, y: y },          // Top-Right
+            { x: x + w, y: y + h },      // Bottom-Right
+            { x: x, y: y + h }           // Bottom-Left
         ];
     }
 
@@ -74,8 +95,8 @@ export function getRotatedRectPoints(x: number, y: number, w: number, h: number,
     const centerX = x + cx;
     const centerY = y + cy;
 
-    // Helper to rotate a point around center
-    const rotatePoint = (px: number, py: number) => {
+    // Helper to rotate a point around the center
+    const rotatePoint = (px: number, py: number): Point => {
         const dx = px - centerX;
         const dy = py - centerY;
         return {
@@ -84,18 +105,11 @@ export function getRotatedRectPoints(x: number, y: number, w: number, h: number,
         };
     };
 
-    // 4 corners relative to (x, y)
-    // Assuming rotation origin usually described relative to key.
-    // If cx, cy are offsets from x,y.
-    
-    // Top-Left
-    const p1 = rotatePoint(x, y);
-    // Top-Right
-    const p2 = rotatePoint(x + w, y);
-    // Bottom-Right
-    const p3 = rotatePoint(x + w, y + h);
-    // Bottom-Left
-    const p4 = rotatePoint(x, y + h);
+    // Calculate 4 corners
+    const p1 = rotatePoint(x, y);            // Top-Left
+    const p2 = rotatePoint(x + w, y);        // Top-Right
+    const p3 = rotatePoint(x + w, y + h);    // Bottom-Right
+    const p4 = rotatePoint(x, y + h);        // Bottom-Left
 
     return [p1, p2, p3, p4];
 }

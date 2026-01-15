@@ -279,6 +279,8 @@ const MainCanvas = () => {
                     onMouseUp={handleStageMouseUp}
                     onMouseLeave={() => setIsMiddleMousePressed(false)}
                     onTouchStart={handleStageMouseDown} // Basic Touch support for now
+                    onTouchMove={handleStageMouseMove}
+                    onTouchEnd={handleStageMouseUp}
                     draggable={isDraggable}
                     onDragEnd={(e) => {
                         if (e.target === stageRef.current) {

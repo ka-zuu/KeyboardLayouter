@@ -7,12 +7,14 @@ import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode } from 'lucide-re
 import { generateQMKInfo } from '@/lib/qmk';
 
 const TopBar = () => {
-    const { project, addKey, importProject } = useStore();
+    const { project, addKeys, importProject } = useStore();
     // Use the zustand helper to consume the temporal store
-    const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state: any) => state);
+    const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state) => state);
+
+    const [addCount, setAddCount] = React.useState(1);
 
     const handleAddKey = () => {
-        addKey({
+        addKeys(addCount, {
             position: { x: 0, y: 0 },
             size: { w: 1, h: 1 },
             angle: 0,
@@ -100,12 +102,27 @@ const TopBar = () => {
                     </button>
                 </div>
 
+                <div className="flex items-center gap-1 bg-gray-800 rounded px-2 py-1 mr-2 border border-gray-700">
+                    <span className="text-xs text-gray-400">Count:</span>
+                    <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={addCount}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value) || 1;
+                            setAddCount(Math.min(20, Math.max(1, val)));
+                        }}
+                        className="w-12 bg-transparent text-white text-sm focus:outline-none text-center"
+                    />
+                </div>
+
                 <button
                     onClick={handleAddKey}
                     className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition-colors"
                 >
                     <Plus size={16} />
-                    Add Key
+                    Add Keys
                 </button>
 
                 <div className="w-px h-6 bg-gray-700 mx-2" />
