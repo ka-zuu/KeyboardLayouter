@@ -120,8 +120,10 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         const pivotCenterX = data.position.x + data.size.w / 2;
         const pivotCenterY = data.position.y + data.size.h / 2;
 
+        const selectedIdsSet = new Set(selectedKeyIds);
+
         project.keys.forEach(k => {
-            if (selectedKeyIds.includes(k.id)) {
+            if (selectedIdsSet.has(k.id)) {
                 if (k.id === pivotId) {
                     updates.push({ id: k.id, data: { angle: newRotation } });
                 } else {
