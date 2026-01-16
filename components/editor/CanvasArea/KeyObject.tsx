@@ -5,6 +5,7 @@ import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, SNAP_SIZE, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
+import { rotatePoint } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
@@ -15,7 +16,7 @@ interface KeyObjectProps {
 }
 
 const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
-    const { snapEnabled, updateKey } = useStore();
+    const { snapEnabled, updateKey, updateKeys, project, selectedKeyIds } = useStore();
     const groupRef = useRef<Konva.Group>(null);
 
     // Convert units to pixels
@@ -64,6 +65,9 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         // HOWEVER, DragBoundFunc receives absolute position.
         // If we assume stage scale is 1, it's screen pixels.
         // If zoomed, Konva handles it? DragBoundFunc gets "absolute position of the node".
+        // It seems Konva handles scale mapping for us if we use stage APIs, but dragBoundFunc receives absolute view coords usually?
+        // Actually dragBoundFunc receives "absolute position".
+        // Let's rely on standard logic.
 
         const snapPx = SNAP_SIZE * PIXELS_PER_U;
 
@@ -91,22 +95,73 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         const dx = pos.x - groupAbs.x;
         const dy = pos.y - groupAbs.y;
 
-        // At rotation 0, handle is at (0, -halfH - 25). Vector (0, -1).
-        // atan2(dy, dx) = -90 deg.
-        // We want this to be 0 deg rotation.
-        // So Rotation = angleDeg + 90.
-
         const angleRad = Math.atan2(dy, dx);
         const angleDeg = angleRad * 180 / Math.PI;
-        const rotation = angleDeg + 90;
+        // At rotation 0, handle is at (0, -radius). Vector(0, -1) -> -90 deg.
+        // So we add 90 deg to align.
+        const newRotation = angleDeg + 90;
 
-        // Snap rotation to 15 degrees if Shift pressed? Not implemented yet but good idea.
+        // If single selection, just update this key
+        if (selectedKeyIds.length <= 1 || !selectedKeyIds.includes(data.id)) {
+            updateKey(data.id, { angle: newRotation });
+            return;
+        }
 
-        updateKey(data.id, { angle: rotation });
+        // Batch Rotation
+        const pivotId = data.id;
+        const previousAngle = data.angle;
+        // Calculate delta
+        const deltaRotation = newRotation - previousAngle;
 
-        // Reset handling position? 
-        // The handle is inside the group, so it rotates WITH the group.
-        // If we just update rotation, the handle moves under the mouse (ideally).
+        // Prepare updates
+        const updates: { id: string, data: Partial<KeyData> }[] = [];
+
+        // Pivot Center in U units
+        const pivotCenterX = data.position.x + data.size.w / 2;
+        const pivotCenterY = data.position.y + data.size.h / 2;
+
+        const selectedIdsSet = new Set(selectedKeyIds);
+
+        project.keys.forEach(k => {
+            if (selectedIdsSet.has(k.id)) {
+                if (k.id === pivotId) {
+                    updates.push({ id: k.id, data: { angle: newRotation } });
+                } else {
+                    // Normalize angle
+                    const kNewAngle = k.angle + deltaRotation;
+
+                    // Orbitting Logic
+                    // 1. Get Key Center
+                    const kCenterX = k.position.x + k.size.w / 2;
+                    const kCenterY = k.position.y + k.size.h / 2;
+
+                    // 2. Rotate Key Center around Pivot Center
+                    const rotatedCenter = rotatePoint(
+                        { x: kCenterX, y: kCenterY },
+                        { x: pivotCenterX, y: pivotCenterY },
+                        deltaRotation
+                    );
+
+                    // 3. Convert back to Top-Left position
+                    const newPos = {
+                        x: rotatedCenter.x - k.size.w / 2,
+                        y: rotatedCenter.y - k.size.h / 2
+                    };
+
+                    updates.push({
+                        id: k.id,
+                        data: {
+                            position: newPos,
+                            angle: kNewAngle
+                        }
+                    });
+                }
+            }
+        });
+
+        if (updates.length > 0) {
+            updateKeys(updates);
+        }
     };
 
     return (

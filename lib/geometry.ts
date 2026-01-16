@@ -87,29 +87,38 @@ export function getRotatedRectPoints(x: number, y: number, w: number, h: number,
         ];
     }
 
-    const rad = (angle * Math.PI) / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-
-    // Center of rotation in world coordinates
     const centerX = x + cx;
     const centerY = y + cy;
 
     // Helper to rotate a point around the center
-    const rotatePoint = (px: number, py: number): Point => {
-        const dx = px - centerX;
-        const dy = py - centerY;
-        return {
-            x: centerX + (dx * cos - dy * sin),
-            y: centerY + (dx * sin + dy * cos)
-        };
-    };
+    // const rotatePoint = (px: number, py: number): Point => { ... } // Replaced by exported function
 
     // Calculate 4 corners
-    const p1 = rotatePoint(x, y);            // Top-Left
-    const p2 = rotatePoint(x + w, y);        // Top-Right
-    const p3 = rotatePoint(x + w, y + h);    // Bottom-Right
-    const p4 = rotatePoint(x, y + h);        // Bottom-Left
+    const p1 = rotatePoint({ x, y }, { x: centerX, y: centerY }, angle);            // Top-Left
+    const p2 = rotatePoint({ x: x + w, y }, { x: centerX, y: centerY }, angle);        // Top-Right
+    const p3 = rotatePoint({ x: x + w, y: y + h }, { x: centerX, y: centerY }, angle);    // Bottom-Right
+    const p4 = rotatePoint({ x, y: y + h }, { x: centerX, y: centerY }, angle);        // Bottom-Left
 
     return [p1, p2, p3, p4];
+}
+
+/**
+ * Rotates a point around a center by a given angle in degrees.
+ * @param point The point to rotate {x, y}
+ * @param center The center of rotation {x, y}
+ * @param angleDeg The angle in degrees
+ * @returns The rotated point {x, y}
+ */
+export function rotatePoint(point: Point, center: Point, angleDeg: number): Point {
+    const rad = (angleDeg * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+
+    const dx = point.x - center.x;
+    const dy = point.y - center.y;
+
+    return {
+        x: center.x + (dx * cos - dy * sin),
+        y: center.y + (dx * sin + dy * cos)
+    };
 }

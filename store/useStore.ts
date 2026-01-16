@@ -17,6 +17,7 @@ export interface EditorState {
   addKey: (key: Omit<KeyData, 'id'>) => void;
   addKeys: (count: number, baseKey: Omit<KeyData, 'id'>) => void;
   updateKey: (id: string, data: Partial<KeyData>) => void;
+  updateKeys: (updates: { id: string; data: Partial<KeyData> }[]) => void;
   removeKey: (id: string) => void;
   selectKey: (id: string, multi: boolean) => void;
   selectKeys: (ids: string[]) => void;
@@ -94,12 +95,45 @@ export const useStore = create<EditorState>()(
           set((state) => ({
             project: {
               ...state.project,
-              keys: state.project.keys.map((k) =>
-                k.id === id ? { ...k, ...data } : k
-              ),
+              keys: state.project.keys.map((k) => {
+                 if (k.id !== id) return k;
+                 
+                 // Deep merge for specific nested objects
+                 const newKey = { ...k, ...data };
+                 if (data.position) newKey.position = { ...k.position, ...data.position };
+                 if (data.size) newKey.size = { ...k.size, ...data.size };
+                 if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
+                 if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
+                 
+                 return newKey;
+              }),
               updatedAt: Date.now(),
             },
           })),
+
+        updateKeys: (updates) =>
+          set((state) => {
+            const updateMap = new Map(updates.map((u) => [u.id, u.data]));
+            return {
+              project: {
+                ...state.project,
+                keys: state.project.keys.map((k) => {
+                  const data = updateMap.get(k.id);
+                  if (!data) return k;
+
+                  // Deep merge for specific nested objects
+                  const newKey = { ...k, ...data };
+                  if (data.position) newKey.position = { ...k.position, ...data.position };
+                  if (data.size) newKey.size = { ...k.size, ...data.size };
+                  if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
+                  if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
+
+                  return newKey;
+                }),
+                updatedAt: Date.now(),
+              },
+            };
+          }),
 
         removeKey: (id) =>
           set((state) => ({

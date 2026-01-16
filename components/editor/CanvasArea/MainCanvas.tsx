@@ -10,7 +10,7 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, updateKey, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey } = useStore();
+    const { project, scale, pan, setZoom, setPan, updateKey, updateKeys, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey } = useStore();
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -297,7 +297,37 @@ const MainCanvas = () => {
                                 data={key}
                                 isSelected={selectedKeyIds.includes(key.id)}
                                 onSelect={selectKey}
-                                onDragEnd={(id, x, y) => updateKey(id, { position: { x, y } })}
+                                onDragEnd={(id, x, y) => {
+                                    if (selectedKeyIds.includes(id)) {
+                                        // Performance optimization: Create Map for O(1) lookup
+                                        const keysById = new Map(project.keys.map(k => [k.id, k]));
+                                        const draggedKey = keysById.get(id);
+                                        if (!draggedKey) return;
+
+                                        const deltaX = x - draggedKey.position.x;
+                                        const deltaY = y - draggedKey.position.y;
+
+                                        type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
+
+                                        const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
+                                            const key = keysById.get(selectedId);
+                                            if (!key) return null;
+                                            return {
+                                                id: selectedId,
+                                                data: {
+                                                    position: {
+                                                        x: key.position.x + deltaX,
+                                                        y: key.position.y + deltaY
+                                                    }
+                                                }
+                                            };
+                                        }).filter((u): u is UpdateType => u !== null);
+
+                                        updateKeys(updates);
+                                    } else {
+                                        updateKey(id, { position: { x, y } });
+                                    }
+                                }}
                             />
                         ))}
                         {/* Selection Box */}
