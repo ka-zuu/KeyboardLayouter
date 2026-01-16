@@ -299,17 +299,18 @@ const MainCanvas = () => {
                                 onSelect={selectKey}
                                 onDragEnd={(id, x, y) => {
                                     if (selectedKeyIds.includes(id)) {
-                                        // O(N) Creation of Map
-                                        const keyMap = new Map(project.keys.map(k => [k.id, k]));
-                                        const draggedKey = keyMap.get(id);
+                                        // Performance optimization: Create Map for O(1) lookup
+                                        const keysById = new Map(project.keys.map(k => [k.id, k]));
+                                        const draggedKey = keysById.get(id);
                                         if (!draggedKey) return;
 
                                         const deltaX = x - draggedKey.position.x;
                                         const deltaY = y - draggedKey.position.y;
 
-                                        // O(M) Iteration
-                                        const updates = selectedKeyIds.map((selectedId): { id: string, data: Partial<import('@/types/mkd').KeyData> } | null => {
-                                            const key = keyMap.get(selectedId);
+                                        type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
+
+                                        const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
+                                            const key = keysById.get(selectedId);
                                             if (!key) return null;
                                             return {
                                                 id: selectedId,
@@ -320,7 +321,7 @@ const MainCanvas = () => {
                                                     }
                                                 }
                                             };
-                                        }).filter((u) => u !== null) as { id: string; data: Partial<import('@/types/mkd').KeyData> }[];
+                                        }).filter((u): u is UpdateType => u !== null);
 
                                         updateKeys(updates);
                                     } else {
