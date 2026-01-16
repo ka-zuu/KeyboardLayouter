@@ -299,14 +299,18 @@ const MainCanvas = () => {
                                 onSelect={selectKey}
                                 onDragEnd={(id, x, y) => {
                                     if (selectedKeyIds.includes(id)) {
-                                        const draggedKey = project.keys.find(k => k.id === id);
+                                        // Performance optimization: Create Map for O(1) lookup
+                                        const keysById = new Map(project.keys.map(k => [k.id, k]));
+                                        const draggedKey = keysById.get(id);
                                         if (!draggedKey) return;
 
                                         const deltaX = x - draggedKey.position.x;
                                         const deltaY = y - draggedKey.position.y;
 
-                                        const updates = selectedKeyIds.map(selectedId => {
-                                            const key = project.keys.find(k => k.id === selectedId);
+                                        type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
+
+                                        const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
+                                            const key = keysById.get(selectedId);
                                             if (!key) return null;
                                             return {
                                                 id: selectedId,
@@ -317,7 +321,7 @@ const MainCanvas = () => {
                                                     }
                                                 }
                                             };
-                                        }).filter((u): u is { id: string; data: import('@/types/mkd').KeyData } => u !== null);
+                                        }).filter((u): u is UpdateType => u !== null);
 
                                         updateKeys(updates);
                                     } else {
