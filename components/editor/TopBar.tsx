@@ -7,11 +7,17 @@ import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode } from 'lucide-re
 import { generateQMKInfo } from '@/lib/qmk';
 
 const TopBar = () => {
-    const { project, addKeys, importProject, gridSize, setGridSize } = useStore();
+    const { project, addKeys, importProject, gridSize, setGridSize, setProjectName } = useStore();
     // Use the zustand helper to consume the temporal store
     const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state) => state);
 
     const [addCount, setAddCount] = React.useState(1);
+    const [localName, setLocalName] = React.useState(project.name);
+
+    // Sync local state when project.name changes externally (e.g. undo/redo)
+    React.useEffect(() => {
+        setLocalName(project.name);
+    }, [project.name]);
 
     const handleAddKey = () => {
         addKeys(addCount, {
@@ -78,7 +84,24 @@ const TopBar = () => {
                 <h1 className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
                     MKD
                 </h1>
-                <span className="text-gray-500 text-sm">{project.name}</span>
+                <input
+                    type="text"
+                    value={localName}
+                    onChange={(e) => setLocalName(e.target.value)}
+                    onBlur={() => {
+                        if (localName.trim() !== project.name) {
+                            setProjectName(localName.trim() || 'Untitled Project');
+                        }
+                    }}
+                    onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') {
+                            e.currentTarget.blur();
+                        }
+                    }}
+                    className="bg-transparent text-gray-300 text-sm focus:outline-none focus:border-b border-gray-500 hover:text-white transition-colors w-48"
+                    placeholder="Project Name"
+                />
             </div>
 
             <div className="flex items-center gap-2">
