@@ -85,6 +85,8 @@ const RightSidebar = () => {
         );
     }
 
+    if (!primaryKey) return null;
+
     return (
         <div className="w-64 bg-gray-900 border-l border-gray-800 flex flex-col p-4 text-gray-300 overflow-y-auto">
             <h2 className="font-semibold mb-4 text-white">Properties</h2>

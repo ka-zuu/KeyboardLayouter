@@ -206,7 +206,7 @@ export const useStore = create<EditorState>()(
             if (state.project.id === id) {
                const keys = Object.keys(rest);
                if (keys.length > 0) {
-                 return { savedProjects: rest, project: rest[keys[0]] };
+                 return { savedProjects: rest, project: rest[keys[0]!]! };
                } else {
                  return { savedProjects: rest, project: { ...DEFAULT_PROJECT, id: uuidv4() } };
                }

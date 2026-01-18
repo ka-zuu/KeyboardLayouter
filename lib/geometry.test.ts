@@ -77,8 +77,8 @@ describe('geometry', () => {
 
       // Floating point check
       points.forEach((p, i) => {
-          expect(p.x).toBeCloseTo(expected[i].x);
-          expect(p.y).toBeCloseTo(expected[i].y);
+          expect(p.x).toBeCloseTo(expected[i]!.x);
+          expect(p.y).toBeCloseTo(expected[i]!.y);
       });
     });
 
@@ -94,8 +94,8 @@ describe('geometry', () => {
         ];
 
         points.forEach((p, i) => {
-            expect(p.x).toBeCloseTo(expected[i].x);
-            expect(p.y).toBeCloseTo(expected[i].y);
+            expect(p.x).toBeCloseTo(expected[i]!.x);
+            expect(p.y).toBeCloseTo(expected[i]!.y);
         });
     });
   });
