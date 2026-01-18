@@ -4,6 +4,7 @@ import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Folder, Plus, Trash2, Box } from 'lucide-react';
 import clsx from 'clsx'; // Assuming standard clsx or just use template literals
+import { PIXELS_PER_U } from '@/lib/constants';
 
 // Preset definitions
 const PRESETS = [
@@ -19,7 +20,7 @@ const PRESETS = [
 ];
 
 const LeftSidebar = () => {
-    const { savedProjects, project, loadProject, createProject, deleteProject, saveProject } = useStore();
+    const { savedProjects, project, loadProject, createProject, deleteProject, saveProject, addKey, pan, scale, gridSize } = useStore();
 
     const handleDragStart = (e: React.DragEvent, preset: typeof PRESETS[0]) => {
         e.dataTransfer.setData('application/json', JSON.stringify({
@@ -32,13 +33,50 @@ const LeftSidebar = () => {
         e.dataTransfer.effectAllowed = 'copy';
     };
 
-    // Auto-save on mount/unmount or interval? 
-    // Store updates directly to persist state, but `savedProjects` acts as "Library".
-    // `project` is current. `persist` saves `project` to storage independently of `savedProjects`.
-    // But if we want to see it in the list, we must call `saveProject`.
-    // Let's add a "Save" button in TopBar or here.  
-    // Or auto-sync loop.
-    // For MVP, manual save or "Create New" saves previous.
+    const handlePresetClick = (preset: typeof PRESETS[0]) => {
+        // Calculate center of the Canvas
+        // Sidebar is 64 tailwind units = 16rem = 256px
+        const sidebarWidth = 256;
+        const canvasWidth = window.innerWidth - sidebarWidth;
+        // Center of the canvas relative to the window
+        const screenCenterX = sidebarWidth + (canvasWidth / 2);
+        const screenCenterY = window.innerHeight / 2;
+
+        // Container offset is sidebarWidth
+        const stageContainerX = screenCenterX - sidebarWidth;
+        const stageContainerY = screenCenterY;
+
+        // World Coordinates in Pixels
+        const pixelX = (stageContainerX - pan.x) / scale;
+        const pixelY = (stageContainerY - pan.y) / scale;
+
+        // Convert to U units
+        const uX = pixelX / PIXELS_PER_U;
+        const uY = pixelY / PIXELS_PER_U;
+
+        // Center the key and snap to grid
+        const rawX = uX - (preset.w / 2);
+        const rawY = uY - (preset.h / 2);
+
+        const snappedX = Math.round(rawX / gridSize) * gridSize;
+        const snappedY = Math.round(rawY / gridSize) * gridSize;
+
+        // Format legend consistent with drag & drop behavior
+        const legend = preset.label.includes('Space') ? '' : preset.label.replace('U', '');
+
+        addKey({
+            size: { w: preset.w, h: preset.h },
+            position: {
+                x: snappedX,
+                y: snappedY
+            },
+            visualLegend: legend,
+            angle: 0,
+            rotationCenter: { x: 0, y: 0 },
+            matrix: { row: 0, col: 0 },
+            variant: (preset as any).variant
+        });
+    };
 
     return (
         <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col p-4 text-gray-300">
@@ -51,7 +89,8 @@ const LeftSidebar = () => {
                         key={preset.label}
                         draggable
                         onDragStart={(e) => handleDragStart(e, preset)}
-                        className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded p-2 text-center text-xs cursor-move transition-colors flex flex-col items-center gap-1 select-none"
+                        onClick={() => handlePresetClick(preset)}
+                        className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded p-2 text-center text-xs cursor-pointer transition-colors flex flex-col items-center gap-1 select-none"
                     >
                         <Box size={16} className="text-blue-400" />
                         {preset.label}
@@ -70,10 +109,6 @@ const LeftSidebar = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-1">
-                {/* Current Project always needs to be explicitly saved to appear in list in this logic?
-            Or we list keys of savedProjects.
-            If current project ID is not in savedProjects, show it as "Unsaved"?
-        */}
                 <div
                     className={clsx(
                         "p-2 rounded cursor-pointer flex items-center gap-2",

@@ -10,7 +10,7 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, updateKey, updateKeys, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey } = useStore();
+    const { project, scale, pan, setZoom, setPan, updateKey, updateKeys, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore();
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -203,8 +203,8 @@ const MainCanvas = () => {
             const finalY = uY - data.h / 2;
 
             // Snap initial position to grid
-            const snappedX = Math.round(finalX / 0.25) * 0.25;
-            const snappedY = Math.round(finalY / 0.25) * 0.25;
+            const snappedX = Math.round(finalX / gridSize) * gridSize;
+            const snappedY = Math.round(finalY / gridSize) * gridSize;
 
             addKey({
                 position: { x: snappedX, y: snappedY },
