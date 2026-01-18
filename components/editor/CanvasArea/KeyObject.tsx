@@ -18,6 +18,7 @@ interface KeyObjectProps {
 const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
     const { snapEnabled, updateKey, updateKeys, project, selectedKeyIds, gridSize } = useStore();
     const groupRef = useRef<Konva.Group>(null);
+    const lastDragPos = useRef<{ x: number, y: number } | null>(null);
 
     // Convert units to pixels
     const width = data.size.w * PIXELS_PER_U;
@@ -166,6 +167,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
 
     return (
         <Group
+            id={data.id} // ID for selection lookup
             x={centerX}
             y={centerY}
             width={width}
@@ -174,6 +176,36 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
             offsetY={0}
             rotation={data.angle}
             draggable
+            onDragStart={(e) => {
+                // Initialize drag start position for delta calculation
+                lastDragPos.current = { x: e.target.x(), y: e.target.y() };
+            }}
+            onDragMove={(e) => {
+                // Multi-select Drag Logic
+                if (selectedKeyIds.length > 1 && selectedKeyIds.includes(data.id) && lastDragPos.current) {
+                    const stage = e.target.getStage();
+                    if (!stage) return;
+
+                    const currentX = e.target.x();
+                    const currentY = e.target.y();
+
+                    const dx = currentX - lastDragPos.current.x;
+                    const dy = currentY - lastDragPos.current.y;
+
+                    lastDragPos.current = { x: currentX, y: currentY };
+
+                    // Move other selected keys
+                    selectedKeyIds.forEach(id => {
+                        if (id === data.id) return; // Skip self (already moved by drag)
+
+                        const node = stage.findOne('#' + id);
+                        if (node) {
+                            node.x(node.x() + dx);
+                            node.y(node.y() + dy);
+                        }
+                    });
+                }
+            }}
             onDragEnd={handleDragEndCenter}
             dragBoundFunc={dragBoundFunc}
             onClick={(e) => {
@@ -241,6 +273,16 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 verticalAlign="middle"
                 fontSize={14}
                 fill={textColor}
+                listening={false}
+            />
+
+            {/* Matrix Row/Col Display */}
+            <Text
+                x={-halfW + 3}
+                y={-halfH + 3}
+                text={`${data.matrix?.row ?? 0}, ${data.matrix?.col ?? 0}`}
+                fontSize={10}
+                fill="#999"
                 listening={false}
             />
 
