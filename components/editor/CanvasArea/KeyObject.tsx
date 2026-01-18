@@ -192,10 +192,6 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 e.cancelBubble = true;
                 onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
             }}
-            onTap={(e) => {
-                e.cancelBubble = true;
-                onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
-            }}
             ref={groupRef}
         >
             {/* Key Shape centered at 0,0 */}
