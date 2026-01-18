@@ -90,8 +90,19 @@ const LeftSidebar = () => {
                         draggable
                         onDragStart={(e) => handleDragStart(e, preset)}
                         onClick={() => handlePresetClick(preset)}
-                        className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded p-2 text-center text-xs cursor-pointer transition-colors flex flex-col items-center gap-1 select-none"
+                        className="relative group bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded p-2 text-center text-xs cursor-pointer transition-colors flex flex-col items-center gap-1 select-none"
                     >
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handlePresetClick(preset);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-0.5 bg-blue-600 rounded text-white hover:bg-blue-500 transition-opacity"
+                            title="Add to Canvas"
+                        >
+                            <Plus size={10} />
+                        </button>
                         <Box size={16} className="text-blue-400" />
                         {preset.label}
                     </div>
