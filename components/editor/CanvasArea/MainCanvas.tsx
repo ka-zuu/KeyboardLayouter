@@ -64,6 +64,98 @@ const MainCanvas = () => {
         setPan(newPos);
     };
 
+    // Touch Handling State
+    const lastDist = useRef<number>(0);
+    const lastCenter = useRef<{ x: number, y: number } | null>(null);
+
+    const getDistance = (p1: { x: number, y: number }, p2: { x: number, y: number }) => {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    };
+
+    const getCenter = (p1: { x: number, y: number }, p2: { x: number, y: number }) => {
+        return {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2,
+        };
+    };
+
+    const handleTouchStart = (e: Konva.KonvaEventObject<TouchEvent>) => {
+        const touches = e.evt.touches;
+        if (touches.length === 2) {
+            e.evt.preventDefault(); // Stop default scroll/zoom
+            const p1 = { x: touches[0].clientX, y: touches[0].clientY };
+            const p2 = { x: touches[1].clientX, y: touches[1].clientY };
+
+            lastDist.current = getDistance(p1, p2);
+            lastCenter.current = getCenter(p1, p2);
+        } else if (touches.length === 1) {
+             // Defer to mouse down handler logic for selection
+             handleStageMouseDown(e);
+        }
+    };
+
+    const handleTouchMove = (e: Konva.KonvaEventObject<TouchEvent>) => {
+        const touches = e.evt.touches;
+        if (touches.length === 2) {
+            e.evt.preventDefault();
+            const stage = stageRef.current;
+            if (!stage) return;
+
+            const p1 = { x: touches[0].clientX, y: touches[0].clientY };
+            const p2 = { x: touches[1].clientX, y: touches[1].clientY };
+
+            const newDist = getDistance(p1, p2);
+            const newCenter = getCenter(p1, p2);
+
+            if (lastCenter.current && lastDist.current > 0) {
+                // Zoom
+                const pointTo = {
+                    x: (lastCenter.current.x - stage.x()) / scale,
+                    y: (lastCenter.current.y - stage.y()) / scale,
+                };
+
+                const scaleBy = newDist / lastDist.current;
+                const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, scale * scaleBy));
+
+                // Pan (based on center movement + zoom offset)
+                // New position = newCenter - (pointTo * newScale)
+                // But wait, standard pinch zoom logic:
+                // 1. Scale relative to center
+                // 2. Translate based on center move
+
+                const dx = newCenter.x - lastCenter.current.x;
+                const dy = newCenter.y - lastCenter.current.y;
+
+                // First calculate where the stage would be if we just scaled around lastCenter
+                // oldPos = lastCenter
+                // newPos = lastCenter
+                // But we want pointTo to remain at lastCenter (visually)
+                // Actually Konva has simple math:
+
+                const newPos = {
+                    x: newCenter.x - pointTo.x * newScale,
+                    y: newCenter.y - pointTo.y * newScale
+                };
+
+                setZoom(newScale);
+                setPan(newPos);
+            }
+
+            lastDist.current = newDist;
+            lastCenter.current = newCenter;
+        } else if (touches.length === 1) {
+            handleStageMouseMove(e);
+        }
+    };
+
+    const handleTouchEnd = (e: Konva.KonvaEventObject<TouchEvent>) => {
+        lastDist.current = 0;
+        lastCenter.current = null;
+        if (e.evt.touches.length === 0) {
+            handleStageMouseUp(e);
+        }
+    };
+
     const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
         const stage = stageRef.current;
         if (!stage) return;
@@ -278,9 +370,9 @@ const MainCanvas = () => {
                     onMouseMove={handleStageMouseMove}
                     onMouseUp={handleStageMouseUp}
                     onMouseLeave={() => setIsMiddleMousePressed(false)}
-                    onTouchStart={handleStageMouseDown} // Basic Touch support for now
-                    onTouchMove={handleStageMouseMove}
-                    onTouchEnd={handleStageMouseUp}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                     draggable={isDraggable}
                     onDragEnd={(e) => {
                         if (e.target === stageRef.current) {
