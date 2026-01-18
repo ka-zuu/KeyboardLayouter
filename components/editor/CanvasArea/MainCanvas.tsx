@@ -40,7 +40,7 @@ const MainCanvas = () => {
     const [lastDist, setLastDist] = useState<number>(0);
 
     const getDistance = (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
-        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+        return Math.hypot(p2.x - p1.x, p2.y - p1.y);
     };
 
     const getCenter = (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
@@ -154,7 +154,7 @@ const MainCanvas = () => {
                     const p2 = { x: t2.clientX, y: t2.clientY };
 
                     const newCenter = getCenter(p1, p2);
-                    const newDist = getDistance(p1, p2);
+                    const newDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
 
                     // 1. Pan
                     const dx = newCenter.x - lastCenter.x;
@@ -170,27 +170,9 @@ const MainCanvas = () => {
                         const finalScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newScaleRaw));
 
                         // Zoom towards center point
-                        // We need to adjust Pan so that the 'newCenter' point remains roughly in same place relative to content?
-                        // actually standard pinch zoom logic:
-                        // pointer position relative to stage...
-
-                        // Simple approach: Apply scale. Then adjust pan.
-                        // This is slightly complex to get perfect combined pan+zoom.
-                        // Let's rely on the fact we panned the center already.
-                        // Now zoom relative to that center?
-                        // Actually, let's just update scale. Konva scales from (0,0).
-                        // We need to zoom around 'newCenter'.
-
-                        // pointTo = (newCenter - stageX) / scale
                         const pointTo = {
-                            x: (newCenter.x - stage.x()) / oldScale, // use current stage pos (which we just updated with pan? no wait)
-                            // The 'pan' state is REACT state. The stage ref might not be updated yet if we didn't re-render?
-                            // But we setPan above... React batching...
-                            // Actually, let's calculate everything based on current props 'pan' and 'scale'.
-                            // But 'pan' is used for next render.
-
-                            // Let's recalculate based on existing state for smoothness
-                            y: (newCenter.y - stage.y()) / oldScale,
+                            x: (newCenter.x - newPan.x) / oldScale,
+                            y: (newCenter.y - newPan.y) / oldScale,
                         };
 
                         setZoom(finalScale);
