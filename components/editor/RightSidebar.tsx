@@ -129,16 +129,20 @@ const RightSidebar = () => {
                 <h2 className="font-semibold mb-4 text-white">Selection</h2>
                 <p>{selectedKeys.length} items selected</p>
 
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 space-y-2">
                     <button
                         onClick={() => autoAssignMatrix(selectedKeyIds)}
-                        className="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded flex justify-center text-gray-300"
-                        title="Auto-assign Matrix"
+                        className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 px-3 rounded flex items-center justify-center gap-2 text-sm transition-colors"
+                        title="Auto-assign Matrix to selected keys"
                     >
                         <Grid size={16} />
+                        Auto-assign Matrix
                     </button>
-                    <button onClick={handleDuplicate} className="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded flex justify-center"><Copy size={16} /></button>
-                    <button onClick={handleDelete} className="flex-1 bg-red-900/50 hover:bg-red-900 p-2 rounded flex justify-center text-red-200"><Trash2 size={16} /></button>
+
+                    <div className="flex gap-2">
+                        <button onClick={handleDuplicate} className="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded flex justify-center items-center gap-2 text-sm"><Copy size={16} /> Duplicate</button>
+                        <button onClick={handleDelete} className="flex-1 bg-red-900/50 hover:bg-red-900 p-2 rounded flex justify-center text-red-200 items-center gap-2 text-sm"><Trash2 size={16} /> Delete</button>
+                    </div>
                 </div>
             </div>
         );

@@ -18,6 +18,7 @@ interface KeyObjectProps {
 const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
     const { snapEnabled, updateKey, updateKeys, project, selectedKeyIds, gridSize } = useStore();
     const groupRef = useRef<Konva.Group>(null);
+    const lastDragPos = useRef<{ x: number, y: number } | null>(null);
 
     // Convert units to pixels
     const width = data.size.w * PIXELS_PER_U;
@@ -166,6 +167,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
 
     return (
         <Group
+            id={data.id} // ID for selection lookup
             x={centerX}
             y={centerY}
             width={width}
@@ -174,7 +176,76 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
             offsetY={0}
             rotation={data.angle}
             draggable
-            onDragEnd={handleDragEndCenter}
+            onDragStart={(e) => {
+                // Initialize drag start position for delta calculation
+                lastDragPos.current = { x: e.target.x(), y: e.target.y() };
+            }}
+            onDragMove={(e) => {
+                // Multi-select Drag Logic
+                if (selectedKeyIds.length > 1 && selectedKeyIds.includes(data.id) && lastDragPos.current) {
+                    const stage = e.target.getStage();
+                    if (!stage) return;
+
+                    const currentX = e.target.x();
+                    const currentY = e.target.y();
+
+                    const dx = currentX - lastDragPos.current.x;
+                    const dy = currentY - lastDragPos.current.y;
+
+                    lastDragPos.current = { x: currentX, y: currentY };
+
+                    // Move other selected keys
+                    selectedKeyIds.forEach(id => {
+                        if (id === data.id) return; // Skip self (already moved by drag)
+
+                        const node = stage.findOne('#' + id);
+                        if (node) {
+                            node.x(node.x() + dx);
+                            node.y(node.y() + dy);
+                        }
+                    });
+                }
+            }}
+            onDragEnd={(e) => {
+                // Standard single drag end
+                if (selectedKeyIds.length <= 1 || !selectedKeyIds.includes(data.id)) {
+                    handleDragEndCenter(e);
+                    return;
+                }
+
+                // Batch Update for Multi-select
+                const nx = e.target.x();
+                const ny = e.target.y();
+
+                // Calculate total delta relative to STORE position
+                const originalCenterX = (data.position.x * PIXELS_PER_U) + (data.size.w * PIXELS_PER_U / 2);
+                const originalCenterY = (data.position.y * PIXELS_PER_U) + (data.size.h * PIXELS_PER_U / 2);
+
+                const totalDeltaX = nx - originalCenterX;
+                const totalDeltaY = ny - originalCenterY;
+
+                const deltaU_X = totalDeltaX / PIXELS_PER_U;
+                const deltaU_Y = totalDeltaY / PIXELS_PER_U;
+
+                const keysById = new Map(project.keys.map(k => [k.id, k]));
+
+                const updates = selectedKeyIds.map(id => {
+                    const key = keysById.get(id);
+                    if (!key) return null;
+
+                    return {
+                        id: id,
+                        data: {
+                            position: {
+                                x: key.position.x + deltaU_X,
+                                y: key.position.y + deltaU_Y
+                            }
+                        }
+                    };
+                }).filter((u) => u !== null) as { id: string; data: Partial<KeyData> }[];
+
+                updateKeys(updates);
+            }}
             dragBoundFunc={dragBoundFunc}
             onClick={(e) => {
                 e.cancelBubble = true;
@@ -241,6 +312,16 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 verticalAlign="middle"
                 fontSize={14}
                 fill={textColor}
+                listening={false}
+            />
+
+            {/* Matrix Row/Col Display */}
+            <Text
+                x={-halfW + 3}
+                y={-halfH + 3}
+                text={`${data.matrix?.row ?? 0}, ${data.matrix?.col ?? 0}`}
+                fontSize={10}
+                fill="#999"
                 listening={false}
             />
 
