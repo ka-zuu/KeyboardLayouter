@@ -264,23 +264,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                             e.cancelBubble = true;
                             e.target.position({ x: 0, y: -halfH - 25 });
                         }}
-                        onTouchStart={(e) => e.cancelBubble = true}
-                        onTouchMove={(e) => {
-                            const newEvent = {
-                                ...e,
-                                evt: {
-                                    ...e.evt,
-                                    preventDefault: () => { }
-                                } as any,
-                                cancelBubble: e.cancelBubble
-                            };
-                            handleRotationDragMove(newEvent);
-                        }}
-                        onTouchEnd={(e) => {
-                            e.cancelBubble = true;
-                            e.target.position({ x: 0, y: -halfH - 25 });
-                        }}
-                        dragBoundFunc={(pos) => pos} // allow free movement visually during drag, but we use the pointer position for math
+                        dragBoundFunc={(pos) => pos}
                         cursor="grab"
                     />
                 </React.Fragment>
