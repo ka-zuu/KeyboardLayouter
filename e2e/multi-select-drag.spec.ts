@@ -17,8 +17,13 @@ test.describe('Multi-select Drag Interaction', () => {
         await countInput.fill('2');
         await page.getByRole('button', { name: 'Add Keys' }).click();
 
-        // Wait for keys to be rendered (canvas activity)
-        await page.waitForTimeout(500);
+        // Wait for keys to be created in store using evaluate
+        await page.waitForFunction(() => {
+             const storage = localStorage.getItem('mkd-storage');
+             if (!storage) return false;
+             const data = JSON.parse(storage).state.project;
+             return data.keys.length >= 2;
+        });
 
         // 2. Locate Canvas
         const canvas = page.locator('canvas').first();
@@ -41,6 +46,9 @@ test.describe('Multi-select Drag Interaction', () => {
         await page.mouse.click(k2X, k2Y);
         await page.keyboard.up('Shift');
 
+        // Wait for sidebar to reflect selection (Robust wait)
+        await expect(page.getByText('2 items selected')).toBeVisible();
+
         // 4. Verify Sidebar "Auto-assign Matrix" button is visible
         // The button title is "Auto-assign Matrix to selected keys" and text is "Auto-assign Matrix"
         await expect(page.getByRole('button', { name: 'Auto-assign Matrix', exact: true })).toBeVisible();
@@ -50,6 +58,9 @@ test.describe('Multi-select Drag Interaction', () => {
         await page.mouse.down();
         await page.mouse.move(k1X, k1Y + 100, { steps: 5 }); // Move slowly
         await page.mouse.up();
+        
+        // Wait for update to persist (UI should be stable)
+        await page.waitForTimeout(200); // Small grace period for store update catch-up is generic for drag ops
 
         // 6. Verify positions in Store
         const projectData = await page.evaluate(() => {
@@ -81,7 +92,5 @@ test.describe('Multi-select Drag Interaction', () => {
         
         // Their relative X should be 1U (Maintained spacing)
         expect(Math.abs(k2.position.x - k1.position.x)).toBeCloseTo(1.0, 1);
-        
-        console.log('Final Positions:', k1.position, k2.position);
     });
 });

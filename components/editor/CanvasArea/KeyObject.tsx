@@ -206,7 +206,46 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     });
                 }
             }}
-            onDragEnd={handleDragEndCenter}
+            onDragEnd={(e) => {
+                // Standard single drag end
+                if (selectedKeyIds.length <= 1 || !selectedKeyIds.includes(data.id)) {
+                    handleDragEndCenter(e);
+                    return;
+                }
+
+                // Batch Update for Multi-select
+                const nx = e.target.x();
+                const ny = e.target.y();
+
+                // Calculate total delta relative to STORE position
+                const originalCenterX = (data.position.x * PIXELS_PER_U) + (data.size.w * PIXELS_PER_U / 2);
+                const originalCenterY = (data.position.y * PIXELS_PER_U) + (data.size.h * PIXELS_PER_U / 2);
+
+                const totalDeltaX = nx - originalCenterX;
+                const totalDeltaY = ny - originalCenterY;
+
+                const deltaU_X = totalDeltaX / PIXELS_PER_U;
+                const deltaU_Y = totalDeltaY / PIXELS_PER_U;
+
+                const keysById = new Map(project.keys.map(k => [k.id, k]));
+
+                const updates = selectedKeyIds.map(id => {
+                    const key = keysById.get(id);
+                    if (!key) return null;
+
+                    return {
+                        id: id,
+                        data: {
+                            position: {
+                                x: key.position.x + deltaU_X,
+                                y: key.position.y + deltaU_Y
+                            }
+                        }
+                    };
+                }).filter((u) => u !== null) as { id: string; data: Partial<KeyData> }[];
+
+                updateKeys(updates);
+            }}
             dragBoundFunc={dragBoundFunc}
             onClick={(e) => {
                 e.cancelBubble = true;
