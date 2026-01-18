@@ -12,6 +12,16 @@ const RightSidebar = () => {
     const singleSelection = selectedKeys.length === 1;
     const primaryKey = selectedKeys[0];
 
+    // Auto-select text in the active input when primaryKey changes (e.g. via Tab navigation)
+    React.useEffect(() => {
+        if (!primaryKey) return;
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+            (activeEl as HTMLInputElement).select();
+        }
+    }, [primaryKey?.id]);
+
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: string, nested?: string) => {
         if (!primaryKey) return;
 
