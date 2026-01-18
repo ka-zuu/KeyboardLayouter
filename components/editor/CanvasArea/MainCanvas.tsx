@@ -17,6 +17,7 @@ const MainCanvas = () => {
     // Selection State
     const [isSelecting, setIsSelecting] = React.useState(false);
     const [selectionBox, setSelectionBox] = React.useState<{ startX: number, startY: number, endX: number, endY: number } | null>(null);
+    const [lastDist, setLastDist] = React.useState(0);
 
     // Handle window resize
     const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
@@ -64,9 +65,23 @@ const MainCanvas = () => {
         setPan(newPos);
     };
 
+    function getDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    }
+
     const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
         const stage = stageRef.current;
         if (!stage) return;
+
+        // Prevent selection logic on multi-touch
+        if (e.evt instanceof TouchEvent && e.evt.touches.length > 1) {
+            if (e.evt.touches.length === 2) {
+                setIsTwoFingerPanning(true);
+            }
+            setIsSelecting(false);
+            setSelectionBox(null);
+            return;
+        }
 
         // If clicking on empty area (stage)
         const clickedOnEmpty = e.target === stage;
@@ -102,6 +117,65 @@ const MainCanvas = () => {
     };
 
     const handleStageMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        if (e.evt instanceof TouchEvent) {
+            e.evt.preventDefault();
+            const touch1 = e.evt.touches[0];
+            const touch2 = e.evt.touches[1];
+            const stage = stageRef.current;
+            if (!stage) return;
+
+            if (touch1 && touch2) {
+                // Multi-touch (pinch-zoom and two-finger pan)
+                if (stage.isDragging()) {
+                    return;
+                }
+                const p1 = { x: touch1.clientX, y: touch1.clientY };
+                const p2 = { x: touch2.clientX, y: touch2.clientY };
+
+                if (!lastDist) {
+                    setLastDist(getDistance(p1, p2));
+                    return;
+                }
+
+                const newDist = getDistance(p1, p2);
+                const oldScale = stage.scaleX();
+
+                const center = {
+                    x: (p1.x + p2.x) / 2,
+                    y: (p1.y + p2.y) / 2,
+                };
+
+                const pointTo = {
+                    x: (center.x - stage.x()) / oldScale,
+                    y: (center.y - stage.y()) / oldScale,
+                };
+
+                const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, oldScale * (newDist / lastDist)));
+
+                const newPos = {
+                    x: center.x - pointTo.x * newScale,
+                    y: center.y - pointTo.y * newScale,
+                };
+
+                setZoom(newScale);
+                setPan(newPos);
+                setLastDist(newDist);
+                return;
+            }
+            setLastDist(0);
+        }
+
+        // For mouse events or single touch (selection)
+        if (e.evt instanceof TouchEvent && e.evt.touches.length === 2) {
+            // This is a two-finger pan
+            const stage = stageRef.current;
+            if (!stage) return;
+            if (!stage.isDragging()) {
+                stage.startDrag();
+            }
+            return;
+        }
+
         if (!isSelecting || !selectionBox) return;
 
         const stage = stageRef.current;
@@ -118,11 +192,14 @@ const MainCanvas = () => {
     };
 
     const handleStageMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        setLastDist(0); // Reset for next touch gesture
+        setIsTwoFingerPanning(false);
+
         if (isMiddleMousePressed) setIsMiddleMousePressed(false);
         if (isSelecting && selectionBox) {
             const stage = stageRef.current;
             if (stage) {
-                // Normalize Selection Box (which is a polygon)
+                // Normalize Selection Box
                 const x1 = Math.min(selectionBox.startX, selectionBox.endX);
                 const x2 = Math.max(selectionBox.startX, selectionBox.endX);
                 const y1 = Math.min(selectionBox.startY, selectionBox.endY);
@@ -224,6 +301,7 @@ const MainCanvas = () => {
     // Track Space key and Middle Mouse for Pan Mode
     const [isSpacePressed, setIsSpacePressed] = React.useState(false);
     const [isMiddleMousePressed, setIsMiddleMousePressed] = React.useState(false);
+    const [isTwoFingerPanning, setIsTwoFingerPanning] = React.useState(false);
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
@@ -256,7 +334,7 @@ const MainCanvas = () => {
         };
     }, []);
 
-    const isDraggable = isSpacePressed || isMiddleMousePressed;
+    const isDraggable = isSpacePressed || isMiddleMousePressed || isTwoFingerPanning;
 
     return (
         <div

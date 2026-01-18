@@ -180,34 +180,39 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 e.cancelBubble = true;
                 onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
             }}
+            onTap={(e) => {
+                e.cancelBubble = true;
+                onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
+            }}
+            onTap={(e) => {
+                e.cancelBubble = true;
+                onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
+            }}
+            onTap={(e) => {
+                e.cancelBubble = true;
+                onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
+            }}
+            onTap={(e) => {
+                e.cancelBubble = true;
+                onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
+            }}
+            onTap={(e) => {
+                e.cancelBubble = true;
+                onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
+            }}
             ref={groupRef}
         >
             {/* Key Shape centered at 0,0 */}
             {data.variant === 'iso_enter' ? (
                 <Path
                     x={-halfW} // Path starts at 0,0. We need to center it. 
-                    // ISO Enter Width is 1.5U approx (actually bounding box is what we used for width).
-                    // Our path definition "M 0,0 ..." is in U units.
-                    // We simply scale the Group or Path?
-                    // Better to scale the Path data? No, simpler to use scale attribute on Path?
-                    // Or pre-calculate path string in pixels?
-                    // Let's use scale transform on Path.
-                    // But width/height calculation in parent was based on data.size.
-                    // If variant is ISO Enter, data.size should be {w: 1.5, h: 2.0}.
-                    // Path is defined in U.
                     y={-halfH}
                     data={ISO_ENTER_PATH}
                     scaleX={PIXELS_PER_U}
                     scaleY={PIXELS_PER_U}
                     fill={keyColor}
                     stroke={strokeColor}
-                    strokeWidth={strokeWidth / PIXELS_PER_U} // Stroke acts weird with scale?
-                    // If we scale the Path object, stroke scales too.
-                    // Better to keep strokeWidth constant?
-                    // Konva 'vectorEffect' non-scaling-stroke? Not supported well.
-                    // Alternative: Define path in Pixels.
-                    // M 0,0 L 1.5*60,0 ...
-                    // Let's do dynamic path generation string.
+                    strokeWidth={strokeWidth / PIXELS_PER_U}
                     fillAfterStrokeEnabled={true}
                     shadowBlur={2}
                     shadowColor="black"
@@ -269,10 +274,22 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                         onDragMove={handleRotationDragMove}
                         onDragEnd={(e) => {
                             e.cancelBubble = true;
-                            // Reset position of handle is automatic since it's a child?
-                            // Wait, if we drag it, Konva modifies its x,y.
-                            // We MUST reset its position back to (0, -halfH - 25) after drag.
-                            // Otherwise it stays where we dragged it relative to parent.
+                            e.target.position({ x: 0, y: -halfH - 25 });
+                        }}
+                        onTouchStart={(e) => e.cancelBubble = true}
+                        onTouchMove={(e) => {
+                            const newEvent = {
+                                ...e,
+                                evt: {
+                                    ...e.evt,
+                                    preventDefault: () => { }
+                                } as any,
+                                cancelBubble: e.cancelBubble
+                            };
+                            handleRotationDragMove(newEvent);
+                        }}
+                        onTouchEnd={(e) => {
+                            e.cancelBubble = true;
                             e.target.position({ x: 0, y: -halfH - 25 });
                         }}
                         dragBoundFunc={(pos) => pos} // allow free movement visually during drag, but we use the pointer position for math
