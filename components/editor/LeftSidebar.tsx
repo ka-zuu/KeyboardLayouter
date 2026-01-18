@@ -20,7 +20,7 @@ const PRESETS = [
 ];
 
 const LeftSidebar = () => {
-    const { savedProjects, project, loadProject, createProject, deleteProject, saveProject, addKey, pan, scale } = useStore();
+    const { savedProjects, project, loadProject, createProject, deleteProject, saveProject, addKey, pan, scale, gridSize } = useStore();
 
     const handleDragStart = (e: React.DragEvent, preset: typeof PRESETS[0]) => {
         e.dataTransfer.setData('application/json', JSON.stringify({
@@ -54,12 +54,12 @@ const LeftSidebar = () => {
         const uX = pixelX / PIXELS_PER_U;
         const uY = pixelY / PIXELS_PER_U;
 
-        // Center the key and snap to grid (0.25U)
+        // Center the key and snap to grid
         const rawX = uX - (preset.w / 2);
         const rawY = uY - (preset.h / 2);
 
-        const snappedX = Math.round(rawX / 0.25) * 0.25;
-        const snappedY = Math.round(rawY / 0.25) * 0.25;
+        const snappedX = Math.round(rawX / gridSize) * gridSize;
+        const snappedY = Math.round(rawY / gridSize) * gridSize;
 
         // Format legend consistent with drag & drop behavior
         const legend = preset.label.includes('Space') ? '' : preset.label.replace('U', '');
@@ -67,10 +67,10 @@ const LeftSidebar = () => {
         addKey({
             size: { w: preset.w, h: preset.h },
             position: {
-                x: x - (preset.w / 2), // Center the key
-                y: y - (preset.h / 2)
+                x: snappedX,
+                y: snappedY
             },
-            visualLegend: preset.label,
+            visualLegend: legend,
             angle: 0,
             rotationCenter: { x: 0, y: 0 },
             matrix: { row: 0, col: 0 },
