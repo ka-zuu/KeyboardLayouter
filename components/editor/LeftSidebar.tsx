@@ -58,8 +58,45 @@ const LeftSidebar = () => {
         const rawX = uX - (preset.w / 2);
         const rawY = uY - (preset.h / 2);
 
-        const snappedX = Math.round(rawX / gridSize) * gridSize;
-        const snappedY = Math.round(rawY / gridSize) * gridSize;
+        let snappedX = Math.round(rawX / gridSize) * gridSize;
+        let snappedY = Math.round(rawY / gridSize) * gridSize;
+
+        // Overlap detection and position adjustment
+        const MAX_RETRIES = 100; // Prevent infinite loops
+        let retries = 0;
+
+        while (retries < MAX_RETRIES) {
+            const isOverlapping = project.keys.some((k) => {
+                // Key to be added
+                const newLeft = snappedX;
+                const newRight = snappedX + preset.w;
+                const newTop = snappedY;
+                const newBottom = snappedY + preset.h;
+
+                // Existing key
+                const kLeft = k.position.x;
+                const kRight = k.position.x + k.size.w;
+                const kTop = k.position.y;
+                const kBottom = k.position.y + k.size.h;
+
+                // Simple AABB collision detection with a small epsilon for float precision
+                const epsilon = 0.001;
+                return (
+                    newLeft < kRight - epsilon &&
+                    newRight > kLeft + epsilon &&
+                    newTop < kBottom - epsilon &&
+                    newBottom > kTop + epsilon
+                );
+            });
+
+            if (!isOverlapping) {
+                break;
+            }
+
+            // Move to the right by one grid unit
+            snappedX += gridSize;
+            retries++;
+        }
 
         // Format legend consistent with drag & drop behavior
         const legend = preset.label.includes('Space') ? '' : preset.label.replace('U', '');

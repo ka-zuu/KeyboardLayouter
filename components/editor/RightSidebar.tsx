@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { Trash2, Copy } from 'lucide-react';
+import { Trash2, Copy, Grid } from 'lucide-react';
 
 const RightSidebar = () => {
-    const { project, selectedKeyIds, updateKey, removeKey, addKey } = useStore();
+    const { project, selectedKeyIds, updateKey, removeKey, addKey, autoAssignMatrix } = useStore();
 
     const selectedKeys = project.keys.filter((k) => selectedKeyIds.includes(k.id));
     const hasSelection = selectedKeys.length > 0;
@@ -108,6 +108,17 @@ const RightSidebar = () => {
                         Select a key to edit properties.
                     </div>
                 </div>
+
+                <hr className="border-gray-800 my-4" />
+
+                <h2 className="font-semibold mb-4 text-white">Tools</h2>
+                <button
+                    onClick={() => autoAssignMatrix()} // all keys
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 px-3 rounded flex items-center justify-center gap-2 text-sm transition-colors"
+                >
+                    <Grid size={16} />
+                    Auto-assign Matrix (All)
+                </button>
             </div>
         );
     }
@@ -119,6 +130,13 @@ const RightSidebar = () => {
                 <p>{selectedKeys.length} items selected</p>
 
                 <div className="mt-4 flex gap-2">
+                    <button
+                        onClick={() => autoAssignMatrix(selectedKeyIds)}
+                        className="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded flex justify-center text-gray-300"
+                        title="Auto-assign Matrix"
+                    >
+                        <Grid size={16} />
+                    </button>
                     <button onClick={handleDuplicate} className="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded flex justify-center"><Copy size={16} /></button>
                     <button onClick={handleDelete} className="flex-1 bg-red-900/50 hover:bg-red-900 p-2 rounded flex justify-center text-red-200"><Trash2 size={16} /></button>
                 </div>
