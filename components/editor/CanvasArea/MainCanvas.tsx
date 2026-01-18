@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
 import GridBackground from './GridBackground';
@@ -34,6 +34,21 @@ const MainCanvas = () => {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Multi-touch state
+    const [lastCenter, setLastCenter] = useState<{ x: number; y: number } | null>(null);
+    const [lastDist, setLastDist] = useState<number>(0);
+
+    const getDistance = (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
+        return Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    };
+
+    const getCenter = (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
+        return {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2,
+        };
+    };
 
     const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault();
@@ -72,15 +87,35 @@ const MainCanvas = () => {
         const clickedOnEmpty = e.target === stage;
         if (!clickedOnEmpty) return;
 
+        // Check for multi-touch (pinch/pan)
+        if (e.evt.type === 'touchstart') {
+            const touchEvt = e.evt as TouchEvent;
+            if (touchEvt.touches.length === 2) {
+                // Start multi-touch gesture
+                const t1 = touchEvt.touches[0];
+                const t2 = touchEvt.touches[1];
+                if (t1 && t2) {
+                    const p1 = { x: t1.clientX, y: t1.clientY };
+                    const p2 = { x: t2.clientX, y: t2.clientY };
+                    setLastCenter(getCenter(p1, p2));
+                    setLastDist(getDistance(p1, p2));
+                }
+                return; // Do not start selection
+            }
+        }
+
         // Middle Click Check
         if ('button' in e.evt && (e.evt as MouseEvent).button === 1) {
             setIsMiddleMousePressed(true);
             return;
         }
 
-        // Left Click Selection
+        // Left Click Selection or Touch Single Tap
         // Touch events don't have 'button', so we assume single touch is left click equivalent.
-        const isLeftClick = ('button' in e.evt) ? (e.evt as MouseEvent).button === 0 : true;
+        let isLeftClick = true;
+        if ('button' in e.evt) {
+            isLeftClick = (e.evt as MouseEvent).button === 0;
+        }
 
         if (isLeftClick && !isSpacePressed && !isMiddleMousePressed) {
             // Clear selection if Shift not held (Standard behavior)
@@ -102,10 +137,63 @@ const MainCanvas = () => {
     };
 
     const handleStageMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-        if (!isSelecting || !selectionBox) return;
-
         const stage = stageRef.current;
         if (!stage) return;
+
+        // Handle Multi-touch (TouchMove)
+        if (e.evt.type === 'touchmove') {
+            const touchEvt = e.evt as TouchEvent;
+            touchEvt.preventDefault(); // Stop scrolling
+
+            if (touchEvt.touches.length === 2 && lastCenter) {
+                // Multi-touch Gesture Logic
+                const t1 = touchEvt.touches[0];
+                const t2 = touchEvt.touches[1];
+                if (t1 && t2) {
+                    const p1 = { x: t1.clientX, y: t1.clientY };
+                    const p2 = { x: t2.clientX, y: t2.clientY };
+
+                    const newCenter = getCenter(p1, p2);
+                    const newDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+
+                    // 1. Pan
+                    const dx = newCenter.x - lastCenter.x;
+                    const dy = newCenter.y - lastCenter.y;
+                    const newPan = { x: pan.x + dx, y: pan.y + dy };
+                    setPan(newPan);
+
+                    // 2. Zoom
+                    if (lastDist > 0) {
+                        const scaleFactor = newDist / lastDist;
+                        const oldScale = stage.scaleX();
+                        const newScaleRaw = oldScale * scaleFactor;
+                        const finalScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newScaleRaw));
+
+                        // Zoom towards center point
+                        const pointTo = {
+                            x: (newCenter.x - newPan.x) / oldScale,
+                            y: (newCenter.y - newPan.y) / oldScale,
+                        };
+
+                        setZoom(finalScale);
+
+                        // Adjust pan to keep pointTo fixed
+                        // newStagePos = newCenter - pointTo * newScale
+                        const adjustedPan = {
+                            x: newCenter.x - pointTo.x * finalScale,
+                            y: newCenter.y - pointTo.y * finalScale,
+                        };
+                        setPan(adjustedPan);
+                    }
+
+                    setLastCenter(newCenter);
+                    setLastDist(newDist);
+                }
+                return;
+            }
+        }
+
+        if (!isSelecting || !selectionBox) return;
 
         const pos = stage.getRelativePointerPosition();
         if (pos) {
@@ -118,6 +206,11 @@ const MainCanvas = () => {
     };
 
     const handleStageMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        if (e.evt.type === 'touchend') {
+            setLastCenter(null);
+            setLastDist(0);
+        }
+
         if (isMiddleMousePressed) setIsMiddleMousePressed(false);
         if (isSelecting && selectionBox) {
             const stage = stageRef.current;
@@ -244,6 +337,7 @@ const MainCanvas = () => {
         const onBlur = () => {
             setIsSpacePressed(false);
             setIsMiddleMousePressed(false);
+            setLastCenter(null);
         };
 
         window.addEventListener('keydown', onKeyDown);
@@ -275,7 +369,7 @@ const MainCanvas = () => {
                     y={pan.y}
                     onWheel={handleWheel}
                     onMouseDown={handleStageMouseDown}
-                    onMouseMove={handleStageMouseMove}
+                    onMouseMove={handleStageMouseMove} // Used for drag selection
                     onMouseUp={handleStageMouseUp}
                     onMouseLeave={() => setIsMiddleMousePressed(false)}
                     onTouchStart={handleStageMouseDown} // Basic Touch support for now
