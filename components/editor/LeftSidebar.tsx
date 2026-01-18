@@ -19,7 +19,7 @@ const PRESETS = [
 ];
 
 const LeftSidebar = () => {
-    const { savedProjects, project, loadProject, createProject, deleteProject, saveProject } = useStore();
+    const { savedProjects, project, loadProject, createProject, deleteProject, saveProject, addKey, pan, scale } = useStore();
 
     const handleDragStart = (e: React.DragEvent, preset: typeof PRESETS[0]) => {
         e.dataTransfer.setData('application/json', JSON.stringify({
@@ -32,13 +32,38 @@ const LeftSidebar = () => {
         e.dataTransfer.effectAllowed = 'copy';
     };
 
-    // Auto-save on mount/unmount or interval? 
-    // Store updates directly to persist state, but `savedProjects` acts as "Library".
-    // `project` is current. `persist` saves `project` to storage independently of `savedProjects`.
-    // But if we want to see it in the list, we must call `saveProject`.
-    // Let's add a "Save" button in TopBar or here.  
-    // Or auto-sync loop.
-    // For MVP, manual save or "Create New" saves previous.
+    const handlePresetClick = (preset: typeof PRESETS[0]) => {
+        // Calculate center of the viewport in canvas coordinates
+        // Viewport center in screen pixels (approximate, relative to canvas area)
+        // Since Sidebar is outside canvas, we can use window center or try to be more precise if possible.
+        // For simplicity, let's assume the canvas takes up most of the screen minus sidebars.
+        // But `pan` moves the canvas, so we need to account for it.
+        // Canvas coordinate = (Screen coordinate - Pan) / Scale
+
+        // Let's assume the center of the window is roughly where the user is looking.
+        // A better approach might be to get the canvas element, but we are in Redux/State logic here loosely.
+        // We'll use window.innerWidth / 2 and window.innerHeight / 2 as a rough center of the screen.
+        // Then adjust for the sidebar width (approx 256px + 64px toolbars etc, but center of screen is fine).
+
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+
+        const x = (centerX - pan.x) / scale;
+        const y = (centerY - pan.y) / scale;
+
+        addKey({
+            size: { w: preset.w, h: preset.h },
+            position: {
+                x: x - (preset.w / 2), // Center the key
+                y: y - (preset.h / 2)
+            },
+            visualLegend: preset.label,
+            angle: 0,
+            rotationCenter: { x: 0, y: 0 },
+            matrix: { row: 0, col: 0 },
+            variant: (preset as any).variant
+        });
+    };
 
     return (
         <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col p-4 text-gray-300">
@@ -51,7 +76,8 @@ const LeftSidebar = () => {
                         key={preset.label}
                         draggable
                         onDragStart={(e) => handleDragStart(e, preset)}
-                        className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded p-2 text-center text-xs cursor-move transition-colors flex flex-col items-center gap-1 select-none"
+                        onClick={() => handlePresetClick(preset)}
+                        className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded p-2 text-center text-xs cursor-pointer transition-colors flex flex-col items-center gap-1 select-none"
                     >
                         <Box size={16} className="text-blue-400" />
                         {preset.label}
@@ -70,10 +96,6 @@ const LeftSidebar = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-1">
-                {/* Current Project always needs to be explicitly saved to appear in list in this logic?
-            Or we list keys of savedProjects.
-            If current project ID is not in savedProjects, show it as "Unsaved"?
-        */}
                 <div
                     className={clsx(
                         "p-2 rounded cursor-pointer flex items-center gap-2",
