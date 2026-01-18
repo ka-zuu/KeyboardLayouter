@@ -4,6 +4,7 @@ import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Folder, Plus, Trash2, Box } from 'lucide-react';
 import clsx from 'clsx'; // Assuming standard clsx or just use template literals
+import { PIXELS_PER_U } from '@/lib/constants';
 
 // Preset definitions
 const PRESETS = [
@@ -33,31 +34,43 @@ const LeftSidebar = () => {
     };
 
     const handlePresetClick = (preset: typeof PRESETS[0]) => {
-        // Calculate center of the viewport in canvas coordinates
-        // Viewport center in screen pixels (approximate, relative to canvas area)
-        // Since Sidebar is outside canvas, we can use window center or try to be more precise if possible.
-        // For simplicity, let's assume the canvas takes up most of the screen minus sidebars.
-        // But `pan` moves the canvas, so we need to account for it.
-        // Canvas coordinate = (Screen coordinate - Pan) / Scale
+        // Calculate center of the Canvas
+        // Sidebar is 64 tailwind units = 16rem = 256px
+        const sidebarWidth = 256;
+        const canvasWidth = window.innerWidth - sidebarWidth;
+        // Center of the canvas relative to the window
+        const screenCenterX = sidebarWidth + (canvasWidth / 2);
+        const screenCenterY = window.innerHeight / 2;
 
-        // Let's assume the center of the window is roughly where the user is looking.
-        // A better approach might be to get the canvas element, but we are in Redux/State logic here loosely.
-        // We'll use window.innerWidth / 2 and window.innerHeight / 2 as a rough center of the screen.
-        // Then adjust for the sidebar width (approx 256px + 64px toolbars etc, but center of screen is fine).
+        // Container offset is sidebarWidth
+        const stageContainerX = screenCenterX - sidebarWidth;
+        const stageContainerY = screenCenterY;
 
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
+        // World Coordinates in Pixels
+        const pixelX = (stageContainerX - pan.x) / scale;
+        const pixelY = (stageContainerY - pan.y) / scale;
 
-        const x = (centerX - pan.x) / scale;
-        const y = (centerY - pan.y) / scale;
+        // Convert to U units
+        const uX = pixelX / PIXELS_PER_U;
+        const uY = pixelY / PIXELS_PER_U;
+
+        // Center the key and snap to grid (0.25U)
+        const rawX = uX - (preset.w / 2);
+        const rawY = uY - (preset.h / 2);
+
+        const snappedX = Math.round(rawX / 0.25) * 0.25;
+        const snappedY = Math.round(rawY / 0.25) * 0.25;
+
+        // Format legend consistent with drag & drop behavior
+        const legend = preset.label.includes('Space') ? '' : preset.label.replace('U', '');
 
         addKey({
             size: { w: preset.w, h: preset.h },
             position: {
-                x: x - (preset.w / 2), // Center the key
-                y: y - (preset.h / 2)
+                x: snappedX,
+                y: snappedY
             },
-            visualLegend: preset.label,
+            visualLegend: legend,
             angle: 0,
             rotationCenter: { x: 0, y: 0 },
             matrix: { row: 0, col: 0 },
