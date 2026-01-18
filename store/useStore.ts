@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { temporal } from 'zundo';
-import { KeyData, Position, ProjectData } from '@/types/mkd';
+import { KeyData, Position, ProjectData, DeepPartial } from '@/types/mkd';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface EditorState {
@@ -16,8 +16,8 @@ export interface EditorState {
   setProjectName: (name: string) => void;
   addKey: (key: Omit<KeyData, 'id'>) => void;
   addKeys: (count: number, baseKey: Omit<KeyData, 'id'>) => void;
-  updateKey: (id: string, data: Partial<KeyData>) => void;
-  updateKeys: (updates: { id: string; data: Partial<KeyData> }[]) => void;
+  updateKey: (id: string, data: DeepPartial<KeyData>) => void;
+  updateKeys: (updates: { id: string; data: DeepPartial<KeyData> }[]) => void;
   removeKey: (id: string) => void;
   selectKey: (id: string, multi: boolean) => void;
   selectKeys: (ids: string[]) => void;
@@ -105,7 +105,7 @@ export const useStore = create<EditorState>()(
                  if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
                  if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
                  
-                 return newKey;
+                 return newKey as KeyData;
               }),
               updatedAt: Date.now(),
             },
@@ -128,7 +128,7 @@ export const useStore = create<EditorState>()(
                   if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
                   if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
 
-                  return newKey;
+                  return newKey as KeyData;
                 }),
                 updatedAt: Date.now(),
               },
