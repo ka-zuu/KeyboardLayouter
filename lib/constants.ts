@@ -1,7 +1,7 @@
 export const PIXELS_PER_U = 60; // 1U = 60px on screen by default
 export const ZOOM_MIN = 0.5;
 export const ZOOM_MAX = 3.0;
-export const SNAP_SIZE = 0.25; // 0.25U snap
+export const DEFAULT_GRID_SIZE = 0.25; // 0.25U snap
 
 // ISO Enter defined as 1.5U width, 2.0U height overall bounding box?
 // Top part width: 1.5U. Bottom part width: 1.25U.

@@ -10,10 +10,12 @@ export interface EditorState {
   scale: number;
   pan: Position;
   snapEnabled: boolean;
+  gridSize: number;
   selectedKeyIds: string[];
   
   // Actions
   setProjectName: (name: string) => void;
+  setGridSize: (size: number) => void;
   addKey: (key: Omit<KeyData, 'id'>) => void;
   addKeys: (count: number, baseKey: Omit<KeyData, 'id'>) => void;
   updateKey: (id: string, data: Partial<KeyData>) => void;
@@ -53,12 +55,15 @@ export const useStore = create<EditorState>()(
         scale: 1,
         pan: { x: 0, y: 0 },
         snapEnabled: true,
+        gridSize: 0.25,
         selectedKeyIds: [],
 
         setProjectName: (name) =>
           set((state) => ({
             project: { ...state.project, name, updatedAt: Date.now() },
           })),
+
+        setGridSize: (gridSize) => set({ gridSize }),
 
         addKey: (keyData) =>
           set((state) => {

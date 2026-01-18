@@ -7,7 +7,7 @@ import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode } from 'lucide-re
 import { generateQMKInfo } from '@/lib/qmk';
 
 const TopBar = () => {
-    const { project, addKeys, importProject } = useStore();
+    const { project, addKeys, importProject, gridSize, setGridSize } = useStore();
     // Use the zustand helper to consume the temporal store
     const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state) => state);
 
@@ -100,6 +100,21 @@ const TopBar = () => {
                     >
                         <RotateCw size={16} />
                     </button>
+                </div>
+
+                <div className="flex items-center gap-1 bg-gray-800 rounded px-2 py-1 mr-2 border border-gray-700">
+                    <span className="text-xs text-gray-400">Grid:</span>
+                    <select
+                        value={gridSize}
+                        onChange={(e) => setGridSize(parseFloat(e.target.value))}
+                        className="bg-transparent text-white text-xs focus:outline-none appearance-none cursor-pointer px-1"
+                    >
+                        <option value="1" className="bg-gray-800">1U</option>
+                        <option value="0.5" className="bg-gray-800">0.5U</option>
+                        <option value="0.25" className="bg-gray-800">0.25U</option>
+                        <option value="0.125" className="bg-gray-800">0.125U</option>
+                        <option value="0.05" className="bg-gray-800">0.05U</option>
+                    </select>
                 </div>
 
                 <div className="flex items-center gap-1 bg-gray-800 rounded px-2 py-1 mr-2 border border-gray-700">

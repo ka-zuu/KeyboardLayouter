@@ -3,7 +3,7 @@
 import React, { useRef } from 'react';
 import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
-import { PIXELS_PER_U, SNAP_SIZE, ISO_ENTER_PATH } from '@/lib/constants';
+import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
 import { rotatePoint } from '@/lib/geometry';
 import Konva from 'konva';
@@ -16,7 +16,7 @@ interface KeyObjectProps {
 }
 
 const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
-    const { snapEnabled, updateKey, updateKeys, project, selectedKeyIds } = useStore();
+    const { snapEnabled, updateKey, updateKeys, project, selectedKeyIds, gridSize } = useStore();
     const groupRef = useRef<Konva.Group>(null);
 
     // Convert units to pixels
@@ -69,7 +69,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         // Actually dragBoundFunc receives "absolute position".
         // Let's rely on standard logic.
 
-        const snapPx = SNAP_SIZE * PIXELS_PER_U;
+        const snapPx = gridSize * PIXELS_PER_U;
 
         // We want (pos.x - halfW) to be multiple of snapPx
         const snappedTopLeftX = Math.round((pos.x - halfW) / snapPx) * snapPx;
