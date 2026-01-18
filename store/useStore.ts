@@ -36,6 +36,7 @@ export interface EditorState {
 
   // Import
   importProject: (project: ProjectData) => void;
+  autoAssignMatrix: (targetIds?: string[]) => void;
 }
 
 const DEFAULT_PROJECT: ProjectData = {
@@ -224,6 +225,71 @@ export const useStore = create<EditorState>()(
             project: { ...project, id: uuidv4() }, 
             selectedKeyIds: [],
           })),
+          
+        autoAssignMatrix: (targetIds) =>
+          set((state) => {
+             // 1. Identify keys to process
+             const allKeys = state.project.keys;
+             const targets = targetIds 
+               ? allKeys.filter(k => targetIds.includes(k.id)) 
+               : allKeys;
+               
+             if (targets.length === 0) return {};
+             
+             // 2. Sort targets by position to determine visual order
+             // We'll group by "Rough Y" to handle slight misalignments
+             const sortedFn = (a: KeyData, b: KeyData) => {
+                // Tolerance for row alignment (e.g. 0.5U or similar, let's say 0.25 is enough)
+                const yDiff = a.position.y - b.position.y;
+                if (Math.abs(yDiff) > 0.1) return yDiff; 
+                return a.position.x - b.position.x;
+             };
+             
+             // Sort all targets to find global order within the selection
+             const sortedTargets = [...targets].sort(sortedFn);
+             
+             // 3. Assign row/cols
+             // We need to re-group them properly into rows to assign row indices
+             // But a simpler approach for "row" and "col" assignment based on "visual grid":
+             // Let's iterate and detect "new row" when Y changes significantly
+             
+             const updates = new Map<string, { row: number, col: number }>();
+             
+             let currentRowY = -9999;
+             let currentRowIndex = -1;
+             let currentColIndex = 0;
+             
+             // If we are updating only a subset, we might want to respect their relative structure
+             // OR we just assign 0..N for the selected cluster.
+             // Issue #9 says "assign sequential numbers from top-left".
+             // Assuming 0-indexed relative to the selection/group.
+             
+             for (const key of sortedTargets) {
+                if (Math.abs(key.position.y - currentRowY) > 0.1) {
+                   // New Row
+                   currentRowY = key.position.y;
+                   currentRowIndex++;
+                   currentColIndex = 0;
+                } else {
+                   // Same Row
+                   currentColIndex++;
+                }
+                
+                updates.set(key.id, { row: currentRowIndex, col: currentColIndex });
+             }
+
+             return {
+                project: {
+                   ...state.project,
+                   keys: state.project.keys.map(k => {
+                      const update = updates.get(k.id);
+                      if (!update) return k;
+                      return { ...k, matrix: { ...k.matrix, ...update } };
+                   }),
+                   updatedAt: Date.now(),
+                }
+             };
+          }),
       }),
       {
         partialize: (state) => ({ project: state.project }),
