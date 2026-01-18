@@ -23,12 +23,15 @@ export function doPolygonsIntersect(polygonA: Point[], polygonB: Point[]): boole
     // Iterate over both polygons to test axes derived from their edges
     for (let i = 0; i < polygons.length; i++) {
         const polygon = polygons[i];
+        if (!polygon) continue;
         
         // Iterate over vertices to get edges
         for (let j = 0; j < polygon.length; j++) {
             const k = (j + 1) % polygon.length;
             const p1 = polygon[j];
             const p2 = polygon[k];
+
+            if (!p1 || !p2) continue;
 
             // Get the normal vector of the edge (perpendicular to the edge)
             // Edge vector = (p2.x - p1.x, p2.y - p1.y)
