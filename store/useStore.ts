@@ -184,14 +184,12 @@ export const useStore = create<EditorState>()(
 
         pasteKeys: () =>
           set((state) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((state as any).clipboard === undefined || (state as any).clipboard.length === 0) return {};
+            if (state.clipboard === undefined || state.clipboard.length === 0) return {};
             
             // Determine offset to avoid exact overlap (e.g. +0.5U, +0.5U)
             const offset = 0.5;
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const newKeys = (state as any).clipboard.map((k: KeyData) => ({
+            const newKeys = state.clipboard.map((k: KeyData) => ({
               ...k,
               id: uuidv4(),
               position: {
