@@ -12,12 +12,7 @@ const TopBar = () => {
     const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state) => state);
 
     const [addCount, setAddCount] = React.useState(1);
-    const [localName, setLocalName] = React.useState(project.name);
 
-    // Sync local state when project.name changes externally (e.g. undo/redo)
-    React.useEffect(() => {
-        setLocalName(project.name);
-    }, [project.name]);
 
     const handleAddKey = () => {
         addKeys(addCount, {
@@ -86,11 +81,12 @@ const TopBar = () => {
                 </h1>
                 <input
                     type="text"
-                    value={localName}
-                    onChange={(e) => setLocalName(e.target.value)}
-                    onBlur={() => {
-                        if (localName.trim() !== project.name) {
-                            setProjectName(localName.trim() || 'Untitled Project');
+                    key={project.name}
+                    defaultValue={project.name}
+                    onBlur={(e) => {
+                        const val = e.target.value.trim();
+                        if (val !== project.name) {
+                            setProjectName(val || 'Untitled Project');
                         }
                     }}
                     onKeyDown={(e) => {
