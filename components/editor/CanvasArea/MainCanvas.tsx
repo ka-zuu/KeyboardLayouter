@@ -305,10 +305,10 @@ const MainCanvas = () => {
                 angle: 0,
                 rotationCenter: { x: 0, y: 0 },
                 legends: {
-                    tl: data.label.includes('Space') ? '' : data.label.replace('U', ''),
-                    tr: '',
-                    bl: '',
-                    br: ''
+                    top: data.label.includes('Space') ? '' : data.label.replace('U', ''),
+                    bottom: '',
+                    left: '',
+                    right: ''
                 },
                 matrix: { row: 0, col: 0 },
                 variant: data.variant || 'rect',

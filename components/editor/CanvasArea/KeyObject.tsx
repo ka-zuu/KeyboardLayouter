@@ -304,55 +304,55 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     shadowOffset={{ x: 2, y: 2 }}
                 />
             )}
-            {/* Legends: TL, TR, BL, BR */}
-            {/* Top Left */}
+            {/* Legends: Top, Bottom, Left, Right */}
+            {/* Top Center */}
             <Text
-                x={-halfW + 4}
+                x={-halfW}
                 y={-halfH + 4}
-                text={data.legends?.tl || ''}
-                width={width - 8}
+                text={data.legends?.top || ''}
+                width={width}
                 height={height / 2 - 4}
-                align="left"
+                align="center"
                 verticalAlign="top"
                 fontSize={12}
                 fill={textColor}
                 listening={false}
             />
-            {/* Top Right */}
+            {/* Bottom Center */}
             <Text
-                x={-halfW + 4}
-                y={-halfH + 4}
-                text={data.legends?.tr || ''}
-                width={width - 8}
+                x={-halfW}
+                y={0}
+                text={data.legends?.bottom || ''}
+                width={width}
                 height={height / 2 - 4}
-                align="right"
-                verticalAlign="top"
+                align="center"
+                verticalAlign="bottom"
                 fontSize={12}
                 fill={textColor}
                 listening={false}
             />
-            {/* Bottom Left */}
+            {/* Left Middle */}
             <Text
                 x={-halfW + 4}
-                y={0}
-                text={data.legends?.bl || ''}
-                width={width - 8}
-                height={height / 2 - 4}
+                y={-halfH}
+                text={data.legends?.left || ''}
+                width={width / 2 - 4}
+                height={height}
                 align="left"
-                verticalAlign="bottom"
+                verticalAlign="middle"
                 fontSize={12}
                 fill={textColor}
                 listening={false}
             />
-            {/* Bottom Right */}
+            {/* Right Middle */}
             <Text
-                x={-halfW + 4}
-                y={0}
-                text={data.legends?.br || ''}
-                width={width - 8}
-                height={height / 2 - 4}
+                x={0}
+                y={-halfH}
+                text={data.legends?.right || ''}
+                width={width / 2 - 4}
+                height={height}
                 align="right"
-                verticalAlign="bottom"
+                verticalAlign="middle"
                 fontSize={12}
                 fill={textColor}
                 listening={false}

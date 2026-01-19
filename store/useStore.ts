@@ -262,23 +262,38 @@ export const useStore = create<EditorState>()(
              const target = state.savedProjects[id];
              if (!target) return {};
 
-             // Migration: visualLegend -> legends.tl
+             // Migration: visualLegend -> legends.top
              const migratedKeys = target.keys.map(k => {
                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                  const oldK = k as any;
                  if (oldK.visualLegend !== undefined && !k.legends) {
                      return {
                          ...k,
-                         legends: { tl: oldK.visualLegend, tr: '', bl: '', br: '' },
+                         legends: { top: oldK.visualLegend, bottom: '', left: '', right: '' },
                          visualLegend: undefined
                      };
                  }
                  if (!k.legends) {
                      return {
                         ...k,
-                        legends: { tl: '', tr: '', bl: '', br: '' }
+                        legends: { top: '', bottom: '', left: '', right: '' }
                      };
                  }
+
+                 // Migration: tl/tr/bl/br -> top/right/left/bottom
+                 const legends = k.legends as any;
+                 if (legends.top === undefined && (legends.tl !== undefined || legends.tr !== undefined)) {
+                      return {
+                          ...k,
+                          legends: {
+                              top: legends.tl || '',
+                              bottom: legends.br || '',
+                              left: legends.bl || '',
+                              right: legends.tr || ''
+                          }
+                      };
+                 }
+
                  return k;
              });
 
