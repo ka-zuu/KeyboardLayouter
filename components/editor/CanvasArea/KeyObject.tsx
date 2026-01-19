@@ -304,12 +304,12 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     shadowOffset={{ x: 2, y: 2 }}
                 />
             )}
-            {/* Legends: TL, TR, BL, BR */}
-            {/* Top Left */}
+            {/* Legends: Top, Right, Left, Bottom */}
+            {/* Top (Top Left) */}
             <Text
                 x={-halfW + 4}
                 y={-halfH + 4}
-                text={data.legends?.tl || ''}
+                text={data.legends?.top || ''}
                 width={width - 8}
                 height={height / 2 - 4}
                 align="left"
@@ -318,11 +318,11 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 fill={textColor}
                 listening={false}
             />
-            {/* Top Right */}
+            {/* Right (Top Right) */}
             <Text
                 x={-halfW + 4}
                 y={-halfH + 4}
-                text={data.legends?.tr || ''}
+                text={data.legends?.right || ''}
                 width={width - 8}
                 height={height / 2 - 4}
                 align="right"
@@ -331,11 +331,11 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 fill={textColor}
                 listening={false}
             />
-            {/* Bottom Left */}
+            {/* Left (Bottom Left) */}
             <Text
                 x={-halfW + 4}
                 y={0}
-                text={data.legends?.bl || ''}
+                text={data.legends?.left || ''}
                 width={width - 8}
                 height={height / 2 - 4}
                 align="left"
@@ -344,11 +344,11 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 fill={textColor}
                 listening={false}
             />
-            {/* Bottom Right */}
+            {/* Bottom (Bottom Right) */}
             <Text
                 x={-halfW + 4}
                 y={0}
-                text={data.legends?.br || ''}
+                text={data.legends?.bottom || ''}
                 width={width - 8}
                 height={height / 2 - 4}
                 align="right"

@@ -260,20 +260,20 @@ export const useStore = create<EditorState>()(
              const target = state.savedProjects[id];
              if (!target) return {};
 
-             // Migration: visualLegend -> legends.tl
+             // Migration: visualLegend -> legends.top
              const migratedKeys: KeyData[] = target.keys.map((k: KeyData) => {
                  const oldK = k as unknown as { visualLegend?: string };
                  if (oldK.visualLegend !== undefined && !k.legends) {
                      return {
                          ...k,
-                         legends: { tl: oldK.visualLegend || '', tr: '', bl: '', br: '' },
+                         legends: { top: oldK.visualLegend || '', bottom: '', left: '', right: '' },
                          visualLegend: undefined
                      } as KeyData;
                  }
                  if (!k.legends) {
                      return {
                         ...k,
-                        legends: { tl: '', tr: '', bl: '', br: '' }
+                        legends: { top: '', bottom: '', left: '', right: '' }
                      };
                  }
                  return k;

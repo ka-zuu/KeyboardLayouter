@@ -165,31 +165,31 @@ const RightSidebar = () => {
                     <label className="text-xs text-gray-500 uppercase block mb-1">Legends</label>
                     <div className="grid grid-cols-2 gap-2">
                         <input
-                            placeholder="TL"
+                            placeholder="Top (TL)"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
-                            value={primaryKey.legends?.tl || ''}
-                            onChange={(e) => handleInputChange(e, 'legends', 'tl')}
+                            value={primaryKey.legends?.top || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'top')}
                             onKeyDown={handleKeyDown}
                         />
                         <input
-                            placeholder="TR"
+                            placeholder="Right (TR)"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
-                            value={primaryKey.legends?.tr || ''}
-                            onChange={(e) => handleInputChange(e, 'legends', 'tr')}
+                            value={primaryKey.legends?.right || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'right')}
                             onKeyDown={handleKeyDown}
                         />
                         <input
-                            placeholder="BL"
+                            placeholder="Left (BL)"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
-                            value={primaryKey.legends?.bl || ''}
-                            onChange={(e) => handleInputChange(e, 'legends', 'bl')}
+                            value={primaryKey.legends?.left || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'left')}
                             onKeyDown={handleKeyDown}
                         />
                         <input
-                            placeholder="BR"
+                            placeholder="Bottom (BR)"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
-                            value={primaryKey.legends?.br || ''}
-                            onChange={(e) => handleInputChange(e, 'legends', 'br')}
+                            value={primaryKey.legends?.bottom || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'bottom')}
                             onKeyDown={handleKeyDown}
                         />
                     </div>
