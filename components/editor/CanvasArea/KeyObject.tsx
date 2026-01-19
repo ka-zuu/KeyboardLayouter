@@ -38,6 +38,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
     const textColor = '#333';
     const strokeColor = isSelected ? '#3b82f6' : '#999';
     const strokeWidth = isSelected ? 3 : 1;
+    const legends = data.visualLegend.split('\n');
 
     const handleDragEndCenter = (e: Konva.KonvaEventObject<DragEvent>) => {
         const nx = e.target.x();
@@ -302,18 +303,81 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     shadowOffset={{ x: 2, y: 2 }}
                 />
             )}
-            <Text
-                x={-halfW}
-                y={-halfH}
-                text={data.visualLegend}
-                width={width}
-                height={height}
-                align="center"
-                verticalAlign="middle"
-                fontSize={14}
-                fill={textColor}
-                listening={false}
-            />
+            {legends.length <= 1 ? (
+                <Text
+                    x={-halfW}
+                    y={-halfH}
+                    text={legends[0]}
+                    width={width}
+                    height={height}
+                    align="center"
+                    verticalAlign="middle"
+                    fontSize={14}
+                    fill={textColor}
+                    listening={false}
+                />
+            ) : (
+                <React.Fragment>
+                    {/* Top */}
+                    {legends[0] && (
+                        <Text
+                            x={-halfW}
+                            y={-halfH + 5}
+                            text={legends[0]}
+                            width={width}
+                            align="center"
+                            fontSize={12}
+                            fill={textColor}
+                            listening={false}
+                        />
+                    )}
+                    {/* Bottom */}
+                    {legends[1] && (
+                        <Text
+                            x={-halfW}
+                            y={-halfH}
+                            text={legends[1]}
+                            width={width}
+                            height={height - 5}
+                            align="center"
+                            verticalAlign="bottom"
+                            fontSize={12}
+                            fill={textColor}
+                            listening={false}
+                        />
+                    )}
+                    {/* Left */}
+                    {legends[2] && (
+                        <Text
+                            x={-halfW + 5}
+                            y={-halfH}
+                            text={legends[2]}
+                            width={width - 5}
+                            height={height}
+                            align="left"
+                            verticalAlign="middle"
+                            fontSize={12}
+                            fill={textColor}
+                            listening={false}
+                        />
+                    )}
+                    {/* Right */}
+                    {legends[3] && (
+                        <Text
+                            x={-halfW}
+                            y={-halfH}
+                            text={legends[3]}
+                            width={width - 5}
+                            height={height}
+                            align="right"
+                            verticalAlign="middle"
+                            fontSize={12}
+                            fill={textColor}
+                            listening={false}
+                        />
+                    )}
+                </React.Fragment>
+            )}
 
             {/* Matrix Row/Col Display */}
             <Text
