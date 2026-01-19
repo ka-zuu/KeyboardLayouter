@@ -16,7 +16,12 @@ export interface KeyData {
   size: Size; // unit: U
   angle: number; // degrees
   rotationCenter: Position; // relative to key center
-  visualLegend: string;
+  legends: {
+    tl: string;
+    tr: string;
+    bl: string;
+    br: string;
+  };
   matrix: {
     row: number;
     col: number;

@@ -5,6 +5,8 @@ import TopBar from './TopBar';
 import LeftSidebar from './LeftSidebar';
 import RightSidebar from './RightSidebar';
 
+import KeyboardShortcuts from './KeyboardShortcuts';
+
 interface EditorLayoutProps {
     children: React.ReactNode;
 }
@@ -12,6 +14,7 @@ interface EditorLayoutProps {
 const EditorLayout: React.FC<EditorLayoutProps> = ({ children }) => {
     return (
         <div className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-900">
+            <KeyboardShortcuts />
             <TopBar />
             <div className="flex flex-1 overflow-hidden">
                 <LeftSidebar />

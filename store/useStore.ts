@@ -13,6 +13,8 @@ export interface EditorState {
   gridSize: number;
   selectedKeyIds: string[];
   
+  clipboard: KeyData[]; // for copy/paste
+  
   // Actions
   setProjectName: (name: string) => void;
   setGridSize: (size: number) => void;
@@ -21,6 +23,10 @@ export interface EditorState {
   updateKey: (id: string, data: Partial<KeyData>) => void;
   updateKeys: (updates: { id: string; data: Partial<KeyData> }[]) => void;
   removeKey: (id: string) => void;
+  deleteSelectedKeys: () => void;
+  copyKeys: () => void;
+  pasteKeys: () => void;
+  moveSelectedKeys: (delta: { x: number; y: number }) => void;
   selectKey: (id: string, multi: boolean) => void;
   selectKeys: (ids: string[]) => void;
   clearSelection: () => void;
@@ -58,6 +64,7 @@ export const useStore = create<EditorState>()(
         snapEnabled: true,
         gridSize: 0.25,
         selectedKeyIds: [],
+        clipboard: [],
 
         setProjectName: (name) =>
           set((state) => ({
@@ -110,6 +117,7 @@ export const useStore = create<EditorState>()(
                  if (data.size) newKey.size = { ...k.size, ...data.size };
                  if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
                  if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
+                 if (data.legends) newKey.legends = { ...k.legends, ...data.legends };
                  
                  return newKey;
               }),
@@ -133,6 +141,7 @@ export const useStore = create<EditorState>()(
                   if (data.size) newKey.size = { ...k.size, ...data.size };
                   if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
                   if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
+                  if (data.legends) newKey.legends = { ...k.legends, ...data.legends };
 
                   return newKey;
                 }),
@@ -150,6 +159,78 @@ export const useStore = create<EditorState>()(
             },
             selectedKeyIds: state.selectedKeyIds.filter((kid) => kid !== id),
           })),
+
+        deleteSelectedKeys: () =>
+          set((state) => {
+            if (state.selectedKeyIds.length === 0) return {};
+            return {
+              project: {
+                ...state.project,
+                keys: state.project.keys.filter((k) => !state.selectedKeyIds.includes(k.id)),
+                updatedAt: Date.now(),
+              },
+              selectedKeyIds: [],
+            };
+          }),
+
+        copyKeys: () =>
+          set((state) => {
+            if (state.selectedKeyIds.length === 0) return {};
+            const keysToCopy = state.project.keys.filter((k) =>
+              state.selectedKeyIds.includes(k.id)
+            );
+            return { clipboard: keysToCopy };
+          }),
+
+        pasteKeys: () =>
+          set((state) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((state as any).clipboard === undefined || (state as any).clipboard.length === 0) return {};
+            
+            // Determine offset to avoid exact overlap (e.g. +0.5U, +0.5U)
+            const offset = 0.5;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const newKeys = (state as any).clipboard.map((k: KeyData) => ({
+              ...k,
+              id: uuidv4(),
+              position: {
+                x: k.position.x + offset,
+                y: k.position.y + offset,
+              },
+            }));
+
+            return {
+              project: {
+                ...state.project,
+                keys: [...state.project.keys, ...newKeys],
+                updatedAt: Date.now(),
+              },
+              selectedKeyIds: newKeys.map((k: KeyData) => k.id), // Select the pasted keys
+            };
+          }),
+
+        moveSelectedKeys: (delta) =>
+          set((state) => {
+             if (state.selectedKeyIds.length === 0) return {};
+             
+             return {
+               project: {
+                 ...state.project,
+                 keys: state.project.keys.map(k => {
+                    if (!state.selectedKeyIds.includes(k.id)) return k;
+                    return {
+                       ...k,
+                       position: {
+                          x: k.position.x + delta.x,
+                          y: k.position.y + delta.y
+                       }
+                    };
+                 }),
+                 updatedAt: Date.now(),
+               }
+             };
+          }),
 
         selectKey: (id, multi) =>
           set((state) => ({
@@ -180,8 +261,29 @@ export const useStore = create<EditorState>()(
           set((state) => {
              const target = state.savedProjects[id];
              if (!target) return {};
+
+             // Migration: visualLegend -> legends.tl
+             const migratedKeys = target.keys.map(k => {
+                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 const oldK = k as any;
+                 if (oldK.visualLegend !== undefined && !k.legends) {
+                     return {
+                         ...k,
+                         legends: { tl: oldK.visualLegend, tr: '', bl: '', br: '' },
+                         visualLegend: undefined
+                     };
+                 }
+                 if (!k.legends) {
+                     return {
+                        ...k,
+                        legends: { tl: '', tr: '', bl: '', br: '' }
+                     };
+                 }
+                 return k;
+             });
+
              return {
-               project: target,
+               project: { ...target, keys: migratedKeys },
                selectedKeyIds: [], // clear selection
              };
           }),

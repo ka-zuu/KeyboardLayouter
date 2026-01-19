@@ -20,7 +20,7 @@ const TopBar = () => {
             size: { w: 1, h: 1 },
             angle: 0,
             rotationCenter: { x: 0, y: 0 },
-            visualLegend: 'A',
+            legends: { tl: 'A', tr: '', bl: '', br: '' },
             matrix: { row: 0, col: 0 },
         });
     };

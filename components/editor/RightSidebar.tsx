@@ -149,14 +149,39 @@ const RightSidebar = () => {
 
             <div className="space-y-4">
                 {/* Legends */}
+                {/* Legends */}
                 <div>
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Legend</label>
-                    <input
-                        className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none"
-                        value={primaryKey.visualLegend}
-                        onChange={(e) => handleInputChange(e, 'visualLegend')}
-                        onKeyDown={handleKeyDown}
-                    />
+                    <label className="text-xs text-gray-500 uppercase block mb-1">Legends</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <input
+                            placeholder="TL"
+                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
+                            value={primaryKey.legends?.tl || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'tl')}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <input
+                            placeholder="TR"
+                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
+                            value={primaryKey.legends?.tr || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'tr')}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <input
+                            placeholder="BL"
+                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
+                            value={primaryKey.legends?.bl || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'bl')}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <input
+                            placeholder="BR"
+                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
+                            value={primaryKey.legends?.br || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'br')}
+                            onKeyDown={handleKeyDown}
+                        />
+                    </div>
                 </div>
 
                 <hr className="border-gray-800" />

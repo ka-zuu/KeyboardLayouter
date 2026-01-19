@@ -302,15 +302,56 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     shadowOffset={{ x: 2, y: 2 }}
                 />
             )}
+            {/* Legends: TL, TR, BL, BR */}
+            {/* Top Left */}
             <Text
-                x={-halfW}
-                y={-halfH}
-                text={data.visualLegend}
-                width={width}
-                height={height}
-                align="center"
-                verticalAlign="middle"
-                fontSize={14}
+                x={-halfW + 4}
+                y={-halfH + 4}
+                text={data.legends?.tl || ''}
+                width={width - 8}
+                height={height / 2 - 4}
+                align="left"
+                verticalAlign="top"
+                fontSize={12}
+                fill={textColor}
+                listening={false}
+            />
+            {/* Top Right */}
+            <Text
+                x={-halfW + 4}
+                y={-halfH + 4}
+                text={data.legends?.tr || ''}
+                width={width - 8}
+                height={height / 2 - 4}
+                align="right"
+                verticalAlign="top"
+                fontSize={12}
+                fill={textColor}
+                listening={false}
+            />
+            {/* Bottom Left */}
+            <Text
+                x={-halfW + 4}
+                y={0}
+                text={data.legends?.bl || ''}
+                width={width - 8}
+                height={height / 2 - 4}
+                align="left"
+                verticalAlign="bottom"
+                fontSize={12}
+                fill={textColor}
+                listening={false}
+            />
+            {/* Bottom Right */}
+            <Text
+                x={-halfW + 4}
+                y={0}
+                text={data.legends?.br || ''}
+                width={width - 8}
+                height={height / 2 - 4}
+                align="right"
+                verticalAlign="bottom"
+                fontSize={12}
                 fill={textColor}
                 listening={false}
             />
