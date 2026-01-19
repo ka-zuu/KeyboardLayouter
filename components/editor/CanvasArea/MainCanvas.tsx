@@ -300,7 +300,7 @@ const MainCanvas = () => {
             const snappedY = Math.round(finalY / gridSize) * gridSize;
 
             addKey({
-                position: { x: snappedX, y: snappedY },
+                position: { x: Math.max(0, snappedX), y: Math.max(0, snappedY) },
                 size: { w: data.w, h: data.h },
                 angle: 0,
                 rotationCenter: { x: 0, y: 0 },
