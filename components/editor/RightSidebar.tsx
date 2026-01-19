@@ -96,14 +96,7 @@ const RightSidebar = () => {
             <div className="w-64 bg-gray-900 border-l border-gray-800 flex flex-col p-4 text-gray-300">
                 <h2 className="font-semibold mb-4 text-white">Project Settings</h2>
                 <div className="space-y-4">
-                    <div>
-                        <label className="text-xs text-gray-500 uppercase">Project Name</label>
-                        <input
-                            className="w-full bg-gray-800 text-white rounded px-2 py-1 mt-1 border border-gray-700"
-                            value={project.name}
-                            readOnly // TODO: implement setProjectName
-                        />
-                    </div>
+                    {/* Project Name removed as it is actionable in TopBar */}
                     <div className="text-sm text-gray-500 mt-4">
                         Select a key to edit properties.
                     </div>
