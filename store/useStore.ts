@@ -184,12 +184,12 @@ export const useStore = create<EditorState>()(
 
         pasteKeys: () =>
           set((state) => {
-            if (state.clipboard === undefined || state.clipboard.length === 0) return {};
+            if (!state.clipboard || state.clipboard.length === 0) return {};
             
             // Determine offset to avoid exact overlap (e.g. +0.5U, +0.5U)
             const offset = 0.5;
 
-            const newKeys = state.clipboard.map((k: KeyData) => ({
+            const newKeys: KeyData[] = state.clipboard.map((k: KeyData) => ({
               ...k,
               id: uuidv4(),
               position: {
@@ -204,7 +204,7 @@ export const useStore = create<EditorState>()(
                 keys: [...state.project.keys, ...newKeys],
                 updatedAt: Date.now(),
               },
-              selectedKeyIds: newKeys.map((k: KeyData) => k.id), // Select the pasted keys
+              selectedKeyIds: newKeys.map((k) => k.id), // Select the pasted keys
             };
           }),
 
@@ -261,14 +261,14 @@ export const useStore = create<EditorState>()(
              if (!target) return {};
 
              // Migration: visualLegend -> legends.tl
-             const migratedKeys = target.keys.map(k => {
+             const migratedKeys: KeyData[] = target.keys.map((k: KeyData) => {
                  const oldK = k as unknown as { visualLegend?: string };
                  if (oldK.visualLegend !== undefined && !k.legends) {
                      return {
                          ...k,
-                         legends: { tl: oldK.visualLegend, tr: '', bl: '', br: '' },
+                         legends: { tl: oldK.visualLegend || '', tr: '', bl: '', br: '' },
                          visualLegend: undefined
-                     };
+                     } as KeyData;
                  }
                  if (!k.legends) {
                      return {
@@ -288,7 +288,7 @@ export const useStore = create<EditorState>()(
         createProject: () =>
           set((state) => {
             const current = state.project;
-            const saved = { ...state.savedProjects, [current.id]: current };
+            const saved: Record<string, ProjectData> = { ...state.savedProjects, [current.id]: current };
             
             const newProject: ProjectData = {
               id: uuidv4(),
