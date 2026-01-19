@@ -304,7 +304,12 @@ const MainCanvas = () => {
                 size: { w: data.w, h: data.h },
                 angle: 0,
                 rotationCenter: { x: 0, y: 0 },
-                visualLegend: data.label.includes('Space') ? '' : data.label.replace('U', ''),
+                legends: {
+                    tl: data.label.includes('Space') ? '' : data.label.replace('U', ''),
+                    tr: '',
+                    bl: '',
+                    br: ''
+                },
                 matrix: { row: 0, col: 0 },
                 variant: data.variant || 'rect',
             });

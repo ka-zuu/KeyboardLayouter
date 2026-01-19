@@ -1,0 +1,69 @@
+"use client";
+
+import { useEffect } from 'react';
+import { useStore } from '@/store/useStore';
+
+const KeyboardShortcuts = () => {
+    const deleteSelectedKeys = useStore((state) => state.deleteSelectedKeys);
+    const copyKeys = useStore((state) => state.copyKeys);
+    const pasteKeys = useStore((state) => state.pasteKeys);
+    const moveSelectedKeys = useStore((state) => state.moveSelectedKeys);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if user is typing in an input field
+            const target = e.target as HTMLElement;
+            if (
+                target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.isContentEditable
+            ) {
+                return;
+            }
+
+            // Delete / Backspace
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                deleteSelectedKeys();
+                return;
+            }
+
+            // Arrow Keys
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault(); // maintain scroll position
+
+                // Use 0.25U as base movement step
+                // If Shift is held, maybe move by 1U? 
+                // For now, let's keep it simple: 0.25U (standard grid)
+                const delta = e.shiftKey ? 1 : 0.25;
+
+                switch (e.key) {
+                    case 'ArrowUp': moveSelectedKeys({ x: 0, y: -delta }); break;
+                    case 'ArrowDown': moveSelectedKeys({ x: 0, y: delta }); break;
+                    case 'ArrowLeft': moveSelectedKeys({ x: -delta, y: 0 }); break;
+                    case 'ArrowRight': moveSelectedKeys({ x: delta, y: 0 }); break;
+                }
+                return;
+            }
+
+            // Copy / Paste (Cmd+C, Cmd+V or Ctrl+C, Ctrl+V)
+            if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+                e.preventDefault();
+                copyKeys();
+                return;
+            }
+
+            if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+                e.preventDefault();
+                pasteKeys();
+                return;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [deleteSelectedKeys, copyKeys, pasteKeys, moveSelectedKeys]);
+
+    return null;
+};
+
+export default KeyboardShortcuts;

@@ -30,7 +30,7 @@ export function generateQMKInfo(project: ProjectData): string {
         const qmkKey: QMKKey = {
             x: key.position.x,
             y: key.position.y,
-            label: key.visualLegend || '',
+            label: key.legends?.tl || '',
             matrix: [key.matrix.row, key.matrix.col], // QMK uses [row, col] array sometimes for matrix data in info.json
         };
 

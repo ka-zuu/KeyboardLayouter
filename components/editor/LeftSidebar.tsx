@@ -99,7 +99,7 @@ const LeftSidebar = () => {
         }
 
         // Format legend consistent with drag & drop behavior
-        const legend = preset.label.includes('Space') ? '' : preset.label.replace('U', '');
+        const legendLabel = preset.label.includes('Space') ? '' : preset.label.replace('U', '');
 
         addKey({
             size: { w: preset.w, h: preset.h },
@@ -107,7 +107,12 @@ const LeftSidebar = () => {
                 x: snappedX,
                 y: snappedY
             },
-            visualLegend: legend,
+            legends: {
+                tl: legendLabel,
+                tr: '',
+                bl: '',
+                br: ''
+            },
             angle: 0,
             rotationCenter: { x: 0, y: 0 },
             matrix: { row: 0, col: 0 },
