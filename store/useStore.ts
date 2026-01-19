@@ -56,7 +56,7 @@ const DEFAULT_PROJECT: ProjectData = {
 export const useStore = create<EditorState>()(
   persist(
     temporal(
-      (set, get) => ({
+      (set) => ({
         project: DEFAULT_PROJECT,
         savedProjects: {},
         scale: 1,
@@ -264,8 +264,7 @@ export const useStore = create<EditorState>()(
 
              // Migration: visualLegend -> legends.tl
              const migratedKeys = target.keys.map(k => {
-                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                 const oldK = k as any;
+                 const oldK = k as unknown as { visualLegend?: string };
                  if (oldK.visualLegend !== undefined && !k.legends) {
                      return {
                          ...k,
@@ -310,7 +309,8 @@ export const useStore = create<EditorState>()(
           
         deleteProject: (id) =>
           set((state) => {
-            const { [id]: deleted, ...rest } = state.savedProjects;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { [id]: _deleted, ...rest } = state.savedProjects;
             if (state.project.id === id) {
                const keys = Object.keys(rest);
                if (keys.length > 0) {
@@ -323,7 +323,7 @@ export const useStore = create<EditorState>()(
           }),
 
         importProject: (project) => 
-          set((state) => ({
+          set(() => ({
             project: { ...project, id: uuidv4() }, 
             selectedKeyIds: [],
           })),
