@@ -75,7 +75,14 @@ export const useStore = create<EditorState>()(
 
         addKey: (keyData) =>
           set((state) => {
-            const newKey: KeyData = { ...keyData, id: uuidv4() };
+            const newKey: KeyData = { 
+              ...keyData, 
+              id: uuidv4(),
+              position: {
+                x: Math.max(0, keyData.position.x),
+                y: Math.max(0, keyData.position.y),
+              }
+            };
             return {
               project: {
                 ...state.project,
@@ -91,8 +98,8 @@ export const useStore = create<EditorState>()(
                 ...baseKey,
                 id: uuidv4(),
                 position: {
-                  x: baseKey.position.x + i * baseKey.size.w,
-                  y: baseKey.position.y,
+                  x: Math.max(0, baseKey.position.x + i * baseKey.size.w),
+                  y: Math.max(0, baseKey.position.y),
                 },
             }));
             return {
@@ -113,7 +120,12 @@ export const useStore = create<EditorState>()(
                  
                  // Deep merge for specific nested objects
                  const newKey = { ...k, ...data };
-                 if (data.position) newKey.position = { ...k.position, ...data.position };
+                 if (data.position) {
+                    newKey.position = { 
+                      x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
+                      y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+                    };
+                 }
                  if (data.size) newKey.size = { ...k.size, ...data.size };
                  if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
                  if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
@@ -137,7 +149,12 @@ export const useStore = create<EditorState>()(
 
                   // Deep merge for specific nested objects
                   const newKey = { ...k, ...data };
-                  if (data.position) newKey.position = { ...k.position, ...data.position };
+                  if (data.position) {
+                     newKey.position = { 
+                       x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
+                       y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+                     };
+                  }
                   if (data.size) newKey.size = { ...k.size, ...data.size };
                   if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
                   if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
@@ -195,8 +212,8 @@ export const useStore = create<EditorState>()(
               ...k,
               id: uuidv4(),
               position: {
-                x: k.position.x + offset,
-                y: k.position.y + offset,
+                x: Math.max(0, k.position.x + offset),
+                y: Math.max(0, k.position.y + offset),
               },
             }));
 
@@ -222,8 +239,8 @@ export const useStore = create<EditorState>()(
                     return {
                        ...k,
                        position: {
-                          x: k.position.x + delta.x,
-                          y: k.position.y + delta.y
+                          x: Math.max(0, k.position.x + delta.x),
+                          y: Math.max(0, k.position.y + delta.y)
                        }
                     };
                  }),

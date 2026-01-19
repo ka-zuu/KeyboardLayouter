@@ -11,7 +11,7 @@ interface GridBackgroundProps {
 
 const GridBackground: React.FC<GridBackgroundProps> = () => {
     // Draw a grid of reasonable size around origin.
-    // Range: -50U to +50U
+    // Range: 0 to +50U
     const range = 50;
 
     const lines = useMemo(() => {
@@ -20,11 +20,11 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
         const strokeWidth = 1;
 
         // Vertical lines
-        for (let i = -range; i <= range; i++) {
+        for (let i = 0; i <= range; i++) {
             gridLines.push(
                 <Line
                     key={`v${i}`}
-                    points={[i * PIXELS_PER_U, -range * PIXELS_PER_U, i * PIXELS_PER_U, range * PIXELS_PER_U]}
+                    points={[i * PIXELS_PER_U, 0, i * PIXELS_PER_U, range * PIXELS_PER_U]}
                     stroke={color}
                     strokeWidth={strokeWidth}
                     listening={false}
@@ -33,11 +33,11 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
         }
 
         // Horizontal lines
-        for (let j = -range; j <= range; j++) {
+        for (let j = 0; j <= range; j++) {
             gridLines.push(
                 <Line
                     key={`h${j}`}
-                    points={[-range * PIXELS_PER_U, j * PIXELS_PER_U, range * PIXELS_PER_U, j * PIXELS_PER_U]}
+                    points={[0, j * PIXELS_PER_U, range * PIXELS_PER_U, j * PIXELS_PER_U]}
                     stroke={color}
                     strokeWidth={strokeWidth}
                     listening={false}
@@ -45,11 +45,11 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
             );
         }
 
-        // Origin lines (thicker or different color)
+        // Origin lines (thicker or different color) - Now acting as left and top borders
         gridLines.push(
             <Line
                 key="origin-x"
-                points={[-range * PIXELS_PER_U, 0, range * PIXELS_PER_U, 0]}
+                points={[0, 0, range * PIXELS_PER_U, 0]}
                 stroke="#555"
                 strokeWidth={2}
                 listening={false}
@@ -58,7 +58,7 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
         gridLines.push(
             <Line
                 key="origin-y"
-                points={[0, -range * PIXELS_PER_U, 0, range * PIXELS_PER_U]}
+                points={[0, 0, 0, range * PIXELS_PER_U]}
                 stroke="#555"
                 strokeWidth={2}
                 listening={false}
