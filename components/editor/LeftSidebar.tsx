@@ -5,9 +5,17 @@ import { useStore } from '@/store/useStore';
 import { Folder, Plus, Trash2, Box } from 'lucide-react';
 import clsx from 'clsx'; // Assuming standard clsx or just use template literals
 import { PIXELS_PER_U } from '@/lib/constants';
+import { KeyVariant } from '@/types/mkd';
+
+interface Preset {
+    label: string;
+    w: number;
+    h: number;
+    variant?: KeyVariant;
+}
 
 // Preset definitions
-const PRESETS = [
+const PRESETS: Preset[] = [
     { label: '1U', w: 1, h: 1 },
     { label: '1.25U', w: 1.25, h: 1 },
     { label: '1.5U', w: 1.5, h: 1 },
@@ -22,18 +30,18 @@ const PRESETS = [
 const LeftSidebar = () => {
     const { savedProjects, project, loadProject, createProject, deleteProject, saveProject, addKey, pan, scale, gridSize } = useStore();
 
-    const handleDragStart = (e: React.DragEvent, preset: typeof PRESETS[0]) => {
+    const handleDragStart = (e: React.DragEvent, preset: Preset) => {
         e.dataTransfer.setData('application/json', JSON.stringify({
             type: 'preset',
             w: preset.w,
             h: preset.h,
             label: preset.label,
-            variant: (preset as any).variant
+            variant: preset.variant
         }));
         e.dataTransfer.effectAllowed = 'copy';
     };
 
-    const handlePresetClick = (preset: typeof PRESETS[0]) => {
+    const handlePresetClick = (preset: Preset) => {
         // Calculate center of the Canvas
         // Sidebar is 64 tailwind units = 16rem = 256px
         const sidebarWidth = 256;
@@ -59,7 +67,7 @@ const LeftSidebar = () => {
         const rawY = uY - (preset.h / 2);
 
         let snappedX = Math.round(rawX / gridSize) * gridSize;
-        let snappedY = Math.round(rawY / gridSize) * gridSize;
+        const snappedY = Math.round(rawY / gridSize) * gridSize;
 
         // Overlap detection and position adjustment
         const MAX_RETRIES = 100; // Prevent infinite loops
@@ -116,7 +124,7 @@ const LeftSidebar = () => {
             angle: 0,
             rotationCenter: { x: 0, y: 0 },
             matrix: { row: 0, col: 0 },
-            variant: (preset as any).variant
+            variant: preset.variant
         });
     };
 

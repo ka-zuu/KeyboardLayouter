@@ -16,7 +16,7 @@ describe('qmk', () => {
                         size: { w: 1, h: 1 },
                         angle: 0,
                         rotationCenter: { x: 0, y: 0 },
-                        visualLegend: 'A',
+                        legends: { tl: 'A', tr: '', bl: '', br: '' },
                         matrix: { row: 0, col: 0 },
                         variant: 'rect'
                     },
@@ -26,7 +26,7 @@ describe('qmk', () => {
                         size: { w: 2, h: 1 }, // 2U key
                         angle: 0,
                         rotationCenter: { x: 0, y: 0 },
-                        visualLegend: 'Space',
+                        legends: { tl: 'Space', tr: '', bl: '', br: '' },
                         matrix: { row: 0, col: 1 },
                         variant: 'rect'
                     },
@@ -36,7 +36,7 @@ describe('qmk', () => {
                         size: { w: 1, h: 1 },
                         angle: 45, // Rotated
                         rotationCenter: { x: 0, y: 0 },
-                        visualLegend: 'B',
+                        legends: { tl: 'B', tr: '', bl: '', br: '' },
                         matrix: { row: 0, col: 2 },
                         variant: 'rect'
                     }
