@@ -108,10 +108,10 @@ const LeftSidebar = () => {
                 y: snappedY
             },
             legends: {
-                tl: legendLabel,
-                tr: '',
-                bl: '',
-                br: ''
+                top: legendLabel,
+                bottom: '',
+                left: '',
+                right: ''
             },
             angle: 0,
             rotationCenter: { x: 0, y: 0 },

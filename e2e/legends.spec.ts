@@ -6,7 +6,7 @@ test.describe('Multi-Legend Support', () => {
         await page.waitForTimeout(1000);
     });
 
-    test('should allow setting 4 legends (TL, TR, BL, BR)', async ({ page }) => {
+    test('should allow setting 4 legends (Top, Bottom, Left, Right)', async ({ page }) => {
         // 1. Add a key using TopBar button (adds default 1U key with 'A' at 0,0)
         await page.getByRole('button', { name: 'Add Keys' }).click();
         
@@ -15,29 +15,29 @@ test.describe('Multi-Legend Support', () => {
         await page.locator('canvas').click({ position: { x: 30, y: 30 } });
 
         // 3. Verify Right Sidebar inputs
-        // "A" is default for TL
-        const inputTL = page.getByPlaceholder('TL');
-        const inputTR = page.getByPlaceholder('TR');
-        const inputBL = page.getByPlaceholder('BL');
-        const inputBR = page.getByPlaceholder('BR');
+        // "A" is default for Top
+        const inputTop = page.getByPlaceholder('Top');
+        const inputBottom = page.getByPlaceholder('Bottom');
+        const inputLeft = page.getByPlaceholder('Left');
+        const inputRight = page.getByPlaceholder('Right');
 
-        await expect(inputTL).toBeVisible();
-        await expect(inputTL).toHaveValue('A');
+        await expect(inputTop).toBeVisible();
+        await expect(inputTop).toHaveValue('A');
         
         // Ensure other inputs are empty
-        await expect(inputTR).toHaveValue('');
-        await expect(inputBL).toHaveValue('');
-        await expect(inputBR).toHaveValue('');
+        await expect(inputBottom).toHaveValue('');
+        await expect(inputLeft).toHaveValue('');
+        await expect(inputRight).toHaveValue('');
 
         // 4. Update Legends
-        await inputTL.fill('Q');
-        await inputTR.fill('W');
-        await inputBL.fill('E');
-        await inputBR.fill('R');
+        await inputTop.fill('Q');
+        await inputRight.fill('W');
+        await inputLeft.fill('E');
+        await inputBottom.fill('R');
         
         // We cannot easily verify canvas text without visual diff or internal state access.
         // But verifying that inputs retain value implies store update.
-        await expect(inputTL).toHaveValue('Q');
+        await expect(inputTop).toHaveValue('Q');
     });
 
     test('should persist legends after page reload', async ({ page }) => {
@@ -45,9 +45,9 @@ test.describe('Multi-Legend Support', () => {
         await page.getByRole('button', { name: 'Add Keys' }).click();
         await page.locator('canvas').click({ position: { x: 30, y: 30 } });
         
-        await page.getByPlaceholder('TR').fill('Test');
+        await page.getByPlaceholder('Right').fill('Test');
         // Check input update instead of text visible
-        await expect(page.getByPlaceholder('TR')).toHaveValue('Test');
+        await expect(page.getByPlaceholder('Right')).toHaveValue('Test');
 
         // Reload
         await page.reload();
@@ -58,6 +58,6 @@ test.describe('Multi-Legend Support', () => {
         await page.locator('canvas').click({ position: { x: 30, y: 30 } });
 
         // Verify "Test" is still in input
-        await expect(page.getByPlaceholder('TR')).toHaveValue('Test');
+        await expect(page.getByPlaceholder('Right')).toHaveValue('Test');
     });
 });

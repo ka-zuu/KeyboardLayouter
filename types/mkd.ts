@@ -17,10 +17,10 @@ export interface KeyData {
   angle: number; // degrees
   rotationCenter: Position; // relative to key center
   legends: {
-    tl: string;
-    tr: string;
-    bl: string;
-    br: string;
+    top: string;
+    bottom: string;
+    left: string;
+    right: string;
   };
   matrix: {
     row: number;
