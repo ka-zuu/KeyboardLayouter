@@ -168,6 +168,8 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
     return (
         <Group
             id={data.id} // ID for selection lookup
+            data-testid="key-object"
+            data-selected={isSelected ? "true" : "false"}
             x={centerX}
             y={centerY}
             width={width}
