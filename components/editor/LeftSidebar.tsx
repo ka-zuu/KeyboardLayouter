@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { Folder, Plus, Trash2, Box } from 'lucide-react';
 import clsx from 'clsx'; // Assuming standard clsx or just use template literals
 import { PIXELS_PER_U } from '@/lib/constants';
@@ -28,7 +29,16 @@ const PRESETS: Preset[] = [
 ];
 
 const LeftSidebar = () => {
-    const { savedProjects, project, loadProject, createProject, deleteProject, saveProject, addKey, pan, scale, gridSize } = useStore();
+    const { savedProjects, projectId, projectName, loadProject, createProject, deleteProject, saveProject, addKey } = useStore(useShallow((state) => ({
+        savedProjects: state.savedProjects,
+        projectId: state.project.id,
+        projectName: state.project.name,
+        loadProject: state.loadProject,
+        createProject: state.createProject,
+        deleteProject: state.deleteProject,
+        saveProject: state.saveProject,
+        addKey: state.addKey,
+    })));
 
     const handleDragStart = (e: React.DragEvent, preset: Preset) => {
         e.dataTransfer.setData('application/json', JSON.stringify({
@@ -42,6 +52,8 @@ const LeftSidebar = () => {
     };
 
     const handlePresetClick = (preset: Preset) => {
+        const { pan, scale, gridSize, project } = useStore.getState();
+
         // Calculate center of the Canvas
         // Sidebar is 64 tailwind units = 16rem = 256px
         const sidebarWidth = 256;
@@ -178,12 +190,12 @@ const LeftSidebar = () => {
                     )}
                 >
                     <Folder size={14} />
-                    <span className="truncate flex-1">{project.name} (Active)</span>
+                    <span className="truncate flex-1">{projectName} (Active)</span>
                     <button onClick={() => saveProject()} className="text-xs bg-blue-700 px-1 rounded hover:bg-blue-600">Save</button>
                 </div>
 
                 {Object.values(savedProjects)
-                    .filter(p => p.id !== project.id)
+                    .filter(p => p.id !== projectId)
                     .sort((a, b) => b.updatedAt - a.updatedAt)
                     .map((p) => (
                         <div
