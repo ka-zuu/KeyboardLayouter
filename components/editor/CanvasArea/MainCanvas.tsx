@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
 import GridBackground from './GridBackground';
@@ -10,7 +10,7 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, updateKey, updateKeys, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore();
+    const { project, scale, pan, setZoom, setPan, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore();
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -357,6 +357,39 @@ const MainCanvas = () => {
 
     const isDraggable = isSpacePressed || isMiddleMousePressed;
 
+    const handleKeyDragEnd = useCallback((id: string, x: number, y: number) => {
+        const { selectedKeyIds, project, updateKeys, updateKey } = useStore.getState();
+        if (selectedKeyIds.includes(id)) {
+            // Performance optimization: Create Map for O(1) lookup
+            const keysById = new Map(project.keys.map(k => [k.id, k]));
+            const draggedKey = keysById.get(id);
+            if (!draggedKey) return;
+
+            const deltaX = x - draggedKey.position.x;
+            const deltaY = y - draggedKey.position.y;
+
+            type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
+
+            const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
+                const key = keysById.get(selectedId);
+                if (!key) return null;
+                return {
+                    id: selectedId,
+                    data: {
+                        position: {
+                            x: key.position.x + deltaX,
+                            y: key.position.y + deltaY
+                        }
+                    }
+                };
+            }).filter((u): u is UpdateType => u !== null);
+
+            updateKeys(updates);
+        } else {
+            updateKey(id, { position: { x, y } });
+        }
+    }, []);
+
     return (
         <div
             className={`w-full h-full bg-neutral-900 overflow-hidden ${isSpacePressed ? 'cursor-grab' : 'cursor-default'}`}
@@ -396,37 +429,7 @@ const MainCanvas = () => {
                                 data={key}
                                 isSelected={selectedKeyIds.includes(key.id)}
                                 onSelect={selectKey}
-                                onDragEnd={(id, x, y) => {
-                                    if (selectedKeyIds.includes(id)) {
-                                        // Performance optimization: Create Map for O(1) lookup
-                                        const keysById = new Map(project.keys.map(k => [k.id, k]));
-                                        const draggedKey = keysById.get(id);
-                                        if (!draggedKey) return;
-
-                                        const deltaX = x - draggedKey.position.x;
-                                        const deltaY = y - draggedKey.position.y;
-
-                                        type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
-
-                                        const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
-                                            const key = keysById.get(selectedId);
-                                            if (!key) return null;
-                                            return {
-                                                id: selectedId,
-                                                data: {
-                                                    position: {
-                                                        x: key.position.x + deltaX,
-                                                        y: key.position.y + deltaY
-                                                    }
-                                                }
-                                            };
-                                        }).filter((u): u is UpdateType => u !== null);
-
-                                        updateKeys(updates);
-                                    } else {
-                                        updateKey(id, { position: { x, y } });
-                                    }
-                                }}
+                                onDragEnd={handleKeyDragEnd}
                             />
                         ))}
                         {/* Selection Box */}
