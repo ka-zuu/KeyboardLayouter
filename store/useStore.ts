@@ -77,7 +77,6 @@ export const useStore = create<EditorState>()(
           set((state) => {
             const newKey: KeyData = {
               ...keyData,
-
               id: uuidv4(),
               position: {
                 x: Math.max(0, keyData.position.x),
@@ -123,7 +122,6 @@ export const useStore = create<EditorState>()(
                  const newKey = { ...k, ...data };
                  if (data.position) {
                     newKey.position = {
-
                       x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
                       y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
                     };
@@ -152,7 +150,7 @@ export const useStore = create<EditorState>()(
                   // Deep merge for specific nested objects
                   const newKey = { ...k, ...data };
                   if (data.position) {
-                     newKey.position = { 
+                     newKey.position = {
                        x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
                        y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
                      };
@@ -298,10 +296,7 @@ export const useStore = create<EditorState>()(
                  }
 
                  // Migration: tl/tr/bl/br -> top/right/left/bottom
-
-                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
-                 const legends = k.legends as any;
+                 const legends = k.legends as Record<string, string | undefined>;
                  if (legends.top === undefined && (legends.tl !== undefined || legends.tr !== undefined)) {
                       return {
                           ...k,
