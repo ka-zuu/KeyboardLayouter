@@ -16,7 +16,11 @@ interface KeyObjectProps {
 }
 
 const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
-    const { snapEnabled, updateKey, updateKeys, project, selectedKeyIds, gridSize } = useStore();
+    const snapEnabled = useStore(state => state.snapEnabled);
+    const gridSize = useStore(state => state.gridSize);
+    const updateKey = useStore(state => state.updateKey);
+    const updateKeys = useStore(state => state.updateKeys);
+
     const groupRef = useRef<Konva.Group>(null);
     const lastDragPos = useRef<{ x: number, y: number } | null>(null);
 
@@ -108,7 +112,8 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         const newRotation = angleDeg + 90;
 
         // If single selection, just update this key
-        if (selectedKeyIds.length <= 1 || !selectedKeyIds.includes(data.id)) {
+        const currentSelectedIds = useStore.getState().selectedKeyIds;
+        if (currentSelectedIds.length <= 1 || !currentSelectedIds.includes(data.id)) {
             updateKey(data.id, { angle: newRotation });
             return;
         }
@@ -126,9 +131,10 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         const pivotCenterX = data.position.x + data.size.w / 2;
         const pivotCenterY = data.position.y + data.size.h / 2;
 
-        const selectedIdsSet = new Set(selectedKeyIds);
+        const selectedIdsSet = new Set(currentSelectedIds);
+        const currentProject = useStore.getState().project;
 
-        project.keys.forEach(k => {
+        currentProject.keys.forEach(k => {
             if (selectedIdsSet.has(k.id)) {
                 if (k.id === pivotId) {
                     updates.push({ id: k.id, data: { angle: newRotation } });
@@ -189,7 +195,8 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
             }}
             onDragMove={(e) => {
                 // Multi-select Drag Logic
-                if (selectedKeyIds.length > 1 && selectedKeyIds.includes(data.id) && lastDragPos.current) {
+                const currentSelectedIds = useStore.getState().selectedKeyIds;
+                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(data.id) && lastDragPos.current) {
                     const stage = e.target.getStage();
                     if (!stage) return;
 
@@ -202,7 +209,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     lastDragPos.current = { x: currentX, y: currentY };
 
                     // Move other selected keys
-                    selectedKeyIds.forEach(id => {
+                    currentSelectedIds.forEach(id => {
                         if (id === data.id) return; // Skip self (already moved by drag)
 
                         const node = stage.findOne('#' + id);
@@ -215,7 +222,8 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
             }}
             onDragEnd={(e) => {
                 // Standard single drag end
-                if (selectedKeyIds.length <= 1 || !selectedKeyIds.includes(data.id)) {
+                const currentSelectedIds = useStore.getState().selectedKeyIds;
+                if (currentSelectedIds.length <= 1 || !currentSelectedIds.includes(data.id)) {
                     handleDragEndCenter(e);
                     return;
                 }
@@ -234,9 +242,10 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 const deltaU_X = totalDeltaX / PIXELS_PER_U;
                 const deltaU_Y = totalDeltaY / PIXELS_PER_U;
 
-                const keysById = new Map(project.keys.map(k => [k.id, k]));
+                const currentProject = useStore.getState().project;
+                const keysById = new Map(currentProject.keys.map(k => [k.id, k]));
 
-                const updates = selectedKeyIds.map(id => {
+                const updates = currentSelectedIds.map(id => {
                     const key = keysById.get(id);
                     if (!key) return null;
 
@@ -413,4 +422,4 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
     );
 };
 
-export default KeyObject;
+export default React.memo(KeyObject);

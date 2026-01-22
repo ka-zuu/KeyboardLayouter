@@ -71,4 +71,4 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
     return <Group>{lines}</Group>;
 };
 
-export default GridBackground;
+export default React.memo(GridBackground);
