@@ -165,31 +165,31 @@ const RightSidebar = () => {
                     <label className="text-xs text-gray-500 uppercase block mb-1">Legends</label>
                     <div className="grid grid-cols-2 gap-2">
                         <input
-                            placeholder="Top (TL)"
+                            placeholder="Top"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
                             value={primaryKey.legends?.top || ''}
                             onChange={(e) => handleInputChange(e, 'legends', 'top')}
                             onKeyDown={handleKeyDown}
                         />
                         <input
-                            placeholder="Right (TR)"
+                            placeholder="Bottom"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
-                            value={primaryKey.legends?.right || ''}
-                            onChange={(e) => handleInputChange(e, 'legends', 'right')}
+                            value={primaryKey.legends?.bottom || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'bottom')}
                             onKeyDown={handleKeyDown}
                         />
                         <input
-                            placeholder="Left (BL)"
+                            placeholder="Left"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
                             value={primaryKey.legends?.left || ''}
                             onChange={(e) => handleInputChange(e, 'legends', 'left')}
                             onKeyDown={handleKeyDown}
                         />
                         <input
-                            placeholder="Bottom (BR)"
+                            placeholder="Right"
                             className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
-                            value={primaryKey.legends?.bottom || ''}
-                            onChange={(e) => handleInputChange(e, 'legends', 'bottom')}
+                            value={primaryKey.legends?.right || ''}
+                            onChange={(e) => handleInputChange(e, 'legends', 'right')}
                             onKeyDown={handleKeyDown}
                         />
                     </div>
@@ -313,6 +313,7 @@ const RightSidebar = () => {
                     </div>
                 </div>
 
+                {/* ... */}
                 <hr className="border-gray-800" />
 
                 <div className="flex gap-2 mt-2">

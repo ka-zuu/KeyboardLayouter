@@ -45,7 +45,8 @@ const LeftSidebar = () => {
         // Calculate center of the Canvas
         // Sidebar is 64 tailwind units = 16rem = 256px
         const sidebarWidth = 256;
-        const canvasWidth = window.innerWidth - sidebarWidth;
+        const rightSidebarWidth = 256; // RightSidebar is also w-64
+        const canvasWidth = window.innerWidth - sidebarWidth - rightSidebarWidth;
         // Center of the canvas relative to the window
         const screenCenterX = sidebarWidth + (canvasWidth / 2);
         const screenCenterY = window.innerHeight / 2;

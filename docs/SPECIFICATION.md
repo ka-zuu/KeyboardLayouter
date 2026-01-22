@@ -22,11 +22,17 @@ interface KeyData {
     x: number;
     y: number;
   };
-  visualLegend: string;// 表示ラベル
+  legends: {           // 表示ラベル (4隅)
+    tl: string;        // Top Left
+    tr: string;        // Top Right
+    bl: string;        // Bottom Left
+    br: string;        // Bottom Right
+  };
   matrix: {            // 電気的マトリクス位置
     row: number;
     col: number;
   };
+  variant?: 'rect' | 'iso_enter' | 'stepped_caps' | 'bae'; // キー形状
   isSelected?: boolean;// (Runtime only) 選択状態
 }
 ```
@@ -49,11 +55,15 @@ interface ProjectData {
 1. **Top Bar**
    - ロゴ
    - プロジェクト名表示
-   - "Add Key" ボタン (デフォルト1Uキーを追加)
-   - (未実装: Import/Export ボタン)
+   - **Undo / Redo ボタン**: 操作履歴の管理。
+   - **Grid Size Selector**: グリッドスナップサイズの変更 (1U ~ 0.05U)。
+   - **Add Key Count**: 一度に追加するキーの個数指定。
+   - **Add Key ボタン**: キーをキャンバスに追加。
+   - **Import / Export**: プロジェクトの JSON ファイル入出力。
+   - **QMK Export**: QMK info.json のエクスポート。
 
 2. **Left Sidebar**
-   - **Presets**: 1U, 1.25U, 2U, Spacebar などのプリセットキー。ドラッグ＆ドロップでキャンバスに追加可能。
+   - **Presets**: 1U, 1.25U, 2U, Spacebar, ISO Enter などのプリセットキー。ドラッグ＆ドロップでキャンバスに追加可能。
    - **Projects**: 保存済みプロジェクトの一覧。切り替え・削除が可能。
 
 3. **Main Canvas**
@@ -63,16 +73,23 @@ interface ProjectData {
      - Shift+クリック: 複数選択
      - キャンバスドラッグ or 中クリックドラッグ: 視点移動 (Pan)
      - ホイール: ズーム (Zoom)
-     - キードラッグ: 移動 (0.25U スナップ)
+     - キードラッグ: 移動 (設定されたグリッドサイズにスナップ)
      - 回転ハンドルドラッグ: 回転
 
 4. **Right Sidebar (Inspector)**
    - 選択中のキーのプロパティ編集フォーム。
-   - X, Y, W, H, Rotation, Legend, Matrix Row/Col の数値入力が可能。
-   - 複数選択時の複製・削除アクション。
+   - **Properties**:
+     - **Legends**: TL, TR, BL, BR の4箇所のテキスト入力。
+     - **Shape**: キー形状の選択 (Rectangle, ISO Enter など)。
+     - **Position**: X, Y 座標。
+     - **Size**: Width, Height。
+     - **Rotation**: 回転角度。
+     - **Matrix**: Row, Col 座標。
+   - **Tools**:
+     - **Auto-assign Matrix**: 選択キー（または全キー）のマトリクス自動割り当て。
+     - **Duplicate / Delete**: キーの複製・削除。
 
 ## 将来の拡張予定 (Phase 2以降)
-- キーデータの Import/Export (Raw JSON data, QMK Info.json互換性など)
-- ISO Enter や L字型キーなどの特殊形状サポート
 - PCB設計ツール (KiCad) へのエクスポート
 - テーマカラーのカスタマイズ
+- Stepped Caps / BAE などの特殊形状の実装

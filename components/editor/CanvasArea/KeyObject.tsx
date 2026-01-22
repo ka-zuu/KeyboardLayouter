@@ -56,29 +56,34 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
     const dragBoundFunc = (pos: { x: number; y: number }) => {
         if (!snapEnabled) return pos;
 
-        // We are dragging the GROUP, whose origin is CENTER.
-        // We want the TOP-LEFT to snap to grid.
-        // pos.x is Center X. TopLeft X = pos.x - halfW.
-        // Snap TopLeft X to grid.
-        // Snapped TopLeft X = round( (pos.x - halfW) / snap ) * snap
-        // New Center X = Snapped TopLeft + halfW.
+        const stage = groupRef.current?.getStage();
+        if (!stage) return pos;
 
-        // HOWEVER, DragBoundFunc receives absolute position.
-        // If we assume stage scale is 1, it's screen pixels.
-        // If zoomed, Konva handles it? DragBoundFunc gets "absolute position of the node".
-        // It seems Konva handles scale mapping for us if we use stage APIs, but dragBoundFunc receives absolute view coords usually?
-        // Actually dragBoundFunc receives "absolute position".
-        // Let's rely on standard logic.
+        const scale = stage.scaleX();
+        const stageX = stage.x();
+        const stageY = stage.y();
 
         const snapPx = gridSize * PIXELS_PER_U;
 
-        // We want (pos.x - halfW) to be multiple of snapPx
-        const snappedTopLeftX = Math.round((pos.x - halfW) / snapPx) * snapPx;
-        const snappedTopLeftY = Math.round((pos.y - halfH) / snapPx) * snapPx;
+        // Convert absolute pos (which is the new center) to local space
+        const localCenterX = (pos.x - stageX) / scale;
+        const localCenterY = (pos.y - stageY) / scale;
+
+        // Calculate local top-left
+        const localTopLeftX = localCenterX - halfW;
+        const localTopLeftY = localCenterY - halfH;
+
+        // Snap local top-left
+        const snappedLocalTopLeftX = Math.round(localTopLeftX / snapPx) * snapPx;
+        const snappedLocalTopLeftY = Math.round(localTopLeftY / snapPx) * snapPx;
+
+        // Convert back to absolute center
+        const snappedLocalCenterX = snappedLocalTopLeftX + halfW;
+        const snappedLocalCenterY = snappedLocalTopLeftY + halfH;
 
         return {
-            x: snappedTopLeftX + halfW,
-            y: snappedTopLeftY + halfH,
+            x: snappedLocalCenterX * scale + stageX,
+            y: snappedLocalCenterY * scale + stageY,
         };
     };
 
@@ -304,55 +309,55 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     shadowOffset={{ x: 2, y: 2 }}
                 />
             )}
-            {/* Legends: Top, Right, Left, Bottom */}
-            {/* Top (Top Left) */}
+            {/* Legends: Top, Bottom, Left, Right */}
+            {/* Top Center */}
             <Text
-                x={-halfW + 4}
+                x={-halfW}
                 y={-halfH + 4}
                 text={data.legends?.top || ''}
-                width={width - 8}
+                width={width}
                 height={height / 2 - 4}
-                align="left"
+                align="center"
                 verticalAlign="top"
                 fontSize={12}
                 fill={textColor}
                 listening={false}
             />
-            {/* Right (Top Right) */}
+            {/* Bottom Center */}
             <Text
-                x={-halfW + 4}
-                y={-halfH + 4}
-                text={data.legends?.right || ''}
-                width={width - 8}
-                height={height / 2 - 4}
-                align="right"
-                verticalAlign="top"
-                fontSize={12}
-                fill={textColor}
-                listening={false}
-            />
-            {/* Left (Bottom Left) */}
-            <Text
-                x={-halfW + 4}
-                y={0}
-                text={data.legends?.left || ''}
-                width={width - 8}
-                height={height / 2 - 4}
-                align="left"
-                verticalAlign="bottom"
-                fontSize={12}
-                fill={textColor}
-                listening={false}
-            />
-            {/* Bottom (Bottom Right) */}
-            <Text
-                x={-halfW + 4}
+                x={-halfW}
                 y={0}
                 text={data.legends?.bottom || ''}
-                width={width - 8}
+                width={width}
                 height={height / 2 - 4}
-                align="right"
+                align="center"
                 verticalAlign="bottom"
+                fontSize={12}
+                fill={textColor}
+                listening={false}
+            />
+            {/* Left Middle */}
+            <Text
+                x={-halfW + 4}
+                y={-halfH}
+                text={data.legends?.left || ''}
+                width={width / 2 - 4}
+                height={height}
+                align="left"
+                verticalAlign="middle"
+                fontSize={12}
+                fill={textColor}
+                listening={false}
+            />
+            {/* Right Middle */}
+            <Text
+                x={0}
+                y={-halfH}
+                text={data.legends?.right || ''}
+                width={width / 2 - 4}
+                height={height}
+                align="right"
+                verticalAlign="middle"
                 fontSize={12}
                 fill={textColor}
                 listening={false}
