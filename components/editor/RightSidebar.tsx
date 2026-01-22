@@ -3,6 +3,7 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Trash2, Copy, Grid } from 'lucide-react';
+import { KeyVariant } from '@/types/mkd';
 
 const RightSidebar = () => {
     const { project, selectedKeyIds, updateKey, removeKey, addKey, autoAssignMatrix } = useStore();
@@ -19,6 +20,7 @@ const RightSidebar = () => {
         if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
             (activeEl as HTMLInputElement).select();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [primaryKey?.id]);
 
 
@@ -34,14 +36,23 @@ const RightSidebar = () => {
         }
 
         if (nested) {
-            // Handle nested updates like position.x
-            updateKey(primaryKey.id, {
-                [field]: {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ...((primaryKey as any)[field]),
-                    [nested]: value,
-                },
-            });
+            if (field === 'position' && (nested === 'x' || nested === 'y')) {
+                updateKey(primaryKey.id, {
+                    position: { ...primaryKey.position, [nested]: value as number }
+                });
+            } else if (field === 'size' && (nested === 'w' || nested === 'h')) {
+                updateKey(primaryKey.id, {
+                    size: { ...primaryKey.size, [nested]: value as number }
+                });
+            } else if (field === 'matrix' && (nested === 'row' || nested === 'col')) {
+                updateKey(primaryKey.id, {
+                    matrix: { ...primaryKey.matrix, [nested]: value as number }
+                });
+            } else if (field === 'legends') {
+                updateKey(primaryKey.id, {
+                    legends: { ...primaryKey.legends, [nested]: value as string }
+                });
+            }
         } else {
             updateKey(primaryKey.id, { [field]: value });
         }
@@ -192,7 +203,7 @@ const RightSidebar = () => {
                     <select
                         className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
                         value={primaryKey.variant || 'rect'}
-                        onChange={(e) => updateKey(primaryKey.id, { variant: e.target.value as any })}
+                        onChange={(e) => updateKey(primaryKey.id, { variant: e.target.value as KeyVariant })}
                         onKeyDown={handleKeyDown}
                     >
                         <option value="rect">Rectangle</option>
@@ -302,6 +313,7 @@ const RightSidebar = () => {
                     </div>
                 </div>
 
+                {/* ... */}
                 <hr className="border-gray-800" />
 
                 <div className="flex gap-2 mt-2">

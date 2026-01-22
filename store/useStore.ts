@@ -56,7 +56,7 @@ const DEFAULT_PROJECT: ProjectData = {
 export const useStore = create<EditorState>()(
   persist(
     temporal(
-      (set, get) => ({
+      (set) => ({
         project: DEFAULT_PROJECT,
         savedProjects: {},
         scale: 1,
@@ -75,8 +75,8 @@ export const useStore = create<EditorState>()(
 
         addKey: (keyData) =>
           set((state) => {
-            const newKey: KeyData = { 
-              ...keyData, 
+            const newKey: KeyData = {
+              ...keyData,
               id: uuidv4(),
               position: {
                 x: Math.max(0, keyData.position.x),
@@ -121,7 +121,7 @@ export const useStore = create<EditorState>()(
                  // Deep merge for specific nested objects
                  const newKey = { ...k, ...data };
                  if (data.position) {
-                    newKey.position = { 
+                    newKey.position = {
                       x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
                       y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
                     };
@@ -150,7 +150,7 @@ export const useStore = create<EditorState>()(
                   // Deep merge for specific nested objects
                   const newKey = { ...k, ...data };
                   if (data.position) {
-                     newKey.position = { 
+                     newKey.position = {
                        x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
                        y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
                      };
@@ -201,14 +201,12 @@ export const useStore = create<EditorState>()(
 
         pasteKeys: () =>
           set((state) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((state as any).clipboard === undefined || (state as any).clipboard.length === 0) return {};
+            if (!state.clipboard || state.clipboard.length === 0) return {};
             
             // Determine offset to avoid exact overlap (e.g. +0.5U, +0.5U)
             const offset = 0.5;
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const newKeys = (state as any).clipboard.map((k: KeyData) => ({
+            const newKeys: KeyData[] = state.clipboard.map((k: KeyData) => ({
               ...k,
               id: uuidv4(),
               position: {
@@ -223,7 +221,7 @@ export const useStore = create<EditorState>()(
                 keys: [...state.project.keys, ...newKeys],
                 updatedAt: Date.now(),
               },
-              selectedKeyIds: newKeys.map((k: KeyData) => k.id), // Select the pasted keys
+              selectedKeyIds: newKeys.map((k) => k.id), // Select the pasted keys
             };
           }),
 
@@ -288,7 +286,7 @@ export const useStore = create<EditorState>()(
                          ...k,
                          legends: { top: oldK.visualLegend, bottom: '', left: '', right: '' },
                          visualLegend: undefined
-                     };
+                     } as KeyData;
                  }
                  if (!k.legends) {
                      return {
@@ -298,7 +296,7 @@ export const useStore = create<EditorState>()(
                  }
 
                  // Migration: tl/tr/bl/br -> top/right/left/bottom
-                 const legends = k.legends as any;
+                 const legends = k.legends as Record<string, string | undefined>;
                  if (legends.top === undefined && (legends.tl !== undefined || legends.tr !== undefined)) {
                       return {
                           ...k,
@@ -323,7 +321,7 @@ export const useStore = create<EditorState>()(
         createProject: () =>
           set((state) => {
             const current = state.project;
-            const saved = { ...state.savedProjects, [current.id]: current };
+            const saved: Record<string, ProjectData> = { ...state.savedProjects, [current.id]: current };
             
             const newProject: ProjectData = {
               id: uuidv4(),
@@ -342,7 +340,8 @@ export const useStore = create<EditorState>()(
           
         deleteProject: (id) =>
           set((state) => {
-            const { [id]: deleted, ...rest } = state.savedProjects;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { [id]: _deleted, ...rest } = state.savedProjects;
             if (state.project.id === id) {
                const keys = Object.keys(rest);
                if (keys.length > 0) {
@@ -355,7 +354,7 @@ export const useStore = create<EditorState>()(
           }),
 
         importProject: (project) => 
-          set((state) => ({
+          set(() => ({
             project: { ...project, id: uuidv4() }, 
             selectedKeyIds: [],
           })),

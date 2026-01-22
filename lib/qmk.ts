@@ -1,4 +1,4 @@
-import { ProjectData, KeyData } from '@/types/mkd';
+import { ProjectData } from '@/types/mkd';
 
 interface QMKKey {
     x: number;

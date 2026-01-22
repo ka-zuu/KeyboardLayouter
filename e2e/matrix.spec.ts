@@ -32,7 +32,7 @@ test.describe('Matrix Auto-Assignment', () => {
         // Let's set count to 3 first.
         
         // The TopBar has an input for count.
-        const countInput = page.getByLabel('Count:').locator('input'); // Or just hierarchy search
+        // const countInput = page.getByLabel('Count:').locator('input'); // Or just hierarchy search
         // Looking at TopBar.tsx, the label "Count:" is a span, input is next to it.
         // Let's reload and try a cleaner approach.
     });
@@ -110,7 +110,7 @@ test.describe('Matrix Auto-Assignment', () => {
         // This confirms the UI button calls the action correctly and the logic works.
         
         await page.evaluate(() => {
-            const store = (window as any).useStoreReference; // We don't have this.
+            // const store = (window as any).useStoreReference; // We don't have this.
             // But we can check localStorage since persistence is on!
             localStorage.clear();
         });
@@ -155,15 +155,18 @@ test.describe('Matrix Auto-Assignment', () => {
         // Open the "Export QMK" or "Export JSON" and parse it?
         // Or check `localStorage`.
         
-        const projectData = await page.evaluate(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const projectData: any = await page.evaluate(() => {
              const storage = localStorage.getItem('mkd-storage');
              if (!storage) return null;
              return JSON.parse(storage).state.project;
         });
         
-        const keys = projectData.keys;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const keys = projectData.keys as any[];
         // Expect sorted by X
-        const sorted = keys.sort((a,b) => a.position.x - b.position.x);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sorted = keys.sort((a: any, b: any) => a.position.x - b.position.x);
         
         expect(sorted[0].matrix).toEqual({ row: 0, col: 0 });
         expect(sorted[1].matrix).toEqual({ row: 0, col: 1 });
