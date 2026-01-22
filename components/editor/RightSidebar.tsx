@@ -8,7 +8,8 @@ import { KeyVariant } from '@/types/mkd';
 const RightSidebar = () => {
     const { project, selectedKeyIds, updateKey, removeKey, addKey, autoAssignMatrix } = useStore();
 
-    const selectedKeys = project.keys.filter((k) => selectedKeyIds.includes(k.id));
+    const selectedKeySet = React.useMemo(() => new Set(selectedKeyIds), [selectedKeyIds]);
+    const selectedKeys = project.keys.filter((k) => selectedKeySet.has(k.id));
     const hasSelection = selectedKeys.length > 0;
     const singleSelection = selectedKeys.length === 1;
     const primaryKey = selectedKeys[0];
