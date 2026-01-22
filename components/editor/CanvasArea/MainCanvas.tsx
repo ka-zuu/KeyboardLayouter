@@ -357,6 +357,8 @@ const MainCanvas = () => {
 
     const isDraggable = isSpacePressed || isMiddleMousePressed;
 
+    const selectedKeysSet = React.useMemo(() => new Set(selectedKeyIds), [selectedKeyIds]);
+
     const handleKeyDragEnd = useCallback((id: string, x: number, y: number) => {
         const { selectedKeyIds, project, updateKeys, updateKey } = useStore.getState();
         if (selectedKeyIds.includes(id)) {
@@ -427,7 +429,7 @@ const MainCanvas = () => {
                             <KeyObject
                                 key={key.id}
                                 data={key}
-                                isSelected={selectedKeyIds.includes(key.id)}
+                                isSelected={selectedKeysSet.has(key.id)}
                                 onSelect={selectKey}
                                 onDragEnd={handleKeyDragEnd}
                             />
