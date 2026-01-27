@@ -8,6 +8,9 @@ import { KeyVariant } from '@/types/mkd';
 const RightSidebar = () => {
     const { project, selectedKeyIds, updateKey, removeKey, addKey, autoAssignMatrix } = useStore();
 
+    const [startRow, setStartRow] = React.useState(0);
+    const [startCol, setStartCol] = React.useState(0);
+
     const selectedKeySet = React.useMemo(() => new Set(selectedKeyIds), [selectedKeyIds]);
     const selectedKeys = project.keys.filter((k) => selectedKeySet.has(k.id));
     const hasSelection = selectedKeys.length > 0;
@@ -117,8 +120,35 @@ const RightSidebar = () => {
                 <hr className="border-gray-800 my-4" />
 
                 <h2 className="font-semibold mb-4 text-white">Tools</h2>
+
+                <div className="mb-4">
+                    <label className="text-xs text-gray-500 uppercase block mb-1">Matrix Auto-Assign Start</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div>
+                            <span className="text-xs text-gray-600 mr-1">Row</span>
+                            <input
+                                type="number"
+                                data-testid="matrix-start-row"
+                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                                value={startRow}
+                                onChange={(e) => setStartRow(parseInt(e.target.value) || 0)}
+                            />
+                        </div>
+                        <div>
+                            <span className="text-xs text-gray-600 mr-1">Col</span>
+                            <input
+                                type="number"
+                                data-testid="matrix-start-col"
+                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                                value={startCol}
+                                onChange={(e) => setStartCol(parseInt(e.target.value) || 0)}
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 <button
-                    onClick={() => autoAssignMatrix()} // all keys
+                    onClick={() => autoAssignMatrix(undefined, { startRow, startCol })} // all keys
                     className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 px-3 rounded flex items-center justify-center gap-2 text-sm transition-colors"
                 >
                     <Grid size={16} />
@@ -135,8 +165,32 @@ const RightSidebar = () => {
                 <p>{selectedKeys.length} items selected</p>
 
                 <div className="mt-4 space-y-2">
+                    <div className="mb-2">
+                        <label className="text-xs text-gray-500 uppercase block mb-1">Matrix Auto-Assign Start</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <span className="text-xs text-gray-600 mr-1">Row</span>
+                                <input
+                                    type="number"
+                                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                                    value={startRow}
+                                    onChange={(e) => setStartRow(parseInt(e.target.value) || 0)}
+                                />
+                            </div>
+                            <div>
+                                <span className="text-xs text-gray-600 mr-1">Col</span>
+                                <input
+                                    type="number"
+                                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                                    value={startCol}
+                                    onChange={(e) => setStartCol(parseInt(e.target.value) || 0)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <button
-                        onClick={() => autoAssignMatrix(selectedKeyIds)}
+                        onClick={() => autoAssignMatrix(selectedKeyIds, { startRow, startCol })}
                         className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 px-3 rounded flex items-center justify-center gap-2 text-sm transition-colors"
                         title="Auto-assign Matrix to selected keys"
                     >

@@ -42,7 +42,7 @@ export interface EditorState {
 
   // Import
   importProject: (project: ProjectData) => void;
-  autoAssignMatrix: (targetIds?: string[]) => void;
+  autoAssignMatrix: (targetIds?: string[], options?: { startRow: number; startCol: number }) => void;
 }
 
 const DEFAULT_PROJECT: ProjectData = {
@@ -359,7 +359,7 @@ export const useStore = create<EditorState>()(
             selectedKeyIds: [],
           })),
           
-        autoAssignMatrix: (targetIds) =>
+        autoAssignMatrix: (targetIds, options = { startRow: 0, startCol: 0 }) =>
           set((state) => {
              // 1. Identify keys to process
              const allKeys = state.project.keys;
@@ -382,27 +382,21 @@ export const useStore = create<EditorState>()(
              const sortedTargets = [...targets].sort(sortedFn);
              
              // 3. Assign row/cols
-             // We need to re-group them properly into rows to assign row indices
-             // But a simpler approach for "row" and "col" assignment based on "visual grid":
-             // Let's iterate and detect "new row" when Y changes significantly
-             
              const updates = new Map<string, { row: number, col: number }>();
              
              let currentRowY = -9999;
-             let currentRowIndex = -1;
-             let currentColIndex = 0;
-             
-             // If we are updating only a subset, we might want to respect their relative structure
-             // OR we just assign 0..N for the selected cluster.
-             // Issue #9 says "assign sequential numbers from top-left".
-             // Assuming 0-indexed relative to the selection/group.
+             // Initialize with provided startRow
+             let currentRowIndex = options.startRow - 1; // Will increment to startRow on first valid key
+             // Initialize with provided startCol
+             const startCol = options.startCol;
+             let currentColIndex = startCol; 
              
              for (const key of sortedTargets) {
                 if (Math.abs(key.position.y - currentRowY) > 0.1) {
                    // New Row
                    currentRowY = key.position.y;
                    currentRowIndex++;
-                   currentColIndex = 0;
+                   currentColIndex = startCol; // Reset to startCol for new row
                 } else {
                    // Same Row
                    currentColIndex++;
