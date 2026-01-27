@@ -42,7 +42,7 @@ const MatrixStartInput: React.FC<MatrixStartInputProps> = ({ row, onRowChange, c
 );
 
 const RightSidebar = () => {
-    const { project, selectedKeyIds, updateKey, removeKey, addKey, autoAssignMatrix } = useStore();
+    const { project, selectedKeyIds, updateKey, removeKey, duplicateSelectedKeys, autoAssignMatrix } = useStore();
 
     const [startRow, setStartRow] = React.useState(0);
     const [startCol, setStartCol] = React.useState(0);
@@ -134,12 +134,7 @@ const RightSidebar = () => {
     };
 
     const handleDuplicate = () => {
-        selectedKeys.forEach((key) => {
-            addKey({
-                ...key,
-                position: { x: key.position.x + 0.5, y: key.position.y + 0.5 },
-            });
-        });
+        duplicateSelectedKeys();
     };
 
     if (!hasSelection) {
