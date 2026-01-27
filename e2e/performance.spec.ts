@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 test.describe('Performance Tests', () => {
     test.beforeEach(async ({ page }) => {
@@ -7,7 +7,7 @@ test.describe('Performance Tests', () => {
         await page.reload();
     });
 
-    async function addKeys(page: any, count: number) {
+    async function addKeys(page: Page, count: number) {
         const remaining = count;
         const maxPerBatch = 20; // App limit
         const batches = Math.ceil(remaining / maxPerBatch);
@@ -55,7 +55,7 @@ test.describe('Performance Tests', () => {
         });
 
         // Get position of the first key to drag
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // Get position of the first key to drag
         const firstKeyPos = await page.evaluate(() => {
             const storage = localStorage.getItem('mkd-storage');
             if (!storage) return { x: 0, y: 0 };
