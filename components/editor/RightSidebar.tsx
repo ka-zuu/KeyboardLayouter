@@ -5,6 +5,42 @@ import { useStore } from '@/store/useStore';
 import { Trash2, Copy, Grid } from 'lucide-react';
 import { KeyVariant } from '@/types/mkd';
 
+interface MatrixStartInputProps {
+    row: number;
+    onRowChange: (val: number) => void;
+    col: number;
+    onColChange: (val: number) => void;
+    testIdSuffix?: string;
+}
+
+const MatrixStartInput: React.FC<MatrixStartInputProps> = ({ row, onRowChange, col, onColChange, testIdSuffix = '' }) => (
+    <div className="mb-4">
+        <label className="text-xs text-gray-500 uppercase block mb-1">Matrix Auto-Assign Start</label>
+        <div className="grid grid-cols-2 gap-2">
+            <div>
+                <span className="text-xs text-gray-600 mr-1">Row</span>
+                <input
+                    type="number"
+                    data-testid={`matrix-start-row${testIdSuffix}`}
+                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                    value={row}
+                    onChange={(e) => onRowChange(parseInt(e.target.value) || 0)}
+                />
+            </div>
+            <div>
+                <span className="text-xs text-gray-600 mr-1">Col</span>
+                <input
+                    type="number"
+                    data-testid={`matrix-start-col${testIdSuffix}`}
+                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                    value={col}
+                    onChange={(e) => onColChange(parseInt(e.target.value) || 0)}
+                />
+            </div>
+        </div>
+    </div>
+);
+
 const RightSidebar = () => {
     const { project, selectedKeyIds, updateKey, removeKey, addKey, autoAssignMatrix } = useStore();
 
@@ -121,31 +157,12 @@ const RightSidebar = () => {
 
                 <h2 className="font-semibold mb-4 text-white">Tools</h2>
 
-                <div className="mb-4">
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Matrix Auto-Assign Start</label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">Row</span>
-                            <input
-                                type="number"
-                                data-testid="matrix-start-row"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
-                                value={startRow}
-                                onChange={(e) => setStartRow(parseInt(e.target.value) || 0)}
-                            />
-                        </div>
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">Col</span>
-                            <input
-                                type="number"
-                                data-testid="matrix-start-col"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
-                                value={startCol}
-                                onChange={(e) => setStartCol(parseInt(e.target.value) || 0)}
-                            />
-                        </div>
-                    </div>
-                </div>
+                <MatrixStartInput
+                    row={startRow}
+                    onRowChange={setStartRow}
+                    col={startCol}
+                    onColChange={setStartCol}
+                />
 
                 <button
                     onClick={() => autoAssignMatrix(undefined, { startRow, startCol })} // all keys
@@ -165,29 +182,13 @@ const RightSidebar = () => {
                 <p>{selectedKeys.length} items selected</p>
 
                 <div className="mt-4 space-y-2">
-                    <div className="mb-2">
-                        <label className="text-xs text-gray-500 uppercase block mb-1">Matrix Auto-Assign Start</label>
-                        <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                <span className="text-xs text-gray-600 mr-1">Row</span>
-                                <input
-                                    type="number"
-                                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
-                                    value={startRow}
-                                    onChange={(e) => setStartRow(parseInt(e.target.value) || 0)}
-                                />
-                            </div>
-                            <div>
-                                <span className="text-xs text-gray-600 mr-1">Col</span>
-                                <input
-                                    type="number"
-                                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
-                                    value={startCol}
-                                    onChange={(e) => setStartCol(parseInt(e.target.value) || 0)}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    <MatrixStartInput
+                        row={startRow}
+                        onRowChange={setStartRow}
+                        col={startCol}
+                        onColChange={setStartCol}
+                        testIdSuffix="-selection"
+                    />
 
                     <button
                         onClick={() => autoAssignMatrix(selectedKeyIds, { startRow, startCol })}
