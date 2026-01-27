@@ -26,6 +26,7 @@ export interface EditorState {
   deleteSelectedKeys: () => void;
   copyKeys: () => void;
   pasteKeys: () => void;
+  duplicateSelectedKeys: () => void;
   moveSelectedKeys: (delta: { x: number; y: number }) => void;
   selectKey: (id: string, multi: boolean) => void;
   selectKeys: (ids: string[]) => void;
@@ -222,6 +223,35 @@ export const useStore = create<EditorState>()(
                 updatedAt: Date.now(),
               },
               selectedKeyIds: newKeys.map((k) => k.id), // Select the pasted keys
+            };
+          }),
+
+        duplicateSelectedKeys: () =>
+          set((state) => {
+            if (state.selectedKeyIds.length === 0) return {};
+            const keysToDuplicate = state.project.keys.filter((k) =>
+              state.selectedKeyIds.includes(k.id)
+            );
+
+            // Offset for duplication
+            const offset = 0.5;
+
+            const newKeys: KeyData[] = keysToDuplicate.map((k) => ({
+              ...k,
+              id: uuidv4(),
+              position: {
+                x: k.position.x + offset,
+                y: k.position.y + offset,
+              },
+            }));
+
+            return {
+              project: {
+                ...state.project,
+                keys: [...state.project.keys, ...newKeys],
+                updatedAt: Date.now(),
+              },
+              selectedKeyIds: newKeys.map((k) => k.id), // Select the newly duplicated keys
             };
           }),
 
