@@ -5,7 +5,7 @@ import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
-import { rotatePoint } from '@/lib/geometry';
+import { rotatePoint, rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
@@ -124,6 +124,10 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         // Calculate delta
         const deltaRotation = newRotation - previousAngle;
 
+        const rad = (deltaRotation * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
         // Prepare updates
         const updates: { id: string, data: Partial<KeyData> }[] = [];
 
@@ -148,10 +152,11 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     const kCenterY = k.position.y + k.size.h / 2;
 
                     // 2. Rotate Key Center around Pivot Center
-                    const rotatedCenter = rotatePoint(
+                    const rotatedCenter = rotatePointPrecalc(
                         { x: kCenterX, y: kCenterY },
                         { x: pivotCenterX, y: pivotCenterY },
-                        deltaRotation
+                        sin,
+                        cos
                     );
 
                     // 3. Convert back to Top-Left position
