@@ -29,6 +29,7 @@ const PRESETS: Preset[] = [
 ];
 
 const LeftSidebar = () => {
+    // Optimization: Use shallow comparison to avoid re-renders when other parts of the store change (e.g. keys)
     const { savedProjects, projectId, projectName, loadProject, createProject, deleteProject, saveProject, addKey } = useStore(useShallow((state) => ({
         savedProjects: state.savedProjects,
         projectId: state.project.id,
