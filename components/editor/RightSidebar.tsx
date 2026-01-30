@@ -48,7 +48,7 @@ const RightSidebar = () => {
     const [startCol, setStartCol] = React.useState(0);
 
     const selectedKeySet = React.useMemo(() => new Set(selectedKeyIds), [selectedKeyIds]);
-    const selectedKeys = project.keys.filter((k) => selectedKeySet.has(k.id));
+    const selectedKeys = React.useMemo(() => project.keys.filter((k) => selectedKeySet.has(k.id)), [project.keys, selectedKeySet]);
     const hasSelection = selectedKeys.length > 0;
     const singleSelection = selectedKeys.length === 1;
     const primaryKey = selectedKeys[0];
