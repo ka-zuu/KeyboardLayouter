@@ -397,8 +397,9 @@ export const useStore = create<EditorState>()(
           set((state) => {
              // 1. Identify keys to process
              const allKeys = state.project.keys;
-             const targets = targetIds 
-               ? allKeys.filter(k => targetIds.includes(k.id)) 
+             const targetSet = targetIds ? new Set(targetIds) : null;
+             const targets = targetSet
+               ? allKeys.filter(k => targetSet.has(k.id))
                : allKeys;
                
              if (targets.length === 0) return {};
