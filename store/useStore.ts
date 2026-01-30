@@ -259,11 +259,12 @@ export const useStore = create<EditorState>()(
           set((state) => {
              if (state.selectedKeyIds.length === 0) return {};
              
+             const selectedKeySet = new Set(state.selectedKeyIds);
              return {
                project: {
                  ...state.project,
                  keys: state.project.keys.map(k => {
-                    if (!state.selectedKeyIds.includes(k.id)) return k;
+                    if (!selectedKeySet.has(k.id)) return k;
                     return {
                        ...k,
                        position: {
