@@ -181,10 +181,11 @@ export const useStore = create<EditorState>()(
         deleteSelectedKeys: () =>
           set((state) => {
             if (state.selectedKeyIds.length === 0) return {};
+            const selectedSet = new Set(state.selectedKeyIds);
             return {
               project: {
                 ...state.project,
-                keys: state.project.keys.filter((k) => !state.selectedKeyIds.includes(k.id)),
+                keys: state.project.keys.filter((k) => !selectedSet.has(k.id)),
                 updatedAt: Date.now(),
               },
               selectedKeyIds: [],
@@ -194,8 +195,9 @@ export const useStore = create<EditorState>()(
         copyKeys: () =>
           set((state) => {
             if (state.selectedKeyIds.length === 0) return {};
+            const selectedSet = new Set(state.selectedKeyIds);
             const keysToCopy = state.project.keys.filter((k) =>
-              state.selectedKeyIds.includes(k.id)
+              selectedSet.has(k.id)
             );
             return { clipboard: keysToCopy };
           }),
@@ -229,8 +231,9 @@ export const useStore = create<EditorState>()(
         duplicateSelectedKeys: () =>
           set((state) => {
             if (state.selectedKeyIds.length === 0) return {};
+            const selectedSet = new Set(state.selectedKeyIds);
             const keysToDuplicate = state.project.keys.filter((k) =>
-              state.selectedKeyIds.includes(k.id)
+              selectedSet.has(k.id)
             );
 
             // Offset for duplication
