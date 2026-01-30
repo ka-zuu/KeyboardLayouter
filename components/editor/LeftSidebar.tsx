@@ -41,6 +41,12 @@ const LeftSidebar = () => {
         addKey: state.addKey,
     })));
 
+    const sortedProjects = React.useMemo(() => {
+        return Object.values(savedProjects)
+            .filter(p => p.id !== projectId)
+            .sort((a, b) => b.updatedAt - a.updatedAt);
+    }, [savedProjects, projectId]);
+
     const handleDragStart = (e: React.DragEvent, preset: Preset) => {
         e.dataTransfer.setData('application/json', JSON.stringify({
             type: 'preset',
@@ -195,10 +201,7 @@ const LeftSidebar = () => {
                     <button onClick={() => saveProject()} className="text-xs bg-blue-700 px-1 rounded hover:bg-blue-600">Save</button>
                 </div>
 
-                {Object.values(savedProjects)
-                    .filter(p => p.id !== projectId)
-                    .sort((a, b) => b.updatedAt - a.updatedAt)
-                    .map((p) => (
+                {sortedProjects.map((p) => (
                         <div
                             key={p.id}
                             className="p-2 rounded cursor-pointer hover:bg-gray-800 flex items-center gap-2 group"
