@@ -93,14 +93,16 @@ export function getRotatedRectPoints(x: number, y: number, w: number, h: number,
     const centerX = x + cx;
     const centerY = y + cy;
 
-    // Helper to rotate a point around the center
-    // const rotatePoint = (px: number, py: number): Point => { ... } // Replaced by exported function
+    // Pre-calculate trig values
+    const rad = (angle * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
 
     // Calculate 4 corners
-    const p1 = rotatePoint({ x, y }, { x: centerX, y: centerY }, angle);            // Top-Left
-    const p2 = rotatePoint({ x: x + w, y }, { x: centerX, y: centerY }, angle);        // Top-Right
-    const p3 = rotatePoint({ x: x + w, y: y + h }, { x: centerX, y: centerY }, angle);    // Bottom-Right
-    const p4 = rotatePoint({ x, y: y + h }, { x: centerX, y: centerY }, angle);        // Bottom-Left
+    const p1 = rotatePointPrecalc({ x, y }, { x: centerX, y: centerY }, sin, cos);            // Top-Left
+    const p2 = rotatePointPrecalc({ x: x + w, y }, { x: centerX, y: centerY }, sin, cos);        // Top-Right
+    const p3 = rotatePointPrecalc({ x: x + w, y: y + h }, { x: centerX, y: centerY }, sin, cos);    // Bottom-Right
+    const p4 = rotatePointPrecalc({ x, y: y + h }, { x: centerX, y: centerY }, sin, cos);        // Bottom-Left
 
     return [p1, p2, p3, p4];
 }
@@ -117,6 +119,25 @@ export function rotatePoint(point: Point, center: Point, angleDeg: number): Poin
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
 
+    const dx = point.x - center.x;
+    const dy = point.y - center.y;
+
+    return {
+        x: center.x + (dx * cos - dy * sin),
+        y: center.y + (dx * sin + dy * cos)
+    };
+}
+
+/**
+ * Rotates a point around a center using pre-calculated sine and cosine values.
+ * Useful for optimizing loops where multiple points are rotated by the same angle.
+ * @param point The point to rotate {x, y}
+ * @param center The center of rotation {x, y}
+ * @param sin Pre-calculated sine of the rotation angle
+ * @param cos Pre-calculated cosine of the rotation angle
+ * @returns The rotated point {x, y}
+ */
+export function rotatePointPrecalc(point: Point, center: Point, sin: number, cos: number): Point {
     const dx = point.x - center.x;
     const dy = point.y - center.y;
 
