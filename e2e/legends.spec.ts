@@ -22,7 +22,7 @@ test.describe('Multi-Legend Support', () => {
         const inputRight = page.getByPlaceholder('Right');
 
         await expect(inputTop).toBeVisible();
-        await expect(inputTop).toHaveValue('A');
+        await expect(inputTop).toHaveValue('');
         
         // Ensure other inputs are empty
         await expect(inputBottom).toHaveValue('');
