@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
+import { KeyData } from '@/types/mkd';
 import GridBackground from './GridBackground';
 import KeyObject from './KeyObject';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
@@ -370,7 +371,7 @@ const MainCanvas = () => {
             const deltaX = x - draggedKey.position.x;
             const deltaY = y - draggedKey.position.y;
 
-            type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
+            type UpdateType = { id: string; data: Partial<KeyData> };
 
             const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
                 const key = keysById.get(selectedId);

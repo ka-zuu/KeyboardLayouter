@@ -122,9 +122,10 @@ export const useStore = create<EditorState>()(
                  // Deep merge for specific nested objects
                  const newKey = { ...k, ...data };
                  if (data.position) {
+                    const mergedPos = { ...k.position, ...data.position };
                     newKey.position = {
-                      x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
-                      y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+                      x: Math.max(0, mergedPos.x),
+                      y: Math.max(0, mergedPos.y)
                     };
                  }
                  if (data.size) newKey.size = { ...k.size, ...data.size };
@@ -151,9 +152,10 @@ export const useStore = create<EditorState>()(
                   // Deep merge for specific nested objects
                   const newKey = { ...k, ...data };
                   if (data.position) {
+                     const mergedPos = { ...k.position, ...data.position };
                      newKey.position = {
-                       x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
-                       y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+                       x: Math.max(0, mergedPos.x),
+                       y: Math.max(0, mergedPos.y)
                      };
                   }
                   if (data.size) newKey.size = { ...k.size, ...data.size };
