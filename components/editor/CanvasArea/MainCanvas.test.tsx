@@ -43,7 +43,7 @@ describe('MainCanvas Performance', () => {
     });
   });
 
-  it('re-renders unnecessarily when unrelated store state changes', async () => {
+  it('should not re-render when unrelated store state changes', async () => {
     render(
       <Profiler id="MainCanvas" onRender={onRender}>
         <MainCanvas />
