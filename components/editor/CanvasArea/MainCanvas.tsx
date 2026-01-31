@@ -378,7 +378,7 @@ const MainCanvas = () => {
 
     const handleKeyDragEnd = useCallback((id: string, x: number, y: number) => {
         const { selectedKeyIds, project, updateKeys, updateKey } = useStore.getState();
-        if (selectedKeyIds.includes(id)) {
+        if (selectedKeyIds.length > 1 && selectedKeyIds.includes(id)) {
             // Performance optimization: Create Map for O(1) lookup
             const keysById = new Map(project.keys.map(k => [k.id, k]));
             const draggedKey = keysById.get(id);
