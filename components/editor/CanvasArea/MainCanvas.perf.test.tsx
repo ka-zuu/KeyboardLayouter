@@ -1,72 +1,92 @@
-import React, { useRef } from 'react';
-import { render, fireEvent, act } from '@testing-library/react';
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
 import MainCanvas from './MainCanvas';
 import { useStore } from '@/store/useStore';
 import KeyObject from './KeyObject'; // Import the mocked component
 
 // Mock mocks
 jest.mock('@/store/useStore');
-jest.mock('./GridBackground', () => () => <div data-testid="grid-background" />);
+
+jest.mock('./GridBackground', () => {
+    const Mock = () => <div data-testid="grid-background" />;
+    Mock.displayName = 'GridBackgroundMock';
+    return Mock;
+});
 
 // Mock KeyObject to track renders
 jest.mock('./KeyObject', () => {
-    return jest.fn(() => <div data-testid="key-object" />);
+    const MockKey = jest.fn(() => <div data-testid="key-object" />);
+    MockKey.displayName = 'MockKeyObject';
+    return MockKey;
 });
 
 // Mock react-konva
 jest.mock('react-konva', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const React = require('react');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const StageMock = React.forwardRef(({ children, onMouseDown, onMouseMove, onMouseUp, ...props }: any, ref: any) => {
+        // Create a stable instance object for the stage
+        const stageInstance = React.useMemo(() => ({
+            getRelativePointerPosition: () => ({ x: 100, y: 100 }),
+            getPointerPosition: () => ({ x: 100, y: 100 }),
+            scaleX: () => 1,
+            x: () => 0,
+            y: () => 0,
+            // Add explicit properties to mimic Konva Node if needed
+            nodeType: 'Stage'
+        }), []);
+
+        // Mock Stage Ref functionality
+        React.useImperativeHandle(ref, () => stageInstance);
+
+        return (
+            <div
+                data-testid="stage"
+                onMouseDown={(e) => {
+                     const evt = {
+                         target: stageInstance, // Match the ref object
+                         evt: { ...e.nativeEvent, button: 0, shiftKey: false },
+                         cancelBubble: false
+                     };
+                     if (onMouseDown) onMouseDown(evt);
+                }}
+                onMouseMove={(e) => {
+                     const evt = {
+                         target: stageInstance,
+                         evt: { ...e.nativeEvent, preventDefault: () => {} },
+                         cancelBubble: false
+                     };
+                     if (onMouseMove) onMouseMove(evt);
+                }}
+                onMouseUp={(e) => {
+                     const evt = {
+                         target: stageInstance,
+                         evt: { ...e.nativeEvent },
+                         cancelBubble: false
+                     };
+                     if (onMouseUp) onMouseUp(evt);
+                }}
+                {...props}
+            >
+                {children}
+            </div>
+        );
+    });
+    StageMock.displayName = 'StageMock';
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const LayerMock = ({ children }: any) => <div data-testid="layer">{children}</div>;
+    LayerMock.displayName = 'LayerMock';
+
+    const RectMock = () => <div data-testid="rect" />;
+    RectMock.displayName = 'RectMock';
+
     return {
-        Stage: React.forwardRef(({ children, onMouseDown, onMouseMove, onMouseUp, ...props }: any, ref: any) => {
-            // Create a stable instance object for the stage
-            const stageInstance = React.useMemo(() => ({
-                getRelativePointerPosition: () => ({ x: 100, y: 100 }),
-                getPointerPosition: () => ({ x: 100, y: 100 }),
-                scaleX: () => 1,
-                x: () => 0,
-                y: () => 0,
-                // Add explicit properties to mimic Konva Node if needed
-                nodeType: 'Stage'
-            }), []);
-
-            // Mock Stage Ref functionality
-            React.useImperativeHandle(ref, () => stageInstance);
-
-            return (
-                <div
-                    data-testid="stage"
-                    onMouseDown={(e) => {
-                         const evt = {
-                             target: stageInstance, // Match the ref object
-                             evt: { ...e.nativeEvent, button: 0, shiftKey: false },
-                             cancelBubble: false
-                         };
-                         onMouseDown && onMouseDown(evt);
-                    }}
-                    onMouseMove={(e) => {
-                         const evt = {
-                             target: stageInstance,
-                             evt: { ...e.nativeEvent, preventDefault: () => {} },
-                             cancelBubble: false
-                         };
-                         onMouseMove && onMouseMove(evt);
-                    }}
-                    onMouseUp={(e) => {
-                         const evt = {
-                             target: stageInstance,
-                             evt: { ...e.nativeEvent },
-                             cancelBubble: false
-                         };
-                         onMouseUp && onMouseUp(evt);
-                    }}
-                    {...props}
-                >
-                    {children}
-                </div>
-            );
-        }),
-        Layer: ({ children }: any) => <div data-testid="layer">{children}</div>,
-        Rect: () => <div data-testid="rect" />,
+        Stage: StageMock,
+        Layer: LayerMock,
+        Rect: RectMock,
     };
 });
 
