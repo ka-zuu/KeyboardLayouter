@@ -15,6 +15,7 @@ const config: Config = {
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/', '<rootDir>/e2e/'],
   moduleNameMapper: {
     '^uuid$': '<rootDir>/mocks/uuid.js',
+    '^@/(.*)$': '<rootDir>/$1',
   },
 }
 
