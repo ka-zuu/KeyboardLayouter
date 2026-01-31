@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
 import KeyObject from './KeyObject';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
@@ -10,7 +11,23 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore();
+    const { project, scale, pan, selectedKeyIds, gridSize } = useStore(useShallow(state => ({
+        project: state.project,
+        scale: state.scale,
+        pan: state.pan,
+        selectedKeyIds: state.selectedKeyIds,
+        gridSize: state.gridSize
+    })));
+
+    const { setZoom, setPan, selectKey, selectKeys, clearSelection, addKey } = useStore(useShallow(state => ({
+        setZoom: state.setZoom,
+        setPan: state.setPan,
+        selectKey: state.selectKey,
+        selectKeys: state.selectKeys,
+        clearSelection: state.clearSelection,
+        addKey: state.addKey
+    })));
+
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 

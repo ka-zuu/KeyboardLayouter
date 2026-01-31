@@ -12,6 +12,6 @@ This information is used to shape Next.js' roadmap and prioritize features.
 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
 https://nextjs.org/telemetry
 
-✓ Ready in 1055ms
+✓ Ready in 1454ms
 ○ Compiling / ...
- GET / 200 in 6.7s (compile: 6.2s, render: 437ms)
+ GET / 200 in 5.6s (compile: 5.2s, render: 390ms)
