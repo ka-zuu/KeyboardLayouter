@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
 import KeyObject from './KeyObject';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
@@ -10,7 +11,23 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore();
+    const projectKeys = useStore(useShallow(state => state.project.keys));
+    const { scale, pan, gridSize, selectedKeyIds } = useStore(useShallow(state => ({
+        scale: state.scale,
+        pan: state.pan,
+        gridSize: state.gridSize,
+        selectedKeyIds: state.selectedKeyIds,
+    })));
+
+    const { setZoom, setPan, selectKey, selectKeys, clearSelection, addKey } = useStore(useShallow(state => ({
+        setZoom: state.setZoom,
+        setPan: state.setPan,
+        selectKey: state.selectKey,
+        selectKeys: state.selectKeys,
+        clearSelection: state.clearSelection,
+        addKey: state.addKey,
+    })));
+
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -230,7 +247,7 @@ const MainCanvas = () => {
 
                 const newSelectedIds: string[] = [];
 
-                project.keys.forEach(key => {
+                projectKeys.forEach(key => {
                     const kx = key.position.x * PIXELS_PER_U;
                     const ky = key.position.y * PIXELS_PER_U;
                     const kw = key.size.w * PIXELS_PER_U;
@@ -246,6 +263,28 @@ const MainCanvas = () => {
                         key.rotationCenter.x * PIXELS_PER_U,
                         key.rotationCenter.y * PIXELS_PER_U
                     );
+
+                    // AABB Check optimization (from conflict source)
+                    const firstPoint = keyPoints[0];
+                    if (!firstPoint) return;
+
+                    let minX = firstPoint.x;
+                    let maxX = firstPoint.x;
+                    let minY = firstPoint.y;
+                    let maxY = firstPoint.y;
+
+                    for (let i = 1; i < keyPoints.length; i++) {
+                        const p = keyPoints[i];
+                        if (!p) continue;
+                        if (p.x < minX) minX = p.x;
+                        if (p.x > maxX) maxX = p.x;
+                        if (p.y < minY) minY = p.y;
+                        if (p.y > maxY) maxY = p.y;
+                    }
+
+                    if (maxX < x1 || minX > x2 || maxY < y1 || minY > y2) {
+                        return;
+                    }
 
                     if (doPolygonsIntersect(selectionRectPoints, keyPoints)) {
                         newSelectedIds.push(key.id);
@@ -361,7 +400,7 @@ const MainCanvas = () => {
 
     const handleKeyDragEnd = useCallback((id: string, x: number, y: number) => {
         const { selectedKeyIds, project, updateKeys, updateKey } = useStore.getState();
-        if (selectedKeyIds.includes(id)) {
+        if (selectedKeyIds.length > 1 && selectedKeyIds.includes(id)) {
             // Performance optimization: Create Map for O(1) lookup
             const keysById = new Map(project.keys.map(k => [k.id, k]));
             const draggedKey = keysById.get(id);
@@ -391,16 +430,6 @@ const MainCanvas = () => {
             updateKey(id, { position: { x, y } });
         }
     }, []);
-
-    const memoizedKeys = React.useMemo(() => project.keys.map((key) => (
-        <KeyObject
-            key={key.id}
-            data={key}
-            isSelected={selectedKeysSet.has(key.id)}
-            onSelect={selectKey}
-            onDragEnd={handleKeyDragEnd}
-        />
-    )), [project.keys, selectedKeysSet, selectKey, handleKeyDragEnd]);
 
     return (
         <div
@@ -435,7 +464,15 @@ const MainCanvas = () => {
                 >
                     <Layer>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
-                        {memoizedKeys}
+                        {projectKeys.map((key) => (
+                            <KeyObject
+                                key={key.id}
+                                data={key}
+                                isSelected={selectedKeysSet.has(key.id)}
+                                onSelect={selectKey}
+                                onDragEnd={handleKeyDragEnd}
+                            />
+                        ))}
                         {/* Selection Box */}
                         {isSelecting && selectionBox && (
                             <Rect

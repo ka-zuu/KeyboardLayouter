@@ -58,11 +58,21 @@ test.describe('Multi-select Drag Interaction', () => {
         await page.mouse.down();
         await page.mouse.move(k1X, k1Y + 100, { steps: 5 }); // Move slowly
         await page.mouse.up();
-        
-        // Wait for update to persist (UI should be stable)
-        await page.waitForTimeout(200); // Small grace period for store update catch-up is generic for drag ops
 
         // 6. Verify positions in Store
+        // Wait for store update (Key 1 should have moved > 1U)
+        await page.waitForFunction(() => {
+            const storage = localStorage.getItem('mkd-storage');
+            if (!storage) return false;
+            const data = JSON.parse(storage).state.project;
+            if (!data.keys || data.keys.length < 2) return false;
+            // Key 1 (index 0 usually if sorted, but we just check if ANY key moved significantly)
+            // But we know keys[0] is k1 because we didn't change order logic?
+            // Safer to check if the specific key we moved has updated.
+            // But here we'll just wait for the persistence.
+            return data.keys.some((k: { position: { y: number } }) => k.position.y > 1);
+        });
+
         const projectData = await page.evaluate(() => {
              const storage = localStorage.getItem('mkd-storage');
              if (!storage) return null;
