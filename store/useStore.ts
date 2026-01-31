@@ -185,6 +185,7 @@ export const useStore = create<EditorState>()(
             return {
               project: {
                 ...state.project,
+                // Optimized to O(N)
                 keys: state.project.keys.filter((k) => !selectedSet.has(k.id)),
                 updatedAt: Date.now(),
               },
