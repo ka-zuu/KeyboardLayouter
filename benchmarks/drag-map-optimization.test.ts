@@ -14,10 +14,7 @@ describe('Map Construction vs Set Lookup Optimization', () => {
         test(`Benchmark ratio ${ratio}`, () => {
             const numSelect = Math.floor(NUM_KEYS * ratio);
             // Select keys (just first N for simplicity)
-            const selectedIds = [];
-            for(let i=0; i<numSelect; i++) {
-                selectedIds.push(keys[i].id);
-            }
+            const selectedIds = keys.slice(0, numSelect).map(k => k.id);
 
             // Baseline: Map Construction
             const start1 = performance.now();
