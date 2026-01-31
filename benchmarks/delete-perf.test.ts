@@ -11,6 +11,8 @@ describe('Performance Benchmark', () => {
   const NUM_KEYS = 10000;
 
   test(`deleteSelectedKeys performance with ${NUM_KEYS} keys`, () => {
+    const store = useStore.getState();
+
     // Reset store
     useStore.setState({
         project: {
