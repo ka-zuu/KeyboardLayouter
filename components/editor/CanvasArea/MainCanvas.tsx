@@ -431,6 +431,16 @@ const MainCanvas = () => {
         }
     }, []);
 
+    const memoizedKeys = React.useMemo(() => project.keys.map((key) => (
+        <KeyObject
+            key={key.id}
+            data={key}
+            isSelected={selectedKeysSet.has(key.id)}
+            onSelect={selectKey}
+            onDragEnd={handleKeyDragEnd}
+        />
+    )), [project.keys, selectedKeysSet, selectKey, handleKeyDragEnd]);
+
     return (
         <div
             className={`w-full h-full bg-neutral-900 overflow-hidden ${isSpacePressed ? 'cursor-grab' : 'cursor-default'}`}
@@ -473,6 +483,7 @@ const MainCanvas = () => {
                                 onDragEnd={handleKeyDragEnd}
                             />
                         ))}
+                        {memoizedKeys}
                         {/* Selection Box */}
                         {isSelecting && selectionBox && (
                             <Rect
