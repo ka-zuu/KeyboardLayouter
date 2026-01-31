@@ -247,6 +247,24 @@ const MainCanvas = () => {
                         key.rotationCenter.y * PIXELS_PER_U
                     );
 
+                    // AABB Check optimization
+                    let minX = keyPoints[0].x;
+                    let maxX = keyPoints[0].x;
+                    let minY = keyPoints[0].y;
+                    let maxY = keyPoints[0].y;
+
+                    for (let i = 1; i < keyPoints.length; i++) {
+                        const p = keyPoints[i];
+                        if (p.x < minX) minX = p.x;
+                        if (p.x > maxX) maxX = p.x;
+                        if (p.y < minY) minY = p.y;
+                        if (p.y > maxY) maxY = p.y;
+                    }
+
+                    if (maxX < x1 || minX > x2 || maxY < y1 || minY > y2) {
+                        return;
+                    }
+
                     if (doPolygonsIntersect(selectionRectPoints, keyPoints)) {
                         newSelectedIds.push(key.id);
                     }
