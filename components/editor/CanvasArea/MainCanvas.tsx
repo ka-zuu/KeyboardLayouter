@@ -384,29 +384,34 @@ const MainCanvas = () => {
     const handleKeyDragEnd = useCallback((id: string, x: number, y: number) => {
         const { selectedKeyIds, project, updateKeys, updateKey } = useStore.getState();
         if (selectedKeyIds.includes(id)) {
-            // Performance optimization: Create Map for O(1) lookup
-            const keysById = new Map(project.keys.map(k => [k.id, k]));
-            const draggedKey = keysById.get(id);
+            // Optimization: Avoid creating a Map of all keys (O(N)).
+            // Instead, scan keys once (O(N)) and check against selected set (O(1)).
+
+            // 1. Find dragged key
+            const draggedKey = project.keys.find(k => k.id === id);
             if (!draggedKey) return;
 
             const deltaX = x - draggedKey.position.x;
             const deltaY = y - draggedKey.position.y;
 
+            // 2. Identify keys to update
+            const selectedSet = new Set(selectedKeyIds);
             type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
+            const updates: UpdateType[] = [];
 
-            const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
-                const key = keysById.get(selectedId);
-                if (!key) return null;
-                return {
-                    id: selectedId,
-                    data: {
-                        position: {
-                            x: key.position.x + deltaX,
-                            y: key.position.y + deltaY
+            for (const key of project.keys) {
+                if (selectedSet.has(key.id)) {
+                    updates.push({
+                        id: key.id,
+                        data: {
+                            position: {
+                                x: key.position.x + deltaX,
+                                y: key.position.y + deltaY
+                            }
                         }
-                    }
-                };
-            }).filter((u): u is UpdateType => u !== null);
+                    });
+                }
+            }
 
             updateKeys(updates);
         } else {
