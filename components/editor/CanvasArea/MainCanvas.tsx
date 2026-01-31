@@ -248,13 +248,17 @@ const MainCanvas = () => {
                     );
 
                     // AABB Check optimization
-                    let minX = keyPoints[0].x;
-                    let maxX = keyPoints[0].x;
-                    let minY = keyPoints[0].y;
-                    let maxY = keyPoints[0].y;
+                    const firstPoint = keyPoints[0];
+                    if (!firstPoint) return;
+
+                    let minX = firstPoint.x;
+                    let maxX = firstPoint.x;
+                    let minY = firstPoint.y;
+                    let maxY = firstPoint.y;
 
                     for (let i = 1; i < keyPoints.length; i++) {
                         const p = keyPoints[i];
+                        if (!p) continue;
                         if (p.x < minX) minX = p.x;
                         if (p.x > maxX) maxX = p.x;
                         if (p.y < minY) minY = p.y;
