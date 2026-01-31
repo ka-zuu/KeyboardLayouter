@@ -9,7 +9,6 @@ test.describe('Key Duplication', () => {
 
     // Add a test key and select it via localStorage manipulation
     await page.evaluate(() => {
-        const storage = localStorage.getItem('mkd-storage');
         // Initial state might be empty if we cleared it, but the app initializes default.
         // Let's rely on the app initializing a default empty project on reload if storage is empty.
         // So we wait for storage to exist.
