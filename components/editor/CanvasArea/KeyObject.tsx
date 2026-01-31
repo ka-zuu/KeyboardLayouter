@@ -5,7 +5,7 @@ import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
-import { rotatePointPrecalc } from '@/lib/geometry';
+import { rotatePoint, rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
@@ -248,22 +248,22 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 const deltaU_Y = totalDeltaY / PIXELS_PER_U;
 
                 const currentProject = useStore.getState().project;
-                const keysById = new Map(currentProject.keys.map(k => [k.id, k]));
+                const selectedSet = new Set(currentSelectedIds);
+                const updates: { id: string; data: Partial<KeyData> }[] = [];
 
-                const updates = currentSelectedIds.map(id => {
-                    const key = keysById.get(id);
-                    if (!key) return null;
-
-                    return {
-                        id: id,
-                        data: {
-                            position: {
-                                x: key.position.x + deltaU_X,
-                                y: key.position.y + deltaU_Y
+                for (const key of currentProject.keys) {
+                    if (selectedSet.has(key.id)) {
+                        updates.push({
+                            id: key.id,
+                            data: {
+                                position: {
+                                    x: key.position.x + deltaU_X,
+                                    y: key.position.y + deltaU_Y
+                                }
                             }
-                        }
-                    };
-                }).filter((u) => u !== null) as { id: string; data: Partial<KeyData> }[];
+                        });
+                    }
+                }
 
                 updateKeys(updates);
             }}
