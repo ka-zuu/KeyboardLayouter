@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
 import KeyObject from './KeyObject';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
@@ -10,7 +11,21 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { project, scale, pan, setZoom, setPan, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore();
+    const { keys, scale, pan, setZoom, setPan, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore(
+        useShallow((state) => ({
+            keys: state.project.keys,
+            scale: state.scale,
+            pan: state.pan,
+            setZoom: state.setZoom,
+            setPan: state.setPan,
+            selectKey: state.selectKey,
+            selectKeys: state.selectKeys,
+            clearSelection: state.clearSelection,
+            selectedKeyIds: state.selectedKeyIds,
+            addKey: state.addKey,
+            gridSize: state.gridSize,
+        }))
+    );
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -230,7 +245,7 @@ const MainCanvas = () => {
 
                 const newSelectedIds: string[] = [];
 
-                project.keys.forEach(key => {
+                keys.forEach(key => {
                     const kx = key.position.x * PIXELS_PER_U;
                     const ky = key.position.y * PIXELS_PER_U;
                     const kw = key.size.w * PIXELS_PER_U;
@@ -452,7 +467,7 @@ const MainCanvas = () => {
                 >
                     <Layer>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
-                        {project.keys.map((key) => (
+                        {keys.map((key) => (
                             <KeyObject
                                 key={key.id}
                                 data={key}
