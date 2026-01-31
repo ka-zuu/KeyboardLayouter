@@ -3,7 +3,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
-import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
 import KeyObject from './KeyObject';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
@@ -11,21 +10,7 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const { keys, scale, pan, setZoom, setPan, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore(
-        useShallow((state) => ({
-            keys: state.project.keys,
-            scale: state.scale,
-            pan: state.pan,
-            setZoom: state.setZoom,
-            setPan: state.setPan,
-            selectKey: state.selectKey,
-            selectKeys: state.selectKeys,
-            clearSelection: state.clearSelection,
-            selectedKeyIds: state.selectedKeyIds,
-            addKey: state.addKey,
-            gridSize: state.gridSize,
-        }))
-    );
+    const { project, scale, pan, setZoom, setPan, selectKey, selectKeys, clearSelection, selectedKeyIds, addKey, gridSize } = useStore();
     const stageRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -245,7 +230,7 @@ const MainCanvas = () => {
 
                 const newSelectedIds: string[] = [];
 
-                keys.forEach(key => {
+                project.keys.forEach(key => {
                     const kx = key.position.x * PIXELS_PER_U;
                     const ky = key.position.y * PIXELS_PER_U;
                     const kw = key.size.w * PIXELS_PER_U;
@@ -261,28 +246,6 @@ const MainCanvas = () => {
                         key.rotationCenter.x * PIXELS_PER_U,
                         key.rotationCenter.y * PIXELS_PER_U
                     );
-
-                    // AABB Check optimization
-                    const firstPoint = keyPoints[0];
-                    if (!firstPoint) return;
-
-                    let minX = firstPoint.x;
-                    let maxX = firstPoint.x;
-                    let minY = firstPoint.y;
-                    let maxY = firstPoint.y;
-
-                    for (let i = 1; i < keyPoints.length; i++) {
-                        const p = keyPoints[i];
-                        if (!p) continue;
-                        if (p.x < minX) minX = p.x;
-                        if (p.x > maxX) maxX = p.x;
-                        if (p.y < minY) minY = p.y;
-                        if (p.y > maxY) maxY = p.y;
-                    }
-
-                    if (maxX < x1 || minX > x2 || maxY < y1 || minY > y2) {
-                        return;
-                    }
 
                     if (doPolygonsIntersect(selectionRectPoints, keyPoints)) {
                         newSelectedIds.push(key.id);
@@ -399,34 +362,29 @@ const MainCanvas = () => {
     const handleKeyDragEnd = useCallback((id: string, x: number, y: number) => {
         const { selectedKeyIds, project, updateKeys, updateKey } = useStore.getState();
         if (selectedKeyIds.includes(id)) {
-            // Optimization: Avoid creating a Map of all keys (O(N)).
-            // Instead, scan keys once (O(N)) and check against selected set (O(1)).
-
-            // 1. Find dragged key
-            const draggedKey = project.keys.find(k => k.id === id);
+            // Performance optimization: Create Map for O(1) lookup
+            const keysById = new Map(project.keys.map(k => [k.id, k]));
+            const draggedKey = keysById.get(id);
             if (!draggedKey) return;
 
             const deltaX = x - draggedKey.position.x;
             const deltaY = y - draggedKey.position.y;
 
-            // 2. Identify keys to update
-            const selectedSet = new Set(selectedKeyIds);
             type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
-            const updates: UpdateType[] = [];
 
-            for (const key of project.keys) {
-                if (selectedSet.has(key.id)) {
-                    updates.push({
-                        id: key.id,
-                        data: {
-                            position: {
-                                x: key.position.x + deltaX,
-                                y: key.position.y + deltaY
-                            }
+            const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
+                const key = keysById.get(selectedId);
+                if (!key) return null;
+                return {
+                    id: selectedId,
+                    data: {
+                        position: {
+                            x: key.position.x + deltaX,
+                            y: key.position.y + deltaY
                         }
-                    });
-                }
-            }
+                    }
+                };
+            }).filter((u): u is UpdateType => u !== null);
 
             updateKeys(updates);
         } else {
@@ -478,15 +436,6 @@ const MainCanvas = () => {
                     <Layer>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
                         {memoizedKeys}
-                        {keys.map((key) => (
-                            <KeyObject
-                                key={key.id}
-                                data={key}
-                                isSelected={selectedKeysSet.has(key.id)}
-                                onSelect={selectKey}
-                                onDragEnd={handleKeyDragEnd}
-                            />
-                        ))}
                         {/* Selection Box */}
                         {isSelecting && selectionBox && (
                             <Rect

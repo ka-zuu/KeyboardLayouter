@@ -248,22 +248,22 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 const deltaU_Y = totalDeltaY / PIXELS_PER_U;
 
                 const currentProject = useStore.getState().project;
-                const selectedSet = new Set(currentSelectedIds);
-                const updates: { id: string; data: Partial<KeyData> }[] = [];
+                const keysById = new Map(currentProject.keys.map(k => [k.id, k]));
 
-                for (const key of currentProject.keys) {
-                    if (selectedSet.has(key.id)) {
-                        updates.push({
-                            id: key.id,
-                            data: {
-                                position: {
-                                    x: key.position.x + deltaU_X,
-                                    y: key.position.y + deltaU_Y
-                                }
+                const updates = currentSelectedIds.map(id => {
+                    const key = keysById.get(id);
+                    if (!key) return null;
+
+                    return {
+                        id: id,
+                        data: {
+                            position: {
+                                x: key.position.x + deltaU_X,
+                                y: key.position.y + deltaU_Y
                             }
-                        });
-                    }
-                }
+                        }
+                    };
+                }).filter((u) => u !== null) as { id: string; data: Partial<KeyData> }[];
 
                 updateKeys(updates);
             }}

@@ -25,8 +25,8 @@ jest.mock('react-konva', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const React = require('react');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const StageMock = React.forwardRef(({ children, onMouseDown, onMouseMove, onMouseUp, ...props }: any, ref: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    const StageMock = React.forwardRef(({ children, onMouseDown, onMouseMove, onMouseUp, scaleX: _scaleX, scaleY: _scaleY, x: _x, y: _y, width: _width, height: _height, ...props }: any, ref: any) => {
         // Create a stable instance object for the stage
         const stageInstance = React.useMemo(() => ({
             getRelativePointerPosition: () => ({ x: 100, y: 100 }),
