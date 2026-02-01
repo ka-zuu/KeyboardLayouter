@@ -6,17 +6,35 @@ import KeyList from '../components/editor/CanvasArea/KeyList';
 
 // Mock KeyList
 jest.mock('../components/editor/CanvasArea/KeyList', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const React = require('react');
-    return jest.fn(() => <div data-testid="key-list" />);
+    const MockKeyList = () => <div data-testid="key-list" />;
+    MockKeyList.displayName = 'KeyList';
+    return jest.fn(MockKeyList);
 });
 
 // Mock GridBackground
-jest.mock('../components/editor/CanvasArea/GridBackground', () => () => <div>Grid</div>);
+jest.mock('../components/editor/CanvasArea/GridBackground', () => {
+    const MockGrid = () => <div>Grid</div>;
+    MockGrid.displayName = 'GridBackground';
+    return MockGrid;
+});
 
 // Mock Konva components
 jest.mock('react-konva', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
-  const Stage = React.forwardRef((props: any, ref: any) => {
+
+  interface MockStageProps {
+      mockPointerX?: number;
+      mockPointerY?: number;
+      onMouseDown?: React.MouseEventHandler;
+      onMouseMove?: React.MouseEventHandler;
+      onMouseUp?: React.MouseEventHandler;
+      children?: React.ReactNode;
+  }
+
+  const Stage = React.forwardRef((props: MockStageProps, ref: React.ForwardedRef<unknown>) => {
     React.useImperativeHandle(ref, () => ({
         getPointerPosition: () => ({ x: props.mockPointerX || 100, y: props.mockPointerY || 100 }),
         getRelativePointerPosition: () => ({ x: props.mockPointerX || 100, y: props.mockPointerY || 100 }),
@@ -40,15 +58,36 @@ jest.mock('react-konva', () => {
   });
   Stage.displayName = 'Stage';
 
+  const Layer = ({ children }: { children: React.ReactNode }) => <div data-testid="layer">{children}</div>;
+  Layer.displayName = 'Layer';
+
+  const Group = ({ children }: { children: React.ReactNode }) => <div>Group{children}</div>;
+  Group.displayName = 'Group';
+
+  const Rect = () => <div data-testid="rect">Rect</div>;
+  Rect.displayName = 'Rect';
+
+  const Text = () => <div>Text</div>;
+  Text.displayName = 'Text';
+
+  const Circle = () => <div>Circle</div>;
+  Circle.displayName = 'Circle';
+
+  const Path = () => <div>Path</div>;
+  Path.displayName = 'Path';
+
+  const Line = () => <div>Line</div>;
+  Line.displayName = 'Line';
+
   return {
     Stage,
-    Layer: jest.fn(({ children }) => <div data-testid="layer">{children}</div>),
-    Rect: jest.fn(() => <div data-testid="rect">Rect</div>),
-    Group: jest.fn(({ children }) => <div>Group{children}</div>),
-    Text: jest.fn(() => <div>Text</div>),
-    Circle: jest.fn(() => <div>Circle</div>),
-    Path: jest.fn(() => <div>Path</div>),
-    Line: jest.fn(() => <div>Line</div>),
+    Layer: jest.fn(Layer),
+    Rect: jest.fn(Rect),
+    Group: jest.fn(Group),
+    Text: jest.fn(Text),
+    Circle: jest.fn(Circle),
+    Path: jest.fn(Path),
+    Line: jest.fn(Line),
   };
 });
 
@@ -57,6 +96,7 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
 
 describe('Selection Performance', () => {
