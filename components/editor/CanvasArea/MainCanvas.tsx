@@ -1,28 +1,26 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
-import KeyObject from './KeyObject';
+import KeyList from './KeyList';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
 import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const projectKeys = useStore(useShallow(state => state.project.keys));
-    const { scale, pan, gridSize, selectedKeyIds } = useStore(useShallow(state => ({
+    // Optimization: Don't subscribe to keys/selection in MainCanvas to avoid re-renders during pan/zoom
+    const { scale, pan, gridSize } = useStore(useShallow(state => ({
         scale: state.scale,
         pan: state.pan,
         gridSize: state.gridSize,
-        selectedKeyIds: state.selectedKeyIds,
     })));
 
-    const { setZoom, setPan, selectKey, selectKeys, clearSelection, addKey } = useStore(useShallow(state => ({
+    const { setZoom, setPan, selectKeys, clearSelection, addKey } = useStore(useShallow(state => ({
         setZoom: state.setZoom,
         setPan: state.setPan,
-        selectKey: state.selectKey,
         selectKeys: state.selectKeys,
         clearSelection: state.clearSelection,
         addKey: state.addKey,
@@ -247,7 +245,9 @@ const MainCanvas = () => {
 
                 const newSelectedIds: string[] = [];
 
-                projectKeys.forEach(key => {
+                const currentKeys = useStore.getState().project.keys;
+
+                currentKeys.forEach(key => {
                     const kx = key.position.x * PIXELS_PER_U;
                     const ky = key.position.y * PIXELS_PER_U;
                     const kw = key.size.w * PIXELS_PER_U;
@@ -292,7 +292,8 @@ const MainCanvas = () => {
                 });
 
                 if (e.evt.shiftKey) {
-                    const combined = Array.from(new Set([...selectedKeyIds, ...newSelectedIds]));
+                    const currentSelected = useStore.getState().selectedKeyIds;
+                    const combined = Array.from(new Set([...currentSelected, ...newSelectedIds]));
                     selectKeys(combined);
                 } else {
                     selectKeys(newSelectedIds);
@@ -396,41 +397,6 @@ const MainCanvas = () => {
 
     const isDraggable = isSpacePressed || isMiddleMousePressed;
 
-    const selectedKeysSet = React.useMemo(() => new Set(selectedKeyIds), [selectedKeyIds]);
-
-    const handleKeyDragEnd = useCallback((id: string, x: number, y: number) => {
-        const { selectedKeyIds, project, updateKeys, updateKey } = useStore.getState();
-        if (selectedKeyIds.length > 1 && selectedKeyIds.includes(id)) {
-            // Performance optimization: Create Map for O(1) lookup
-            const keysById = new Map(project.keys.map(k => [k.id, k]));
-            const draggedKey = keysById.get(id);
-            if (!draggedKey) return;
-
-            const deltaX = x - draggedKey.position.x;
-            const deltaY = y - draggedKey.position.y;
-
-            type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
-
-            const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
-                const key = keysById.get(selectedId);
-                if (!key) return null;
-                return {
-                    id: selectedId,
-                    data: {
-                        position: {
-                            x: key.position.x + deltaX,
-                            y: key.position.y + deltaY
-                        }
-                    }
-                };
-            }).filter((u): u is UpdateType => u !== null);
-
-            updateKeys(updates);
-        } else {
-            updateKey(id, { position: { x, y } });
-        }
-    }, []);
-
     return (
         <div
             className={`w-full h-full bg-neutral-900 overflow-hidden ${isSpacePressed ? 'cursor-grab' : 'cursor-default'}`}
@@ -464,15 +430,7 @@ const MainCanvas = () => {
                 >
                     <Layer>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
-                        {projectKeys.map((key) => (
-                            <KeyObject
-                                key={key.id}
-                                data={key}
-                                isSelected={selectedKeysSet.has(key.id)}
-                                onSelect={selectKey}
-                                onDragEnd={handleKeyDragEnd}
-                            />
-                        ))}
+                        <KeyList />
                         {/* Selection Box */}
                         {isSelecting && selectionBox && (
                             <Rect
