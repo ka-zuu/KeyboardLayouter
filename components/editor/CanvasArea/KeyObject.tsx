@@ -5,7 +5,7 @@ import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
-import { rotatePoint, rotatePointPrecalc } from '@/lib/geometry';
+import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
@@ -225,48 +225,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     });
                 }
             }}
-            onDragEnd={(e) => {
-                // Standard single drag end
-                const currentSelectedIds = useStore.getState().selectedKeyIds;
-                if (currentSelectedIds.length <= 1 || !currentSelectedIds.includes(data.id)) {
-                    handleDragEndCenter(e);
-                    return;
-                }
-
-                // Batch Update for Multi-select
-                const nx = e.target.x();
-                const ny = e.target.y();
-
-                // Calculate total delta relative to STORE position
-                const originalCenterX = (data.position.x * PIXELS_PER_U) + (data.size.w * PIXELS_PER_U / 2);
-                const originalCenterY = (data.position.y * PIXELS_PER_U) + (data.size.h * PIXELS_PER_U / 2);
-
-                const totalDeltaX = nx - originalCenterX;
-                const totalDeltaY = ny - originalCenterY;
-
-                const deltaU_X = totalDeltaX / PIXELS_PER_U;
-                const deltaU_Y = totalDeltaY / PIXELS_PER_U;
-
-                const currentProject = useStore.getState().project;
-                const selectedSet = new Set(currentSelectedIds);
-                const updates: { id: string; data: Partial<KeyData> }[] = [];
-
-                for (const key of currentProject.keys) {
-                    if (selectedSet.has(key.id)) {
-                        updates.push({
-                            id: key.id,
-                            data: {
-                                position: {
-                                    x: key.position.x + deltaU_X,
-                                    y: key.position.y + deltaU_Y
-                                }
-                            }
-                        });
-                    }
-                }
-
-                updateKeys(updates);
-            }}
+            onDragEnd={handleDragEndCenter}
             dragBoundFunc={dragBoundFunc}
             onClick={(e) => {
                 e.cancelBubble = true;

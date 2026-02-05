@@ -5,7 +5,7 @@ import { Stage, Layer, Rect } from 'react-konva';
 import { useStore } from '@/store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
-import KeyObject from './KeyObject';
+import KeyList from './KeyList';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
 import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
@@ -464,15 +464,12 @@ const MainCanvas = () => {
                 >
                     <Layer>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
-                        {projectKeys.map((key) => (
-                            <KeyObject
-                                key={key.id}
-                                data={key}
-                                isSelected={selectedKeysSet.has(key.id)}
-                                onSelect={selectKey}
-                                onDragEnd={handleKeyDragEnd}
-                            />
-                        ))}
+                        <KeyList
+                            keys={projectKeys}
+                            selectedKeysSet={selectedKeysSet}
+                            onSelect={selectKey}
+                            onDragEnd={handleKeyDragEnd}
+                        />
                         {/* Selection Box */}
                         {isSelecting && selectionBox && (
                             <Rect
