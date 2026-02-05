@@ -40,14 +40,10 @@ export function generateQMKInfo(project: ProjectData): string {
         // Rotation handling
         if (key.angle !== 0) {
             qmkKey.r = key.angle;
-            // In MKD, we rotate around center? Or Top Left?
-            // Our store data says "rotationCenter". 
-            // If rotationCenter is not used correctly yet, we might fallback to 0,0 or key origin.
-            // For now, let's omit complex rotation origin logic if strictly not needed or just pass what we have if compatible.
-            // Standard KLE behavior: rotation is around a point (rx, ry).
-            // If MKD keys just have 'angle' and we assume they rotate around their own center for now visually, 
-            // exporting that to QMK/KLE format requires defining rx/ry.
-            // Let's assume standard 0,0 origin for simplicity or omit if 0.
+            // The rotation origin (rx, ry) for QMK is an absolute coordinate.
+            // It's calculated from the key's center plus the relative rotationCenter offset.
+            qmkKey.rx = key.position.x + key.size.w / 2 + key.rotationCenter.x;
+            qmkKey.ry = key.position.y + key.size.h / 2 + key.rotationCenter.y;
         }
 
         return qmkKey;
