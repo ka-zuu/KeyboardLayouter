@@ -40,10 +40,10 @@ export function generateQMKInfo(project: ProjectData): string {
         // Rotation handling
         if (key.angle !== 0) {
             qmkKey.r = key.angle;
-            // MKD visually rotates keys around their center.
-            // We export rx/ry as the center of the key to match this visual behavior.
-            qmkKey.rx = key.position.x + key.size.w / 2;
-            qmkKey.ry = key.position.y + key.size.h / 2;
+            // The rotation origin (rx, ry) for QMK is an absolute coordinate.
+            // It's calculated from the key's center plus the relative rotationCenter offset.
+            qmkKey.rx = key.position.x + key.size.w / 2 + key.rotationCenter.x;
+            qmkKey.ry = key.position.y + key.size.h / 2 + key.rotationCenter.y;
         }
 
         return qmkKey;
