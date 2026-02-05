@@ -70,7 +70,9 @@ describe('qmk', () => {
                                 y: 0,
                                 label: 'B',
                                 matrix: [0, 2],
-                                r: 45
+                                r: 45,
+                                rx: 3.5,
+                                ry: 0.5
                             }
                         ]
                     }
