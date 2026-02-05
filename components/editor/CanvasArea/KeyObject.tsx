@@ -18,11 +18,11 @@ interface KeyObjectProps {
 const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
     const snapEnabled = useStore(state => state.snapEnabled);
     const gridSize = useStore(state => state.gridSize);
-    const updateKey = useStore(state => state.updateKey);
     const updateKeys = useStore(state => state.updateKeys);
 
     const groupRef = useRef<Konva.Group>(null);
     const lastDragPos = useRef<{ x: number, y: number } | null>(null);
+    const pendingRotationUpdates = useRef<{ id: string; data: Partial<KeyData> }[]>([]);
 
     // Convert units to pixels
     const width = data.size.w * PIXELS_PER_U;
@@ -114,7 +114,12 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         // If single selection, just update this key
         const currentSelectedIds = useStore.getState().selectedKeyIds;
         if (currentSelectedIds.length <= 1 || !currentSelectedIds.includes(data.id)) {
-            updateKey(data.id, { angle: newRotation });
+            // Imperative update for single selection
+            const node = stage.findOne('#' + data.id);
+            if (node) {
+                node.rotation(newRotation);
+            }
+            pendingRotationUpdates.current = [{ id: data.id, data: { angle: newRotation } }];
             return;
         }
 
@@ -141,7 +146,14 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         currentProject.keys.forEach(k => {
             if (selectedIdsSet.has(k.id)) {
                 if (k.id === pivotId) {
-                    updates.push({ id: k.id, data: { angle: newRotation } });
+                    const update = { id: k.id, data: { angle: newRotation } };
+                    updates.push(update);
+
+                    // Imperative Update
+                    const node = stage.findOne('#' + k.id);
+                    if (node) {
+                        node.rotation(newRotation);
+                    }
                 } else {
                     // Normalize angle
                     const kNewAngle = k.angle + deltaRotation;
@@ -172,12 +184,21 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                             angle: kNewAngle
                         }
                     });
+
+                    // Imperative Update
+                    const node = stage.findOne('#' + k.id);
+                    if (node) {
+                        node.rotation(kNewAngle);
+                        // Convert U to Px for Konva Node
+                        node.x((newPos.x * PIXELS_PER_U) + (k.size.w * PIXELS_PER_U / 2));
+                        node.y((newPos.y * PIXELS_PER_U) + (k.size.h * PIXELS_PER_U / 2));
+                    }
                 }
             }
         });
 
         if (updates.length > 0) {
-            updateKeys(updates);
+            pendingRotationUpdates.current = updates;
         }
     };
 
@@ -371,6 +392,12 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                         onDragMove={handleRotationDragMove}
                         onDragEnd={(e) => {
                             e.cancelBubble = true;
+                            // Commit Pending Updates
+                            if (pendingRotationUpdates.current.length > 0) {
+                                updateKeys(pendingRotationUpdates.current);
+                                pendingRotationUpdates.current = [];
+                            }
+
                             // Reset position of handle is automatic since it's a child?
                             // Wait, if we drag it, Konva modifies its x,y.
                             // We MUST reset its position back to (0, -halfH - 25) after drag.
