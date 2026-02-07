@@ -4,12 +4,15 @@ import JSZip from 'jszip';
 
 // Mock crypto if needed
 if (!global.crypto) {
-    // @ts-ignore
-    global.crypto = {};
-}
-if (!global.crypto.randomUUID) {
-    let i = 0;
-    global.crypto.randomUUID = () => `uuid-${i++}`;
+    Object.defineProperty(global, 'crypto', {
+        value: {
+            randomUUID: () => `uuid-${Math.random()}`
+        },
+        writable: true
+    });
+} else if (!global.crypto.randomUUID) {
+    // @ts-expect-error: fallback for missing randomUUID
+    global.crypto.randomUUID = () => `uuid-${Math.random()}`;
 }
 
 describe('generateKicadProjectZip', () => {

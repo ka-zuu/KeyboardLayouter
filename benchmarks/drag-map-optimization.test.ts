@@ -25,6 +25,7 @@ describe('Map Construction vs Set Lookup Optimization', () => {
                     if (!key) return null;
                     return { id: key.id };
                 }).filter(u => u !== null);
+                void updates;
             }
             const end1 = performance.now();
             const timeBaseline = end1 - start1;
@@ -39,6 +40,7 @@ describe('Map Construction vs Set Lookup Optimization', () => {
                          updates.push({ id: key.id });
                     }
                 }
+                void updates;
             }
             const end2 = performance.now();
             const timeOptimized = end2 - start2;
