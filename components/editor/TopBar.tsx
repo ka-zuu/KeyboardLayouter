@@ -3,8 +3,9 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { useStore as useZustandStore } from 'zustand';
-import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode } from 'lucide-react';
+import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode, Cpu } from 'lucide-react';
 import { generateQMKInfo } from '@/lib/qmk';
+import { generateKicadProjectZip } from '@/lib/kicad';
 
 const TopBar = () => {
     const { project, addKeys, importProject, gridSize, setGridSize, setProjectName } = useStore();
@@ -45,6 +46,21 @@ const TopBar = () => {
         a.download = 'info.json';
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    const handleExportKicad = async () => {
+        try {
+            const blob = await generateKicadProjectZip(project);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${project.name.replace(/\s+/g, '_')}_kicad.zip`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Failed to generate KiCad project:', error);
+            alert('Failed to generate KiCad project');
+        }
     };
 
     const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,6 +196,14 @@ const TopBar = () => {
                     title="Export QMK (info.json)"
                 >
                     <FileCode size={18} />
+                </button>
+
+                <button
+                    onClick={handleExportKicad}
+                    className="p-2 text-gray-400 hover:text-orange-400 transition-colors"
+                    title="Export KiCad Project (.zip)"
+                >
+                    <Cpu size={18} />
                 </button>
             </div>
         </div>
