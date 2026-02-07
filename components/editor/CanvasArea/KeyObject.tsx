@@ -24,6 +24,12 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
     const lastDragPos = useRef<{ x: number, y: number } | null>(null);
     const pendingRotationUpdates = useRef<{ id: string; data: Partial<KeyData> }[]>([]);
 
+    // Performance optimization: Cache participating keys during rotation drag
+    const rotationContextRef = useRef<{
+        participatingKeys: KeyData[];
+        pivotId: string;
+    } | null>(null);
+
     // Convert units to pixels
     const width = data.size.w * PIXELS_PER_U;
     const height = data.size.h * PIXELS_PER_U;
@@ -111,9 +117,11 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         // So we add 90 deg to align.
         const newRotation = angleDeg + 90;
 
-        // If single selection, just update this key
-        const currentSelectedIds = useStore.getState().selectedKeyIds;
-        if (currentSelectedIds.length <= 1 || !currentSelectedIds.includes(data.id)) {
+        // Use cached context if available, otherwise fallback to store (though dragStart should have set it)
+        const context = rotationContextRef.current;
+
+        // If single selection or no context, just update this key
+        if (!context) {
             // Imperative update for single selection
             const node = stage.findOne('#' + data.id);
             if (node) {
@@ -140,59 +148,55 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         const pivotCenterX = data.position.x + data.size.w / 2;
         const pivotCenterY = data.position.y + data.size.h / 2;
 
-        const selectedIdsSet = new Set(currentSelectedIds);
-        const currentProject = useStore.getState().project;
+        // Iterate over cached participating keys instead of all project keys
+        context.participatingKeys.forEach(k => {
+            if (k.id === pivotId) {
+                const update = { id: k.id, data: { angle: newRotation } };
+                updates.push(update);
 
-        currentProject.keys.forEach(k => {
-            if (selectedIdsSet.has(k.id)) {
-                if (k.id === pivotId) {
-                    const update = { id: k.id, data: { angle: newRotation } };
-                    updates.push(update);
+                // Imperative Update
+                const node = stage.findOne('#' + k.id);
+                if (node) {
+                    node.rotation(newRotation);
+                }
+            } else {
+                // Normalize angle
+                const kNewAngle = k.angle + deltaRotation;
 
-                    // Imperative Update
-                    const node = stage.findOne('#' + k.id);
-                    if (node) {
-                        node.rotation(newRotation);
+                // Orbitting Logic
+                // 1. Get Key Center
+                const kCenterX = k.position.x + k.size.w / 2;
+                const kCenterY = k.position.y + k.size.h / 2;
+
+                // 2. Rotate Key Center around Pivot Center
+                const rotatedCenter = rotatePointPrecalc(
+                    { x: kCenterX, y: kCenterY },
+                    { x: pivotCenterX, y: pivotCenterY },
+                    sin,
+                    cos
+                );
+
+                // 3. Convert back to Top-Left position
+                const newPos = {
+                    x: rotatedCenter.x - k.size.w / 2,
+                    y: rotatedCenter.y - k.size.h / 2
+                };
+
+                updates.push({
+                    id: k.id,
+                    data: {
+                        position: newPos,
+                        angle: kNewAngle
                     }
-                } else {
-                    // Normalize angle
-                    const kNewAngle = k.angle + deltaRotation;
+                });
 
-                    // Orbitting Logic
-                    // 1. Get Key Center
-                    const kCenterX = k.position.x + k.size.w / 2;
-                    const kCenterY = k.position.y + k.size.h / 2;
-
-                    // 2. Rotate Key Center around Pivot Center
-                    const rotatedCenter = rotatePointPrecalc(
-                        { x: kCenterX, y: kCenterY },
-                        { x: pivotCenterX, y: pivotCenterY },
-                        sin,
-                        cos
-                    );
-
-                    // 3. Convert back to Top-Left position
-                    const newPos = {
-                        x: rotatedCenter.x - k.size.w / 2,
-                        y: rotatedCenter.y - k.size.h / 2
-                    };
-
-                    updates.push({
-                        id: k.id,
-                        data: {
-                            position: newPos,
-                            angle: kNewAngle
-                        }
-                    });
-
-                    // Imperative Update
-                    const node = stage.findOne('#' + k.id);
-                    if (node) {
-                        node.rotation(kNewAngle);
-                        // Convert U to Px for Konva Node
-                        node.x((newPos.x * PIXELS_PER_U) + (k.size.w * PIXELS_PER_U / 2));
-                        node.y((newPos.y * PIXELS_PER_U) + (k.size.h * PIXELS_PER_U / 2));
-                    }
+                // Imperative Update
+                const node = stage.findOne('#' + k.id);
+                if (node) {
+                    node.rotation(kNewAngle);
+                    // Convert U to Px for Konva Node
+                    node.x((newPos.x * PIXELS_PER_U) + (k.size.w * PIXELS_PER_U / 2));
+                    node.y((newPos.y * PIXELS_PER_U) + (k.size.h * PIXELS_PER_U / 2));
                 }
             }
         });
@@ -388,10 +392,34 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                         stroke={strokeColor}
                         strokeWidth={2}
                         draggable
-                        onDragStart={(e) => e.cancelBubble = true}
+                        onDragStart={(e) => {
+                            e.cancelBubble = true;
+
+                            // Initialize rotation context
+                            const state = useStore.getState();
+                            const selectedIds = state.selectedKeyIds;
+
+                            // Check if this key is part of the selection (it should be if handle is visible)
+                            if (selectedIds.length > 1 && selectedIds.includes(data.id)) {
+                                const selectedSet = new Set(selectedIds);
+                                // Filter project keys ONCE at start of drag
+                                const participatingKeys = state.project.keys.filter(k => selectedSet.has(k.id));
+
+                                rotationContextRef.current = {
+                                    participatingKeys,
+                                    pivotId: data.id
+                                };
+                            } else {
+                                rotationContextRef.current = null;
+                            }
+                        }}
                         onDragMove={handleRotationDragMove}
                         onDragEnd={(e) => {
                             e.cancelBubble = true;
+
+                            // Clear context
+                            rotationContextRef.current = null;
+
                             // Commit Pending Updates
                             if (pendingRotationUpdates.current.length > 0) {
                                 updateKeys(pendingRotationUpdates.current);
