@@ -36,7 +36,20 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
     // Performance optimization: Cache participating nodes during move drag
     const draggedNodesRef = useRef<Konva.Node[]>([]);
 
+    // Calculate derived values safely, even if data is undefined (though effect depends on it)
+    const width = data ? data.size.w * PIXELS_PER_U : 0;
+    const height = data ? data.size.h * PIXELS_PER_U : 0;
+    const x = data ? data.position.x * PIXELS_PER_U : 0;
+    const y = data ? data.position.y * PIXELS_PER_U : 0;
+
+    // Visual styling
+    const keyColor = '#f0f0f0';
+    const textColor = '#333';
+    const strokeColor = isSelected ? '#3b82f6' : '#999';
+    const strokeWidth = isSelected ? 3 : 1;
+
     useEffect(() => {
+        if (!data) return;
         const group = groupRef.current;
         if (group) {
             group.cache({ pixelRatio: 2 });
@@ -45,24 +58,11 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
 
     if (!data) return null;
 
-    // Convert units to pixels
-    const width = data.size.w * PIXELS_PER_U;
-    const height = data.size.h * PIXELS_PER_U;
-    // data.position IS Top-Left.
-    const x = data.position.x * PIXELS_PER_U;
-    const y = data.position.y * PIXELS_PER_U;
-
     // Calculate Center for Pivot
     const halfW = width / 2;
     const halfH = height / 2;
     const centerX = x + halfW;
     const centerY = y + halfH;
-
-    // Visual styling
-    const keyColor = '#f0f0f0';
-    const textColor = '#333';
-    const strokeColor = isSelected ? '#3b82f6' : '#999';
-    const strokeWidth = isSelected ? 3 : 1;
 
     const handleDragEndCenter = (e: Konva.KonvaEventObject<DragEvent>) => {
         const nx = e.target.x();
