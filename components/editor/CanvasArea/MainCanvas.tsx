@@ -409,7 +409,9 @@ const MainCanvas = () => {
             const deltaX = x - draggedKey.position.x;
             const deltaY = y - draggedKey.position.y;
 
-            const updates = selectedKeyIds.map((selectedId): { id: string; data: Partial<import('@/types/mkd').KeyData> } | null => {
+            type UpdateType = { id: string; data: Partial<import('@/types/mkd').KeyData> };
+
+            const updates = selectedKeyIds.map((selectedId): UpdateType | null => {
                 const key = keysById.get(selectedId);
                 if (!key) return null;
                 return {
@@ -421,7 +423,7 @@ const MainCanvas = () => {
                         }
                     }
                 };
-            }).filter((u): u is { id: string; data: Partial<import('@/types/mkd').KeyData> } => u !== null);
+            }).filter((u): u is UpdateType => u !== null);
 
             updateKeys(updates);
         } else {

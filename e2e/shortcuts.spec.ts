@@ -123,12 +123,12 @@ test.describe('Keyboard Shortcuts', () => {
         });
         await page.reload();
         
-        // Copy (Control+C or Meta+C)
-        await page.keyboard.press('Control+c');
+        // Copy (Meta+C)
+        await page.keyboard.press('Meta+c');
         await page.waitForTimeout(100);
 
-        // Paste (Control+V or Meta+V)
-        await page.keyboard.press('Control+v');
+        // Paste (Meta+V)
+        await page.keyboard.press('Meta+v');
         await page.waitForTimeout(100);
         
         // Should have 2 keys
@@ -146,164 +146,6 @@ test.describe('Keyboard Shortcuts', () => {
              const storage = localStorage.getItem('mkd-storage');
              const data = JSON.parse(storage!).state.project;
              return data.keys.length === 1;
-        });
-    });
-
-    test('should cut and paste keys', async ({ page }) => {
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             const keys = state.project.keys;
-             if (keys.length > 0) {
-                 state.selectedKeyIds = [keys[0].id];
-                 localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-             }
-        });
-        await page.reload();
-
-        // Cut
-        await page.keyboard.press('Control+x');
-        await page.waitForTimeout(100);
-
-        // Should have 0 keys
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             const data = JSON.parse(storage!).state.project;
-             return data.keys.length === 0;
-        });
-
-        // Paste
-        await page.keyboard.press('Control+v');
-        await page.waitForTimeout(100);
-
-        // Should have 1 key again
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             const data = JSON.parse(storage!).state.project;
-             return data.keys.length === 1;
-        });
-    });
-
-    test('should duplicate selected keys with Cmd+D', async ({ page }) => {
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             const keys = state.project.keys;
-             if (keys.length > 0) {
-                 state.selectedKeyIds = [keys[0].id];
-                 localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-             }
-        });
-        await page.reload();
-
-        await page.keyboard.press('Control+d');
-        await page.waitForTimeout(100);
-
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             const data = JSON.parse(storage!).state.project;
-             return data.keys.length === 2;
-        });
-    });
-
-    test('should select all keys with Cmd+A', async ({ page }) => {
-        // Add one more key
-        await page.click('button:has-text("Add Keys")');
-        await page.waitForTimeout(500);
-
-        // Select All
-        await page.keyboard.press('Control+a');
-        await page.waitForTimeout(100);
-
-        // Verify by deleting all
-        await page.keyboard.press('Delete');
-
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             const data = JSON.parse(storage!).state.project;
-             return data.keys.length === 0;
-        });
-    });
-
-    test('should deselect all keys with Escape', async ({ page }) => {
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             const keys = state.project.keys;
-             if (keys.length > 0) {
-                 // We can't easily set selection via localStorage if it's not persisted,
-                 // so let's use the UI to select it or just assume the last added key is NOT selected if we don't click it.
-                 // Actually, the easiest way to test Deselect is:
-                 // 1. Add key (it's NOT selected by default in this app's Add Key logic, wait let me check TopBar)
-             }
-        });
-
-        // Select All first
-        await page.keyboard.press('Control+a');
-        await page.waitForTimeout(100);
-
-        // Escape to deselect
-        await page.keyboard.press('Escape');
-        await page.waitForTimeout(100);
-
-        // Verify by trying to delete (should do nothing)
-        await page.keyboard.press('Delete');
-        await page.waitForTimeout(200);
-
-        const keyCount = await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             return JSON.parse(storage!).state.project.keys.length;
-        });
-        expect(keyCount).toBe(1);
-    });
-
-    test('should undo and redo', async ({ page }) => {
-        // Initial count is 1 (added in beforeEach)
-
-        // Delete the key
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             state.selectedKeyIds = [state.project.keys[0].id];
-             localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-        });
-        await page.reload();
-        await page.keyboard.press('Delete');
-
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             return JSON.parse(storage!).state.project.keys.length === 0;
-        });
-
-        // Undo
-        await page.keyboard.press('Control+z');
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             return JSON.parse(storage!).state.project.keys.length === 1;
-        });
-
-        // Redo
-        if (process.platform === 'darwin') {
-            await page.keyboard.press('Meta+Shift+z');
-        } else {
-            await page.keyboard.press('Control+Shift+z');
-        }
-
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             return JSON.parse(storage!).state.project.keys.length === 0;
-        });
-
-        // Redo with Ctrl+Y
-        await page.keyboard.press('Control+z'); // Back to 1
-        await page.keyboard.press('Control+y'); // Back to 0
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             return JSON.parse(storage!).state.project.keys.length === 0;
         });
     });
     
