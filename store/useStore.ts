@@ -54,6 +54,27 @@ const DEFAULT_PROJECT: ProjectData = {
   updatedAt: Date.now(),
 };
 
+const storageTimers: Record<string, any> = {};
+
+const debouncedStorage = {
+  getItem: (name: string) => {
+    if (typeof localStorage === 'undefined') return null;
+    return localStorage.getItem(name);
+  },
+  setItem: (name: string, value: string) => {
+    if (typeof localStorage === 'undefined') return;
+    if (storageTimers[name]) clearTimeout(storageTimers[name]);
+    storageTimers[name] = setTimeout(() => {
+        localStorage.setItem(name, value);
+        delete storageTimers[name];
+    }, 1000);
+  },
+  removeItem: (name: string) => {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(name);
+  },
+};
+
 export const useStore = create<EditorState>()(
   persist(
     temporal(
@@ -461,7 +482,7 @@ export const useStore = create<EditorState>()(
     ),
     {
       name: 'mkd-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => debouncedStorage),
       partialize: (state) => ({
          project: state.project,
          savedProjects: state.savedProjects 

@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
-    data: KeyData;
+    id: string;
     isSelected: boolean;
     onSelect: (id: string, multi: boolean) => void;
     onDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
+const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragEnd }) => {
+    const data = useStore(useShallow(state => state.project.keys.find(k => k.id === id)));
     const snapEnabled = useStore(state => state.snapEnabled);
     const gridSize = useStore(state => state.gridSize);
     const updateKeys = useStore(state => state.updateKeys);
@@ -30,6 +32,18 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         participatingKeys: KeyData[];
         pivotId: string;
     } | null>(null);
+
+    // Performance optimization: Cache participating nodes during move drag
+    const draggedNodesRef = useRef<Konva.Node[]>([]);
+
+    useEffect(() => {
+        const group = groupRef.current;
+        if (group) {
+            group.cache({ pixelRatio: 2 });
+        }
+    }, [data, isSelected, width, height, keyColor, strokeColor, strokeWidth]);
+
+    if (!data) return null;
 
     // Convert units to pixels
     const width = data.size.w * PIXELS_PER_U;
@@ -105,6 +119,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
              // Reset refs
              dragStartPos.current = null;
              lastDragPos.current = null;
+             draggedNodesRef.current = [];
         } else {
              // Single Key Update
              onDragEnd(data.id, uX, uY);
@@ -273,14 +288,28 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 const startY = e.target.y();
                 lastDragPos.current = { x: startX, y: startY };
                 dragStartPos.current = { x: startX, y: startY };
+
+                const state = useStore.getState();
+                const currentSelectedIds = state.selectedKeyIds;
+                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(data.id)) {
+                    const stage = e.target.getStage();
+                    if (stage) {
+                        draggedNodesRef.current = [];
+                        currentSelectedIds.forEach(id => {
+                             if (id === data.id) return; // Skip self
+                             const node = stage.findOne('#' + id);
+                             if (node) {
+                                 draggedNodesRef.current.push(node);
+                             }
+                        });
+                    }
+                } else {
+                    draggedNodesRef.current = [];
+                }
             }}
             onDragMove={(e) => {
                 // Multi-select Drag Logic
-                const currentSelectedIds = useStore.getState().selectedKeyIds;
-                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(data.id) && lastDragPos.current) {
-                    const stage = e.target.getStage();
-                    if (!stage) return;
-
+                if (draggedNodesRef.current.length > 0 && lastDragPos.current) {
                     const currentX = e.target.x();
                     const currentY = e.target.y();
 
@@ -290,14 +319,9 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     lastDragPos.current = { x: currentX, y: currentY };
 
                     // Move other selected keys
-                    currentSelectedIds.forEach(id => {
-                        if (id === data.id) return; // Skip self (already moved by drag)
-
-                        const node = stage.findOne('#' + id);
-                        if (node) {
-                            node.x(node.x() + dx);
-                            node.y(node.y() + dy);
-                        }
+                    draggedNodesRef.current.forEach(node => {
+                        node.x(node.x() + dx);
+                        node.y(node.y() + dy);
                     });
                 }
             }}
