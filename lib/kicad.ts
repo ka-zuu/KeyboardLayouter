@@ -144,7 +144,9 @@ function generateSch(keys: ExportKey[]): string {
     });
 
     content += `)\n`;
-    return content;
+
+    // Ensure no markdown code blocks or backticks are present in the output
+    return content.replace(/`/g, '').trim();
 }
 
 function getLibSymbols(): string {

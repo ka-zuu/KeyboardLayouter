@@ -158,4 +158,13 @@ describe('generateKicadProjectZip', () => {
         // 2 keys * (2 pins SW + 2 pins D) = 8 pins
         expect(pinUuidMatches?.length).toBe(8);
     });
+
+    it('does not contain backticks in schematic output', async () => {
+        const blob = await generateKicadProjectZip(mockProject);
+        const zip = await JSZip.loadAsync(blob);
+        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
+
+        expect(sch).toBeDefined();
+        expect(sch).not.toContain('`');
+    });
 });
