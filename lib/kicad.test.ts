@@ -159,7 +159,7 @@ describe('generateKicadProjectZip', () => {
         expect(pinUuidMatches?.length).toBe(8);
     });
 
-    it('output format is clean (starts with S-expr, no backticks, no source tags)', async () => {
+    it('output format is clean (starts with S-expr, no backticks, no tags)', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
@@ -172,5 +172,6 @@ describe('generateKicadProjectZip', () => {
         expect(sch).not.toContain('`');
         expect(sch).not.toContain('<source>');
         expect(sch).not.toContain('</source>');
+        expect(sch).not.toContain('<tag>');
     });
 });

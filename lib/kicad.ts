@@ -147,7 +147,13 @@ function generateSch(keys: ExportKey[]): string {
 
     // Ensure no markdown code blocks or backticks are present in the output
     // Also remove any AI citation tags like <source>...</source>
-    const cleanContent = content.replace(/<source>[\s\S]*?<\/source>/g, '').replace(/`/g, '');
+    // We use a broader regex to catch any tag-like structures that might be hallucinated,
+    // assuming valid KiCad S-expressions won't contain angle brackets in this context.
+    const cleanContent = content
+        .replace(/<source>[\s\S]*?<\/source>/g, '')
+        .replace(/<[^>]+>/g, '') // Aggressively strip other XML-like tags
+        .replace(/`/g, '');
+
     return cleanContent.trim();
 }
 
