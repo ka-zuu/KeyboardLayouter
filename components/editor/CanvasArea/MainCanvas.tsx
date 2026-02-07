@@ -11,7 +11,7 @@ import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const projectKeys = useStore(useShallow(state => state.project.keys));
+    const projectKeyIds = useStore(useShallow(state => state.project.keys.map(k => k.id)));
     const { scale, pan, gridSize, selectedKeyIds } = useStore(useShallow(state => ({
         scale: state.scale,
         pan: state.pan,
@@ -33,7 +33,8 @@ const MainCanvas = () => {
 
     // Selection State
     const [isSelecting, setIsSelecting] = React.useState(false);
-    const [selectionBox, setSelectionBox] = React.useState<{ startX: number, startY: number, endX: number, endY: number } | null>(null);
+    const selectionBoxRef = useRef<Konva.Rect>(null);
+    const selectionStartRef = useRef<{ x: number, y: number } | null>(null);
 
     // Handle window resize
     const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
@@ -143,12 +144,15 @@ const MainCanvas = () => {
             const pos = stage.getRelativePointerPosition();
             if (pos) {
                 setIsSelecting(true);
-                setSelectionBox({
-                    startX: pos.x,
-                    startY: pos.y,
-                    endX: pos.x,
-                    endY: pos.y
-                });
+                selectionStartRef.current = { x: pos.x, y: pos.y };
+                if (selectionBoxRef.current) {
+                    selectionBoxRef.current.visible(true);
+                    selectionBoxRef.current.width(0);
+                    selectionBoxRef.current.height(0);
+                    selectionBoxRef.current.x(pos.x);
+                    selectionBoxRef.current.y(pos.y);
+                    selectionBoxRef.current.getLayer()?.batchDraw();
+                }
             }
         }
     };
@@ -210,15 +214,24 @@ const MainCanvas = () => {
             }
         }
 
-        if (!isSelecting || !selectionBox) return;
+        if (!isSelecting || !selectionStartRef.current || !selectionBoxRef.current) return;
 
         const pos = stage.getRelativePointerPosition();
         if (pos) {
-            setSelectionBox({
-                ...selectionBox,
-                endX: pos.x,
-                endY: pos.y
+            const startX = selectionStartRef.current.x;
+            const startY = selectionStartRef.current.y;
+            const x = Math.min(startX, pos.x);
+            const y = Math.min(startY, pos.y);
+            const width = Math.abs(pos.x - startX);
+            const height = Math.abs(pos.y - startY);
+
+            selectionBoxRef.current.setAttrs({
+                x,
+                y,
+                width,
+                height,
             });
+            selectionBoxRef.current.getLayer()?.batchDraw();
         }
     };
 
@@ -229,14 +242,15 @@ const MainCanvas = () => {
         }
 
         if (isMiddleMousePressed) setIsMiddleMousePressed(false);
-        if (isSelecting && selectionBox) {
+        if (isSelecting && selectionBoxRef.current && selectionBoxRef.current.visible()) {
             const stage = stageRef.current;
             if (stage) {
                 // Normalize Selection Box (which is a polygon)
-                const x1 = Math.min(selectionBox.startX, selectionBox.endX);
-                const x2 = Math.max(selectionBox.startX, selectionBox.endX);
-                const y1 = Math.min(selectionBox.startY, selectionBox.endY);
-                const y2 = Math.max(selectionBox.startY, selectionBox.endY);
+                const sb = selectionBoxRef.current;
+                const x1 = sb.x();
+                const y1 = sb.y();
+                const x2 = x1 + sb.width();
+                const y2 = y1 + sb.height();
 
                 const selectionRectPoints = [
                     { x: x1, y: y1 },
@@ -246,6 +260,8 @@ const MainCanvas = () => {
                 ];
 
                 const newSelectedIds: string[] = [];
+
+                const projectKeys = useStore.getState().project.keys;
 
                 projectKeys.forEach(key => {
                     const kx = key.position.x * PIXELS_PER_U;
@@ -300,7 +316,11 @@ const MainCanvas = () => {
             }
         }
         setIsSelecting(false);
-        setSelectionBox(null);
+        selectionStartRef.current = null;
+        if (selectionBoxRef.current) {
+            selectionBoxRef.current.visible(false);
+            selectionBoxRef.current.getLayer()?.batchDraw();
+        }
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -465,23 +485,20 @@ const MainCanvas = () => {
                     <Layer>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
                         <KeyList
-                            keys={projectKeys}
+                            keyIds={projectKeyIds}
                             selectedKeysSet={selectedKeysSet}
                             onSelect={selectKey}
                             onDragEnd={handleKeyDragEnd}
                         />
                         {/* Selection Box */}
-                        {isSelecting && selectionBox && (
-                            <Rect
-                                x={Math.min(selectionBox.startX, selectionBox.endX)}
-                                y={Math.min(selectionBox.startY, selectionBox.endY)}
-                                width={Math.abs(selectionBox.endX - selectionBox.startX)}
-                                height={Math.abs(selectionBox.endY - selectionBox.startY)}
-                                fill="rgba(66, 153, 225, 0.3)" // Blue 500 equivalent with opacity
-                                stroke="#4299e1"
-                                strokeWidth={1 / scale}
-                            />
-                        )}
+                        <Rect
+                            ref={selectionBoxRef}
+                            visible={false}
+                            fill="rgba(66, 153, 225, 0.3)" // Blue 500 equivalent with opacity
+                            stroke="#4299e1"
+                            strokeWidth={1 / scale}
+                            listening={false}
+                        />
                     </Layer>
                 </Stage>
             )}

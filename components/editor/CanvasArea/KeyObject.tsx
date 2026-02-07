@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
-    data: KeyData;
+    id: string;
     isSelected: boolean;
     onSelect: (id: string, multi: boolean) => void;
     onDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
+const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragEnd }) => {
+    const data = useStore(useShallow(state => state.project.keys.find(k => k.id === id)));
     const snapEnabled = useStore(state => state.snapEnabled);
     const gridSize = useStore(state => state.gridSize);
     const updateKeys = useStore(state => state.updateKeys);
@@ -31,24 +33,36 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         pivotId: string;
     } | null>(null);
 
-    // Convert units to pixels
-    const width = data.size.w * PIXELS_PER_U;
-    const height = data.size.h * PIXELS_PER_U;
-    // data.position IS Top-Left.
-    const x = data.position.x * PIXELS_PER_U;
-    const y = data.position.y * PIXELS_PER_U;
+    // Performance optimization: Cache participating nodes during move drag
+    const draggedNodesRef = useRef<Konva.Node[]>([]);
 
-    // Calculate Center for Pivot
-    const halfW = width / 2;
-    const halfH = height / 2;
-    const centerX = x + halfW;
-    const centerY = y + halfH;
+    // Calculate derived values safely, even if data is undefined (though effect depends on it)
+    const width = data ? data.size.w * PIXELS_PER_U : 0;
+    const height = data ? data.size.h * PIXELS_PER_U : 0;
+    const x = data ? data.position.x * PIXELS_PER_U : 0;
+    const y = data ? data.position.y * PIXELS_PER_U : 0;
 
     // Visual styling
     const keyColor = '#f0f0f0';
     const textColor = '#333';
     const strokeColor = isSelected ? '#3b82f6' : '#999';
     const strokeWidth = isSelected ? 3 : 1;
+
+    useEffect(() => {
+        if (!data) return;
+        const group = groupRef.current;
+        if (group) {
+            group.cache({ pixelRatio: 2 });
+        }
+    }, [data, isSelected, width, height, keyColor, strokeColor, strokeWidth]);
+
+    if (!data) return null;
+
+    // Calculate Center for Pivot
+    const halfW = width / 2;
+    const halfH = height / 2;
+    const centerX = x + halfW;
+    const centerY = y + halfH;
 
     const handleDragEndCenter = (e: Konva.KonvaEventObject<DragEvent>) => {
         const nx = e.target.x();
@@ -105,6 +119,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
              // Reset refs
              dragStartPos.current = null;
              lastDragPos.current = null;
+             draggedNodesRef.current = [];
         } else {
              // Single Key Update
              onDragEnd(data.id, uX, uY);
@@ -273,14 +288,28 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 const startY = e.target.y();
                 lastDragPos.current = { x: startX, y: startY };
                 dragStartPos.current = { x: startX, y: startY };
+
+                const state = useStore.getState();
+                const currentSelectedIds = state.selectedKeyIds;
+                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(data.id)) {
+                    const stage = e.target.getStage();
+                    if (stage) {
+                        draggedNodesRef.current = [];
+                        currentSelectedIds.forEach(id => {
+                             if (id === data.id) return; // Skip self
+                             const node = stage.findOne('#' + id);
+                             if (node) {
+                                 draggedNodesRef.current.push(node);
+                             }
+                        });
+                    }
+                } else {
+                    draggedNodesRef.current = [];
+                }
             }}
             onDragMove={(e) => {
                 // Multi-select Drag Logic
-                const currentSelectedIds = useStore.getState().selectedKeyIds;
-                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(data.id) && lastDragPos.current) {
-                    const stage = e.target.getStage();
-                    if (!stage) return;
-
+                if (draggedNodesRef.current.length > 0 && lastDragPos.current) {
                     const currentX = e.target.x();
                     const currentY = e.target.y();
 
@@ -290,14 +319,9 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     lastDragPos.current = { x: currentX, y: currentY };
 
                     // Move other selected keys
-                    currentSelectedIds.forEach(id => {
-                        if (id === data.id) return; // Skip self (already moved by drag)
-
-                        const node = stage.findOne('#' + id);
-                        if (node) {
-                            node.x(node.x() + dx);
-                            node.y(node.y() + dy);
-                        }
+                    draggedNodesRef.current.forEach(node => {
+                        node.x(node.x() + dx);
+                        node.y(node.y() + dy);
                     });
                 }
             }}

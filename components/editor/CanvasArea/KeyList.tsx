@@ -1,22 +1,21 @@
 import React from 'react';
 import KeyObject from './KeyObject';
-import { KeyData } from '@/types/mkd';
 
 interface KeyListProps {
-    keys: KeyData[];
+    keyIds: string[];
     selectedKeysSet: Set<string>;
     onSelect: (id: string, multi: boolean) => void;
     onDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const KeyList: React.FC<KeyListProps> = ({ keys, selectedKeysSet, onSelect, onDragEnd }) => {
+const KeyList: React.FC<KeyListProps> = ({ keyIds, selectedKeysSet, onSelect, onDragEnd }) => {
     return (
         <>
-            {keys.map((key) => (
+            {keyIds.map((id) => (
                 <KeyObject
-                    key={key.id}
-                    data={key}
-                    isSelected={selectedKeysSet.has(key.id)}
+                    key={id}
+                    id={id}
+                    isSelected={selectedKeysSet.has(id)}
                     onSelect={onSelect}
                     onDragEnd={onDragEnd}
                 />
