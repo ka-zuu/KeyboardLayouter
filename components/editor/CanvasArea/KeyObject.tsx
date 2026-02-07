@@ -113,7 +113,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
 
         // If single selection, just update this key
         const currentSelectedIds = useStore.getState().selectedKeyIds;
-        if (currentSelectedIds.length <= 1 || !currentSelectedIds.includes(data.id)) {
+        if (!isSelected || currentSelectedIds.length <= 1) {
             // Imperative update for single selection
             const node = stage.findOne('#' + data.id);
             if (node) {
@@ -140,8 +140,8 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         const pivotCenterX = data.position.x + data.size.w / 2;
         const pivotCenterY = data.position.y + data.size.h / 2;
 
-        const selectedIdsSet = new Set(currentSelectedIds);
         const currentProject = useStore.getState().project;
+        const selectedIdsSet = new Set(currentSelectedIds);
 
         currentProject.keys.forEach(k => {
             if (selectedIdsSet.has(k.id)) {
@@ -221,8 +221,10 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
             }}
             onDragMove={(e) => {
                 // Multi-select Drag Logic
-                const currentSelectedIds = useStore.getState().selectedKeyIds;
-                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(data.id) && lastDragPos.current) {
+                if (isSelected && lastDragPos.current) {
+                    const currentSelectedIds = useStore.getState().selectedKeyIds;
+                    if (currentSelectedIds.length <= 1) return;
+
                     const stage = e.target.getStage();
                     if (!stage) return;
 
