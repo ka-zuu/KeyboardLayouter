@@ -22,6 +22,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
 
     const groupRef = useRef<Konva.Group>(null);
     const lastDragPos = useRef<{ x: number, y: number } | null>(null);
+    const dragStartPos = useRef<{ x: number, y: number } | null>(null); // Store initial position
     const pendingRotationUpdates = useRef<{ id: string; data: Partial<KeyData> }[]>([]);
 
     // Convert units to pixels
@@ -52,9 +53,56 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         const uX = (nx - halfW) / PIXELS_PER_U;
         const uY = (ny - halfH) / PIXELS_PER_U;
 
-        // Rounding is handled by manual logic or if we want exact.
-        // store updates with whatever we give.
-        onDragEnd(data.id, uX, uY);
+        // Check for Multi-Selection
+        const selectedKeyIds = useStore.getState().selectedKeyIds;
+        if (selectedKeyIds.length > 1 && selectedKeyIds.includes(data.id) && dragStartPos.current) {
+             // Calculate Total Delta in U
+             const initialCenter = dragStartPos.current; // Center PX
+             // Current Center PX is nx, ny
+             const deltaX_px = nx - initialCenter.x;
+             const deltaY_px = ny - initialCenter.y;
+
+             const deltaX_u = deltaX_px / PIXELS_PER_U;
+             const deltaY_u = deltaY_px / PIXELS_PER_U;
+
+             const allKeys = useStore.getState().project.keys;
+             const updates: { id: string; data: Partial<KeyData> }[] = [];
+
+             const selectedSet = new Set(selectedKeyIds);
+             allKeys.forEach(k => {
+                 if (selectedSet.has(k.id)) {
+                     // Add delta to original position
+                     // Wait, we need original position?
+                     // Or just current position + delta?
+                     // Current position in Store hasn't changed during drag (only visual).
+                     // So yes, store pos + delta.
+
+                     // Exception: The dragged key itself?
+                     // Ideally we treat all uniformly based on Store state + Delta.
+                     // But the dragged key `data` prop might be stale if store updated?
+                     // No, drag is local.
+
+                     updates.push({
+                         id: k.id,
+                         data: {
+                             position: {
+                                 x: k.position.x + deltaX_u,
+                                 y: k.position.y + deltaY_u
+                             }
+                         }
+                     });
+                 }
+             });
+
+             updateKeys(updates);
+
+             // Reset refs
+             dragStartPos.current = null;
+             lastDragPos.current = null;
+        } else {
+             // Single Key Update
+             onDragEnd(data.id, uX, uY);
+        }
     };
 
     const dragBoundFunc = (pos: { x: number; y: number }) => {
@@ -217,7 +265,10 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
             draggable
             onDragStart={(e) => {
                 // Initialize drag start position for delta calculation
-                lastDragPos.current = { x: e.target.x(), y: e.target.y() };
+                const startX = e.target.x();
+                const startY = e.target.y();
+                lastDragPos.current = { x: startX, y: startY };
+                dragStartPos.current = { x: startX, y: startY };
             }}
             onDragMove={(e) => {
                 // Multi-select Drag Logic
