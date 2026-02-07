@@ -146,7 +146,9 @@ function generateSch(keys: ExportKey[]): string {
     content += `)\n`;
 
     // Ensure no markdown code blocks or backticks are present in the output
-    return content.replace(/`/g, '').trim();
+    // Also remove any AI citation tags like <source>...</source>
+    const cleanContent = content.replace(/<source>[\s\S]*?<\/source>/g, '').replace(/`/g, '');
+    return cleanContent.trim();
 }
 
 function getLibSymbols(): string {

@@ -159,12 +159,18 @@ describe('generateKicadProjectZip', () => {
         expect(pinUuidMatches?.length).toBe(8);
     });
 
-    it('does not contain backticks in schematic output', async () => {
+    it('output format is clean (starts with S-expr, no backticks, no source tags)', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
         expect(sch).toBeDefined();
+        // Check for start of file
+        expect(sch!.trim().startsWith('(kicad_sch')).toBe(true);
+
+        // Check for forbidden characters/tags
         expect(sch).not.toContain('`');
+        expect(sch).not.toContain('<source>');
+        expect(sch).not.toContain('</source>');
     });
 });
