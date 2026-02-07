@@ -122,9 +122,10 @@ export const useStore = create<EditorState>()(
                  // Deep merge for specific nested objects
                  const newKey = { ...k, ...data };
                  if (data.position) {
-                    newKey.position = { ...k.position, ...data.position };
-                    newKey.position.x = Math.max(0, newKey.position.x);
-                    newKey.position.y = Math.max(0, newKey.position.y);
+                    newKey.position = {
+                      x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
+                      y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+                    };
                  }
                  if (data.size) newKey.size = { ...k.size, ...data.size };
                  if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
@@ -150,9 +151,10 @@ export const useStore = create<EditorState>()(
                   // Deep merge for specific nested objects
                   const newKey = { ...k, ...data };
                   if (data.position) {
-                     newKey.position = { ...k.position, ...data.position };
-                     newKey.position.x = Math.max(0, newKey.position.x);
-                     newKey.position.y = Math.max(0, newKey.position.y);
+                     newKey.position = {
+                       x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
+                       y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+                     };
                   }
                   if (data.size) newKey.size = { ...k.size, ...data.size };
                   if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
