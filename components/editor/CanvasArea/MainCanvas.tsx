@@ -409,7 +409,7 @@ const MainCanvas = () => {
             const deltaX = x - draggedKey.position.x;
             const deltaY = y - draggedKey.position.y;
 
-            const updates = selectedKeyIds.map((selectedId) => {
+            const updates = selectedKeyIds.map((selectedId): { id: string; data: Partial<import('@/types/mkd').KeyData> } | null => {
                 const key = keysById.get(selectedId);
                 if (!key) return null;
                 return {
