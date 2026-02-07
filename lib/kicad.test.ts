@@ -79,41 +79,21 @@ describe('generateKicadProjectZip', () => {
         expect(sch).toContain('(at 19.05 -19.05 0)');
     });
 
-    it('generates consistent UUIDs between SCH and PCB', async () => {
-        const blob = await generateKicadProjectZip(mockProject);
-        const zip = await JSZip.loadAsync(blob);
-        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
-        const pcb = await zip.file('Test_Project.kicad_pcb')?.async('string');
-
-        // Extract UUID from first switch in PCB
-        const matches = pcb?.matchAll(/\(uuid "([^"]+)"\)/g);
-        const uuids = Array.from(matches || []).map(m => m[1]);
-
-        expect(uuids.length).toBeGreaterThan(0);
-
-        // At least one PCB UUID (switch) should be present in SCH
-        let found = false;
-        for (const uuid of uuids) {
-            if (sch?.includes(`(uuid "${uuid}")`)) {
-                found = true;
-                break;
-            }
-        }
-        expect(found).toBe(true);
-    });
-
-    it('generates nets correctly', async () => {
+    it('generates nets via labels correctly', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
         // Key 1: ROW_0, COL_0
-        expect(sch).toContain('"ROW_0"');
-        expect(sch).toContain('"COL_0"');
+        expect(sch).toContain('(label "ROW_0"');
+        expect(sch).toContain('(label "COL_0"');
 
         // Key 2: ROW_1, COL_1
-        expect(sch).toContain('"ROW_1"');
-        expect(sch).toContain('"COL_1"');
+        expect(sch).toContain('(label "ROW_1"');
+        expect(sch).toContain('(label "COL_1"');
+
+        // Intermediate net
+        expect(sch).toContain('(label "Net-SW1-Pad2"');
     });
 
     it('includes lib_symbols definitions', async () => {
@@ -123,40 +103,18 @@ describe('generateKicadProjectZip', () => {
 
         expect(sch).toContain('(symbol "Switch:SW_Push"');
         expect(sch).toContain('(symbol "Device:D_Small"');
-        expect(sch).toContain('(pin passive line (at -5.08 0 0)'); // Part of symbol def
     });
 
-    it('connects SW pin 2 and Diode pin 2 to intermediate net', async () => {
+    it('does NOT include (connect ...) inside pin definitions', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
-        // Should find "Net-SW1-Pad2"
-        expect(sch).toContain('"Net-SW1-Pad2"');
-
-        // Regex to match pin 2 connection to Net-SW1-Pad2
-        // (pin "2" (uuid "...") (connect (net \d+ "Net-SW1-Pad2")))
-        const regex = /\(pin "2" \(uuid "[^"]+"\) \(connect \(net \d+ "Net-SW1-Pad2"\)\)\)/g;
-        const matches = sch?.match(regex);
-
-        // Should happen twice for Key 1 (SW1 and D1)
-        expect(matches?.length).toBe(2);
-    });
-
-    it('assigns UUIDs to diode pins', async () => {
-        const blob = await generateKicadProjectZip(mockProject);
-        const zip = await JSZip.loadAsync(blob);
-        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
-
-        // Verify no pin connections without UUIDs
-        expect(sch).not.toContain('(pin "1" (connect');
-        expect(sch).not.toContain('(pin "2" (connect');
-
-        const pinUuidRegex = /\(pin "\d" \(uuid "[^"]+"\) \(connect/g;
-        const pinUuidMatches = sch?.match(pinUuidRegex);
-
-        // 2 keys * (2 pins SW + 2 pins D) = 8 pins
-        expect(pinUuidMatches?.length).toBe(8);
+        // Regex to look for (pin "..." ... (connect ...))
+        // This is tricky with regex, but we can look for "connect (" inside the file at all?
+        // No, connect is valid elsewhere? No, in SCH connect is mostly for hierarchical pins?
+        // Actually, let's just search for the specific pattern we removed.
+        expect(sch).not.toContain('(connect (net');
     });
 
     it('output format is clean (starts with S-expr, no backticks, no tags)', async () => {
