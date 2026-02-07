@@ -54,7 +54,7 @@ const DEFAULT_PROJECT: ProjectData = {
   updatedAt: Date.now(),
 };
 
-const storageTimers: Record<string, any> = {};
+const storageTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 
 const debouncedStorage = {
   getItem: (name: string) => {

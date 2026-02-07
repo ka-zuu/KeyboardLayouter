@@ -41,7 +41,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
         if (group) {
             group.cache({ pixelRatio: 2 });
         }
-    }, [data, isSelected]);
+    }, [data, isSelected, width, height, keyColor, strokeColor, strokeWidth]);
 
     if (!data) return null;
 
