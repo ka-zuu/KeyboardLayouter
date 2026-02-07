@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { useStore as useZustandStore } from 'zustand';
-import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode, Cpu } from 'lucide-react';
+import { Plus, Download, Upload, RotateCcw, RotateCw, FileCode, Cpu, ChevronDown } from 'lucide-react';
 import { generateQMKInfo } from '@/lib/qmk';
 import { generateKicadProjectZip } from '@/lib/kicad';
 
@@ -12,8 +12,26 @@ const TopBar = () => {
     // Use the zustand helper to consume the temporal store
     const { undo, redo, pastStates, futureStates } = useZustandStore(useStore.temporal, (state) => state);
 
-    const [addCount, setAddCount] = React.useState(1);
+    const [addCount, setAddCount] = useState(1);
+    const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+    const exportMenuRef = useRef<HTMLDivElement>(null);
 
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+                setIsExportMenuOpen(false);
+            }
+        };
+
+        if (isExportMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isExportMenuOpen]);
 
     const handleAddKey = () => {
         addKeys(addCount, {
@@ -26,7 +44,7 @@ const TopBar = () => {
         });
     };
 
-    const handleExport = () => {
+    const handleExportJson = () => {
         const dataStr = JSON.stringify(project, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -35,6 +53,7 @@ const TopBar = () => {
         a.download = `${project.name.replace(/\s+/g, '_')}.json`;
         a.click();
         URL.revokeObjectURL(url);
+        setIsExportMenuOpen(false);
     };
 
     const handleExportQMK = () => {
@@ -46,6 +65,7 @@ const TopBar = () => {
         a.download = 'info.json';
         a.click();
         URL.revokeObjectURL(url);
+        setIsExportMenuOpen(false);
     };
 
     const handleExportKicad = async () => {
@@ -61,6 +81,7 @@ const TopBar = () => {
             console.error('Failed to generate KiCad project:', error);
             alert('Failed to generate KiCad project');
         }
+        setIsExportMenuOpen(false);
     };
 
     const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,29 +203,48 @@ const TopBar = () => {
                     <input type="file" accept=".json" className="hidden" onChange={handleImport} />
                 </label>
 
-                <button
-                    onClick={handleExport}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Export JSON"
-                >
-                    <Download size={18} />
-                </button>
+                {/* Export Menu Dropdown */}
+                <div className="relative" ref={exportMenuRef}>
+                    <button
+                        onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                            isExportMenuOpen ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                        }`}
+                        title="Export..."
+                    >
+                        <Download size={18} />
+                        <span className="hidden sm:inline">Export</span>
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${isExportMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-                <button
-                    onClick={handleExportQMK}
-                    className="p-2 text-gray-400 hover:text-green-400 transition-colors"
-                    title="Export QMK (info.json)"
-                >
-                    <FileCode size={18} />
-                </button>
-
-                <button
-                    onClick={handleExportKicad}
-                    className="p-2 text-gray-400 hover:text-orange-400 transition-colors"
-                    title="Export KiCad Project (.zip)"
-                >
-                    <Cpu size={18} />
-                </button>
+                    {isExportMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 overflow-hidden">
+                            <div className="py-1">
+                                <button
+                                    onClick={handleExportJson}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center gap-2"
+                                >
+                                    <Download size={16} />
+                                    <span>Export JSON (Project)</span>
+                                </button>
+                                <button
+                                    onClick={handleExportQMK}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-green-400 flex items-center gap-2"
+                                >
+                                    <FileCode size={16} />
+                                    <span>Export QMK (info.json)</span>
+                                </button>
+                                <button
+                                    onClick={handleExportKicad}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-orange-400 flex items-center gap-2"
+                                >
+                                    <Cpu size={16} />
+                                    <span>Export KiCad (.zip)</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
