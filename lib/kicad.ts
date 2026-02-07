@@ -15,10 +15,14 @@ interface ExportKey {
     uuidDiode: string;
     uuidPin1: string;
     uuidPin2: string;
+    uuidDiodePin1: string;
+    uuidDiodePin2: string;
     netRowId: string; // for the pin connection net integer ID (local to file)
     netColId: string;
+    netMidId: string; // Intermediate net between Switch and Diode
     netRowName: string; // "ROW_0"
     netColName: string; // "COL_0"
+    netMidName: string; // "Net-SW1-Pad2"
 }
 
 export async function generateKicadProjectZip(project: ProjectData): Promise<Blob> {
@@ -43,20 +47,26 @@ export async function generateKicadProjectZip(project: ProjectData): Promise<Blo
         const index = i + 1;
         const rowName = `ROW_${key.matrix.row}`;
         const colName = `COL_${key.matrix.col}`;
+        const ref = `SW${index}`;
+        const midName = `Net-${ref}-Pad2`;
 
         exportKeys.push({
             key,
             index,
-            ref: `SW${index}`,
+            ref,
             diodeRef: `D${index}`,
             uuidSw: crypto.randomUUID(),
             uuidDiode: crypto.randomUUID(),
             uuidPin1: crypto.randomUUID(),
             uuidPin2: crypto.randomUUID(),
+            uuidDiodePin1: crypto.randomUUID(),
+            uuidDiodePin2: crypto.randomUUID(),
             netRowName: rowName,
             netColName: colName,
+            netMidName: midName,
             netRowId: getNetId(rowName).toString(),
             netColId: getNetId(colName).toString(),
+            netMidId: getNetId(midName).toString(),
         });
     });
 
@@ -80,22 +90,14 @@ function generateSch(keys: ExportKey[]): string {
     // Basic Header
     let content = `(kicad_sch (version 20231120) (generator "mkd_export")\n`;
     content += `  (paper "A4")\n`;
-    content += `  (lib_symbols)\n`; // Empty lib cache, KiCad will complain but should load references if standard libraries exist
-
-    // Wire/Net generation is tricky without routing.
-    // The prompt only asks to "Generate each switch... and diode... in S-expression format".
-    // And "connect to net...".
-    // We will place symbols.
+    content += `  (lib_symbols\n`;
+    content += getLibSymbols();
+    content += `  )\n`;
 
     keys.forEach(k => {
         // Coordinate conversion
         // 1u = 19.05mm.
         // SCH coords: x positive right, y positive up (inverted from PCB y down).
-        // Let's space them out a bit more in SCH than PCB maybe? Or just keep 1:1 scale for simplicity.
-        // KiCad SCH units are arbitrary, but often 1.27mm grid.
-        // If we use mm directly: 19.05.
-        // x_sch = x_mm
-        // y_sch = -y_mm
         const x_mm = k.key.position.x * 19.05;
         const y_mm = k.key.position.y * 19.05;
 
@@ -103,30 +105,9 @@ function generateSch(keys: ExportKey[]): string {
         const y_sch = (-y_mm).toFixed(2); // Invert Y
 
         // Switch Instance
-        // Template:
-        // (symbol (lib_id "Switch:SW_Push") (at {x} {y} 0) (unit 1)
-        //   (in_bom yes) (on_board yes) (fields_autoplaced yes)
-        //   (uuid "{sw_uuid}")
-        //   (property "Reference" "{ref}" (at {x} {y+2} 0))
-        //   (property "Footprint" "Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate" (at {x} {y+5} 0) (effects (font (size 1.27 1.27)) hide))
-        //   (pin "1" (uuid "{pin1_uuid}") (connect (net {net_id_row} "ROW_{row}")))
-        //   (pin "2" (uuid "{pin2_uuid}") (connect (net {net_id_col} "COL_{col}")))
-        // )
-
-        // We need to calculate text positions relative to symbol.
-        // y+2 means higher (less negative) in SCH? Or lower?
-        // Since Y is up-positive in math, but KiCad internal coords might be down-positive in file format?
-        // Wait. KiCad file format:
-        // (at X Y R)
-        // Usually, in KiCad Schematic file, Y increases downwards.
-        // Prompt says: "SCH: Y axis up positive so invert".
-        // This implies the user wants visual layout in SCH to match physical layout but flipped Y?
-        // If I use -y_mm, and KiCad SCH Y is down, then -y_mm (negative) is UP.
-        // So keys at Y=0 (top) are at 0. Keys at Y=1 (lower) are at -19.05 (higher in SCH).
-        // This matches "Y up positive" logic for *cartesian* graphs, but in KiCad View, Y is down.
-        // So visually, the keyboard rows will go UP in the schematic. That's fine.
-
-        const refY = (parseFloat(y_sch) + 2.54).toFixed(2); // 2.54mm = 100mil, standard text offset
+        // Pin 1 -> ROW
+        // Pin 2 -> MID (Net-SWx-Pad2)
+        const refY = (parseFloat(y_sch) + 2.54).toFixed(2);
         const fpY = (parseFloat(y_sch) + 5.08).toFixed(2);
 
         content += `
@@ -137,23 +118,17 @@ function generateSch(keys: ExportKey[]): string {
     (property "Value" "SW_Push" (at ${x_sch} ${fpY} 0) (effects (font (size 1.27 1.27)) hide))
     (property "Footprint" "Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate" (at ${x_sch} ${fpY} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidPin1}") (connect (net ${k.netRowId} "${k.netRowName}")))
-    (pin "2" (uuid "${k.uuidPin2}") (connect (net ${k.netColId} "${k.netColName}")))
+    (pin "2" (uuid "${k.uuidPin2}") (connect (net ${k.netMidId} "${k.netMidName}")))
   )
 `;
 
         // Diode Instance
+        // Pin 1 -> COL (Cathode)
+        // Pin 2 -> MID (Anode)
         // Place it slightly offset, e.g. +5mm X.
         const d_x_sch = (parseFloat(x_sch) + 5.0).toFixed(2);
         const d_y_sch = y_sch;
         const d_refY = (parseFloat(d_y_sch) + 2.54).toFixed(2);
-
-        // We don't have explicit pin UUIDs for diode in the loop above, generate them here or add to interface.
-        // I didn't add them to interface, I'll generate on the fly.
-        // Wait, for SCH-PCB sync, UUIDs of *components* matter (uuidDiode). Pin UUIDs are local to SCH usually?
-        // Actually, Pin UUIDs help with wire connections in SCH.
-
-        const d_pin1 = crypto.randomUUID();
-        const d_pin2 = crypto.randomUUID();
 
         content += `
   (symbol (lib_id "Device:D_Small") (at ${d_x_sch} ${d_y_sch} 0) (unit 1)
@@ -162,14 +137,72 @@ function generateSch(keys: ExportKey[]): string {
     (property "Reference" "${k.diodeRef}" (at ${d_x_sch} ${d_refY} 0))
     (property "Value" "D" (at ${d_x_sch} ${d_y_sch} 0) (effects (font (size 1.27 1.27)) hide))
     (property "Footprint" "Diode_SMD:D_SOD-123" (at ${d_x_sch} ${d_y_sch} 0) (effects (font (size 1.27 1.27)) hide))
-    (pin "1" (uuid "${d_pin1}"))
-    (pin "2" (uuid "${d_pin2}"))
+    (pin "1" (uuid "${k.uuidDiodePin1}") (connect (net ${k.netColId} "${k.netColName}")))
+    (pin "2" (uuid "${k.uuidDiodePin2}") (connect (net ${k.netMidId} "${k.netMidName}")))
   )
 `;
     });
 
     content += `)\n`;
     return content;
+}
+
+function getLibSymbols(): string {
+    return `
+    (symbol "Switch:SW_Push" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+      (property "Reference" "SW" (at 0 2.54 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "SW_Push" (at 0 -2.54 0) (effects (font (size 1.27 1.27))))
+      (symbol "SW_Push_1_1"
+        (polyline
+          (pts
+            (xy -1.27 0)
+            (xy 1.27 0)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (pin passive line (at -5.08 0 0) (length 2.54)
+          (name "1" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 5.08 0 180) (length 2.54)
+          (name "2" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+    (symbol "Device:D_Small" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+      (property "Reference" "D" (at 0 2.54 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "D_Small" (at 0 -2.54 0) (effects (font (size 1.27 1.27))))
+      (symbol "D_Small_1_1"
+        (polyline
+          (pts
+            (xy -1.27 1.27)
+            (xy -1.27 -1.27)
+            (xy 1.27 0)
+            (xy -1.27 1.27)
+          )
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 1.27 1.27)
+            (xy 1.27 -1.27)
+          )
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (pin passive line (at -3.81 0 0) (length 2.54)
+          (name "K" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 3.81 0 180) (length 2.54)
+          (name "A" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )`;
 }
 
 function generatePcb(keys: ExportKey[]): string {
