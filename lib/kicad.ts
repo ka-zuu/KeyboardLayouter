@@ -97,12 +97,18 @@ function generateSch(keys: ExportKey[]): string {
     keys.forEach(k => {
         // Coordinate conversion
         // 1u = 19.05mm.
-        // SCH coords: x positive right, y positive up (inverted from PCB y down).
+        // SCH coords: X positive right, Y positive down (same as PCB).
+        // To place inside the paper (default A4), we add an offset.
+        // A4 is roughly 297mm x 210mm. Center is around 150, 100.
+        // We add offset 50, 50 to ensure we are not on the edge.
+        const OFFSET_X = 50;
+        const OFFSET_Y = 50;
+
         const x_mm = k.key.position.x * 19.05;
         const y_mm = k.key.position.y * 19.05;
 
-        const x_sch = x_mm.toFixed(2);
-        const y_sch = (-y_mm).toFixed(2); // Invert Y
+        const x_sch = (x_mm + OFFSET_X).toFixed(2);
+        const y_sch = (y_mm + OFFSET_Y).toFixed(2); // No inversion, just offset
 
         // Switch Instance
         const refY = (parseFloat(y_sch) + 2.54).toFixed(2);

@@ -66,17 +66,19 @@ describe('generateKicadProjectZip', () => {
         expect(pcb).toContain('(at 19.0500 19.0500 0)');
     });
 
-    it('generates correct coordinates in SCH (inverted Y)', async () => {
+    it('generates correct coordinates in SCH (positive Y with offset)', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
         expect(sch).toBeDefined();
-        // Key 1: 0, 0 -> 0.00, 0.00
-        expect(sch).toContain('(at 0.00 0.00 0)');
+        // Key 1: 0, 0 -> 50.00, 50.00 (with offset 50,50)
+        expect(sch).toContain('(at 50.00 50.00 0)');
 
-        // Key 2: 1, 1 -> 19.05, -19.05 (Y inverted)
-        expect(sch).toContain('(at 19.05 -19.05 0)');
+        // Key 2: 1, 1 -> 1u = 19.05mm.
+        // X = 19.05 + 50 = 69.05
+        // Y = 19.05 + 50 = 69.05
+        expect(sch).toContain('(at 69.05 69.05 0)');
     });
 
     it('generates nets via labels correctly', async () => {
@@ -110,10 +112,6 @@ describe('generateKicadProjectZip', () => {
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
-        // Regex to look for (pin "..." ... (connect ...))
-        // This is tricky with regex, but we can look for "connect (" inside the file at all?
-        // No, connect is valid elsewhere? No, in SCH connect is mostly for hierarchical pins?
-        // Actually, let's just search for the specific pattern we removed.
         expect(sch).not.toContain('(connect (net');
     });
 
