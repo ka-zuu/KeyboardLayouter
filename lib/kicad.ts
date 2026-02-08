@@ -110,9 +110,11 @@ function generateSch(keys: ExportKey[]): string {
     const placedCols = new Set<string>();
 
     keys.forEach(k => {
-        // Schematic placement based on Matrix (Row/Col)
-        const row = k.key.matrix.row;
-        const col = k.key.matrix.col;
+        // Schematic placement:
+        // Use physical position (approximated to grid) to avoid stacking if matrix data is default (0,0).
+        // This ensures all keys are visible even if electrically shorted.
+        const col = Math.round(k.key.position.x);
+        const row = Math.round(k.key.position.y);
 
         const baseX = OFFSET_X + col * KEY_SPACING_X;
         const baseY = OFFSET_Y + row * KEY_SPACING_Y;
@@ -215,32 +217,26 @@ function generateSch(keys: ExportKey[]): string {
 `;
 
         // 4. Global Labels
-        // COL Label at top of column
-        if (!placedCols.has(k.netColName)) {
-            // Place at (baseX, OFFSET_Y - 5.08) - top of the column for the first row basically, or just global top
-            // Since we draw segments per key, the visual top of the col bus for THIS key is (baseX, baseY - 5.08).
-            // But we only want ONE label per column.
-            // If we assume keys are sorted or we just place it at the absolute grid top?
-            // "At the top of each vertical bus". If the bus is discontinuous (e.g. gaps in matrix), we might need multiple.
-            // But usually a keyboard matrix is dense.
-            // Let's place it at the top of the grid for this column.
-            // Col J is at OFFSET_X + J * SPACING.
-            // Top Y is OFFSET_Y - 5.08.
+        // Check "placedCols" using a unique key for position+name to allow multiple if physically disjoint?
+        // No, assuming standard matrix.
+        // We use "col" index (physical) to track placement to avoid stacking labels on the same visual column.
+        const colKey = `${col}_${k.netColName}`;
+        if (!placedCols.has(colKey)) {
             const col_x = r(OFFSET_X + col * KEY_SPACING_X);
             const col_y = r(OFFSET_Y - 5.08);
 
+            // Rotation 270 degrees (Top to Bottom text flow)
             content += `
-  (global_label "${k.netColName}" (shape input) (at ${col_x} ${col_y} 90) (fields_autoplaced)
+  (global_label "${k.netColName}" (shape input) (at ${col_x} ${col_y} 270) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
 `;
-            placedCols.add(k.netColName);
+            placedCols.add(colKey);
         }
 
-        // ROW Label at left of row
-        if (!placedRows.has(k.netRowName)) {
-            // Place at (OFFSET_X - 5.08, baseY + 15.24)
+        const rowKey = `${row}_${k.netRowName}`;
+        if (!placedRows.has(rowKey)) {
             const row_x = r(OFFSET_X - 5.08);
             const row_y = r(OFFSET_Y + row * KEY_SPACING_Y + 15.24);
 
@@ -250,7 +246,7 @@ function generateSch(keys: ExportKey[]): string {
     (uuid "${crypto.randomUUID()}")
   )
 `;
-            placedRows.add(k.netRowName);
+            placedRows.add(rowKey);
         }
 
     });
