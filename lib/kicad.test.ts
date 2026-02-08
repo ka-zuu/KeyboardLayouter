@@ -31,12 +31,12 @@ describe('generateKicadProjectZip', () => {
             },
             {
                 id: 'key2',
-                position: { x: 1, y: 1 }, // 1u offset
+                position: { x: 2, y: 0 }, // Gap in column 1
                 size: { w: 1, h: 1 },
                 angle: 0,
                 rotationCenter: { x: 0, y: 0 },
                 legends: { top: '', bottom: '', left: '', right: '' },
-                matrix: { row: 0, col: 0 }, // Same matrix, different pos
+                matrix: { row: 0, col: 2 },
             }
         ],
         createdAt: 0,
@@ -53,29 +53,29 @@ describe('generateKicadProjectZip', () => {
         expect(files).toContain('Test_Project.kicad_pro');
     });
 
-    it('generates distinct coordinates in SCH even if matrix is identical', async () => {
+    it('generates continuous bus wires across gaps', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
-        // Constants: OFFSET=25.4, SPACING_X=30.48, SPACING_Y=25.40
-        // Key 1 (pos 0,0) -> Schematic X=25.4, Y=25.4
-        // Key 2 (pos 1,1) -> Schematic X=25.4+30.48=55.88, Y=25.4+25.4=50.8
+        // Row 0 has keys at col 0 and col 2.
+        // There should be a wire spanning from Col 0 area to Col 2 area.
+        // X0 approx 25.4. X2 approx 25.4 + 2 * 30.48 = 86.36.
+        // We expect a wire with start/end X covering this range.
+        // Start X should be around 25.4 + 0 - 10.16 = 15.24
+        // End X should be around 25.4 + 2*30.48 + 25.4 = 111.76
 
-        // Wait, Switch is at (baseX + 10.16, baseY)
-        // Key 1 SW: 25.4 + 10.16 = 35.56
-        expect(sch).toContain('(at 35.56 25.40 0)');
-
-        // Key 2 SW: 55.88 + 10.16 = 66.04. Y=50.80.
-        expect(sch).toContain('(at 66.04 50.80 0)');
+        expect(sch).toContain('(xy 15.24 40.64)'); // Start of row 0 wire
+        expect(sch).toContain('(xy 111.76 40.64)'); // End of row 0 wire
     });
 
-    it('generates global labels for COL with rotation 270', async () => {
+    it('generates global labels for COL with rotation 90', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
-        expect(sch).toContain('(global_label "COL_0" (shape input) (at 25.40 20.32 270)');
+        // Y = 15.24 because we subtract 10.16 from offset 25.40 for bus extension
+        expect(sch).toContain('(global_label "COL_0" (shape input) (at 25.40 15.24 90)');
     });
 
     it('output format is clean', async () => {
