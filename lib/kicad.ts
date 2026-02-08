@@ -91,7 +91,7 @@ function generateSch(keys: ExportKey[]): string {
     const SCH_GRID = 1.27;
     const OFFSET_X = 25.4;
     const OFFSET_Y = 25.4;
-    const KEY_SPACING_X = 40.64;
+    const KEY_SPACING_X = 30.48; // Updated to 30.48mm
     const KEY_SPACING_Y = 25.40;
 
     // Helper to round to nearest grid point
@@ -106,45 +106,60 @@ function generateSch(keys: ExportKey[]): string {
     content += getLibSymbols();
     content += `  )\n`;
 
+    const placedRows = new Set<string>();
+    const placedCols = new Set<string>();
+
     keys.forEach(k => {
-        // Schematic placement based on Matrix (Row/Col) to ensure clean grid
+        // Schematic placement based on Matrix (Row/Col)
         const row = k.key.matrix.row;
         const col = k.key.matrix.col;
 
         const baseX = OFFSET_X + col * KEY_SPACING_X;
         const baseY = OFFSET_Y + row * KEY_SPACING_Y;
 
-        // 1. Switch Instance at (baseX, baseY)
-        const sw_x = r(baseX);
+        // 1. Bus Wires
+        // Vertical Bus (Column): (baseX, baseY - 5.08) to (baseX, baseY + 20.32)
+        content += `
+  (wire (pts (xy ${r(baseX)} ${r(baseY - 5.08)}) (xy ${r(baseX)} ${r(baseY + 20.32)}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+        // Horizontal Bus (Row): (baseX - 5.08, baseY + 15.24) to (baseX + 25.4, baseY + 15.24)
+        content += `
+  (wire (pts (xy ${r(baseX - 5.08)} ${r(baseY + 15.24)}) (xy ${r(baseX + 25.4)} ${r(baseY + 15.24)}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+
+        // 2. Components
+        // Switch at (baseX + 10.16, baseY)
+        const sw_x = r(baseX + 10.16);
         const sw_y = r(baseY);
         const sw_refY = r(baseY + 2.54);
-        const sw_fpY = r(baseY + 5.08);
 
         content += `
   (symbol (lib_id "Switch:SW_Push") (at ${sw_x} ${sw_y} 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced yes)
     (uuid "${k.uuidSw}")
     (property "Reference" "${k.ref}" (at ${sw_x} ${sw_refY} 0))
-    (property "Value" "SW_Push" (at ${sw_x} ${sw_fpY} 0) (effects (font (size 1.27 1.27)) hide))
-    (property "Footprint" "Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate" (at ${sw_x} ${sw_fpY} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Value" "SW_Push" (at ${sw_x} ${r(baseY + 5.08)} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Footprint" "Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate" (at ${sw_x} ${r(baseY + 5.08)} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidPin1}"))
     (pin "2" (uuid "${k.uuidPin2}"))
   )
 `;
 
-        // 2. Diode Instance at (baseX + 20.32, baseY)
-        // Rotated 180 degrees so Anode (Pin 2) faces left (towards Switch)
-        const d_baseX = baseX + 20.32;
-        const d_baseY = baseY;
-        const d_x = r(d_baseX);
-        const d_y = r(d_baseY);
-        const d_refY = r(d_baseY + 2.54);
+        // Diode at (baseX + 15.24, baseY + 7.62) rotated 270 (Cathode Down)
+        const d_x = r(baseX + 15.24);
+        const d_y = r(baseY + 7.62);
 
         content += `
-  (symbol (lib_id "Device:D_Small") (at ${d_x} ${d_y} 180) (unit 1)
+  (symbol (lib_id "Device:D_Small") (at ${d_x} ${d_y} 270) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced yes)
     (uuid "${k.uuidDiode}")
-    (property "Reference" "${k.diodeRef}" (at ${d_x} ${d_refY} 0))
+    (property "Reference" "${k.diodeRef}" (at ${d_x} ${r(baseY + 7.62 + 2.54)} 0))
     (property "Value" "D" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
     (property "Footprint" "Diode_SMD:D_SOD-123" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidDiodePin1}"))
@@ -152,81 +167,97 @@ function generateSch(keys: ExportKey[]): string {
   )
 `;
 
-        // 3. Wires and Labels
+        // 3. Connection Wires & Junctions
 
-        // A. ROW Connection
-        // Switch Pin 1 is at (baseX - 5.08, baseY)
-        // Wire from (baseX - 5.08, baseY) to (baseX - 7.62, baseY) length 2.54
-        const row_start_x = r(baseX - 5.08);
-        const row_end_x = r(baseX - 7.62);
-        const row_y = r(baseY);
-
+        // A. SW Pin 1 (Left) -> Vertical Bus
+        // SW Pin 1 is at (baseX + 10.16 - 5.08) = (baseX + 5.08)
+        // Vert Bus is at (baseX)
+        // Wire: (baseX + 5.08, baseY) -> (baseX, baseY)
         content += `
-  (wire (pts (xy ${row_start_x} ${row_y}) (xy ${row_end_x} ${row_y}))
+  (wire (pts (xy ${r(baseX + 5.08)} ${sw_y}) (xy ${r(baseX)} ${sw_y}))
     (stroke (width 0) (type solid) (color 0 0 0 0))
     (uuid "${crypto.randomUUID()}")
   )
 `;
-        // Label ROW at (baseX - 7.62, baseY)
+        // Junction at (baseX, baseY)
         content += `
-  (label "${k.netRowName}" (at ${row_end_x} ${row_y} 180) (fields_autoplaced yes)
+  (junction (at ${r(baseX)} ${sw_y}) (diameter 0) (color 0 0 0 0)
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+
+        // B. SW Pin 2 (Right) -> D Pin 2 (Anode, Up)
+        // SW Pin 2: (baseX + 10.16 + 5.08) = (baseX + 15.24, baseY)
+        // D Pin 2 (Anode) at 270deg: (d_x, d_y - 3.81) = (baseX + 15.24, baseY + 7.62 - 3.81) = (baseX + 15.24, baseY + 3.81)
+        // Wire: (baseX + 15.24, baseY) -> (baseX + 15.24, baseY + 3.81)
+        content += `
+  (wire (pts (xy ${r(baseX + 15.24)} ${sw_y}) (xy ${r(baseX + 15.24)} ${r(baseY + 3.81)}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+
+        // C. D Pin 1 (Cathode, Down) -> Horizontal Bus
+        // D Pin 1: (d_x, d_y + 3.81) = (baseX + 15.24, baseY + 7.62 + 3.81) = (baseX + 15.24, baseY + 11.43)
+        // Horiz Bus Y: baseY + 15.24
+        // Wire: (baseX + 15.24, baseY + 11.43) -> (baseX + 15.24, baseY + 15.24)
+        content += `
+  (wire (pts (xy ${r(baseX + 15.24)} ${r(baseY + 11.43)}) (xy ${r(baseX + 15.24)} ${r(baseY + 15.24)}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+        // Junction at (baseX + 15.24, baseY + 15.24)
+        content += `
+  (junction (at ${r(baseX + 15.24)} ${r(baseY + 15.24)}) (diameter 0) (color 0 0 0 0)
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+
+        // 4. Global Labels
+        // COL Label at top of column
+        if (!placedCols.has(k.netColName)) {
+            // Place at (baseX, OFFSET_Y - 5.08) - top of the column for the first row basically, or just global top
+            // Since we draw segments per key, the visual top of the col bus for THIS key is (baseX, baseY - 5.08).
+            // But we only want ONE label per column.
+            // If we assume keys are sorted or we just place it at the absolute grid top?
+            // "At the top of each vertical bus". If the bus is discontinuous (e.g. gaps in matrix), we might need multiple.
+            // But usually a keyboard matrix is dense.
+            // Let's place it at the top of the grid for this column.
+            // Col J is at OFFSET_X + J * SPACING.
+            // Top Y is OFFSET_Y - 5.08.
+            const col_x = r(OFFSET_X + col * KEY_SPACING_X);
+            const col_y = r(OFFSET_Y - 5.08);
+
+            content += `
+  (global_label "${k.netColName}" (shape input) (at ${col_x} ${col_y} 90) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
 `;
+            placedCols.add(k.netColName);
+        }
 
-        // B. Internal Connection (Switch -> Diode)
-        // Switch Pin 2 is at (baseX + 5.08, baseY)
-        // Diode Pin 2 (Anode) is at (baseX + 20.32 + 3.81, baseY) IF ROTATION 0
-        // BUT ROTATION IS 180.
-        // Diode at (X, Y) rot 180:
-        // Pin 2 (Anode, orig +3.81) becomes (X - 3.81, Y).
-        // Pin 1 (Cathode, orig -3.81) becomes (X + 3.81, Y).
-        //
-        // So:
-        // Switch Pin 2: (baseX + 5.08)
-        // Diode Pin 2: (baseX + 20.32 - 3.81) = (baseX + 16.51)
-        // Wire from (baseX + 5.08) to (baseX + 16.51)
+        // ROW Label at left of row
+        if (!placedRows.has(k.netRowName)) {
+            // Place at (OFFSET_X - 5.08, baseY + 15.24)
+            const row_x = r(OFFSET_X - 5.08);
+            const row_y = r(OFFSET_Y + row * KEY_SPACING_Y + 15.24);
 
-        const internal_start_x = r(baseX + 5.08);
-        const internal_end_x = r(baseX + 20.32 - 3.81);
-        const internal_y = r(baseY);
-
-        content += `
-  (wire (pts (xy ${internal_start_x} ${internal_y}) (xy ${internal_end_x} ${internal_y}))
-    (stroke (width 0) (type solid) (color 0 0 0 0))
+            content += `
+  (global_label "${k.netRowName}" (shape input) (at ${row_x} ${row_y} 180) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
 `;
-
-        // C. COL Connection
-        // Diode Pin 1 (Cathode) is at (baseX + 20.32 + 3.81) = (baseX + 24.13)
-        // Wire from (baseX + 24.13) to (baseX + 24.13 + 2.54) = (baseX + 26.67)
-
-        const col_start_x = r(baseX + 20.32 + 3.81);
-        const col_end_x = r(baseX + 26.67);
-        const col_y = r(baseY);
-
-        content += `
-  (wire (pts (xy ${col_start_x} ${col_y}) (xy ${col_end_x} ${col_y}))
-    (stroke (width 0) (type solid) (color 0 0 0 0))
-    (uuid "${crypto.randomUUID()}")
-  )
-`;
-        // Label COL at (baseX + 26.67)
-        content += `
-  (label "${k.netColName}" (at ${col_end_x} ${col_y} 0) (fields_autoplaced yes)
-    (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "${crypto.randomUUID()}")
-  )
-`;
+            placedRows.add(k.netRowName);
+        }
 
     });
 
     content += `)\n`;
 
-    // Ensure no markdown code blocks or backticks are present in the output
-    // Also remove any AI citation tags like <source>...</source>
+    // Strict cleanup
     const cleanContent = content
         .replace(/<source>[\s\S]*?<\/source>/g, '')
         .replace(/<[^>]+>/g, '')
