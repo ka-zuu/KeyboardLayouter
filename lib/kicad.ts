@@ -87,6 +87,18 @@ export async function generateKicadProjectZip(project: ProjectData): Promise<Blo
 }
 
 function generateSch(keys: ExportKey[]): string {
+    // Constants for Schematic Layout
+    const SCH_GRID = 1.27;
+    const OFFSET_X = 25.4;
+    const OFFSET_Y = 25.4;
+    const KEY_SPACING_X = 40.64;
+    const KEY_SPACING_Y = 25.40;
+
+    // Helper to round to nearest grid point
+    const r = (val: number): string => {
+        return (Math.round(val / SCH_GRID) * SCH_GRID).toFixed(2);
+    };
+
     // Basic Header
     let content = `(kicad_sch (version 20231120) (generator "mkd_export")\n`;
     content += `  (paper "A4")\n`;
@@ -95,131 +107,116 @@ function generateSch(keys: ExportKey[]): string {
     content += `  )\n`;
 
     keys.forEach(k => {
-        // Coordinate conversion
-        // 1u = 19.05mm.
-        // SCH coords: X positive right, Y positive down (same as PCB).
-        // To place inside the paper (default A4), we add an offset.
-        // A4 is roughly 297mm x 210mm. Center is around 150, 100.
-        // We add offset 50, 50 to ensure we are not on the edge.
-        const OFFSET_X = 50;
-        const OFFSET_Y = 50;
+        // Schematic placement based on Matrix (Row/Col) to ensure clean grid
+        const row = k.key.matrix.row;
+        const col = k.key.matrix.col;
 
-        const x_mm = k.key.position.x * 19.05;
-        const y_mm = k.key.position.y * 19.05;
+        const baseX = OFFSET_X + col * KEY_SPACING_X;
+        const baseY = OFFSET_Y + row * KEY_SPACING_Y;
 
-        const x_sch = (x_mm + OFFSET_X).toFixed(2);
-        const y_sch = (y_mm + OFFSET_Y).toFixed(2); // No inversion, just offset
-
-        // Switch Instance
-        const refY = (parseFloat(y_sch) + 2.54).toFixed(2);
-        const fpY = (parseFloat(y_sch) + 5.08).toFixed(2);
-
-        // Switch symbol
-        // (pin ...) entries in symbol instance must NOT contain (connect ...) in KiCad 6+
-        // Connections are defined by overlapping pins or wires/labels at the same coordinate.
-        // We will place LABELS or WIRES to connect them.
-        // Or actually, KiCad implicitly connects overlapping items.
-        // But to make explicit nets, we place LABELs at the pin coordinates.
-        //
-        // Switch Pin 1 is at (-5.08, 0) relative to symbol center (x_sch, y_sch).
-        // Switch Pin 2 is at (5.08, 0) relative to symbol center.
-        //
-        // We need to calculate absolute coordinates for the labels.
-        // Note: Coordinates in 'at' are X Y Rotation.
-        // Relative offsets need to be added.
-        // Pin 1 Abs X = x_sch - 5.08
-        // Pin 2 Abs X = x_sch + 5.08
-
-        const sw_pin1_x = (parseFloat(x_sch) - 5.08).toFixed(2);
-        const sw_pin2_x = (parseFloat(x_sch) + 5.08).toFixed(2);
-        const sw_pin_y = y_sch;
+        // 1. Switch Instance at (baseX, baseY)
+        const sw_x = r(baseX);
+        const sw_y = r(baseY);
+        const sw_refY = r(baseY + 2.54);
+        const sw_fpY = r(baseY + 5.08);
 
         content += `
-  (symbol (lib_id "Switch:SW_Push") (at ${x_sch} ${y_sch} 0) (unit 1)
+  (symbol (lib_id "Switch:SW_Push") (at ${sw_x} ${sw_y} 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced yes)
     (uuid "${k.uuidSw}")
-    (property "Reference" "${k.ref}" (at ${x_sch} ${refY} 0))
-    (property "Value" "SW_Push" (at ${x_sch} ${fpY} 0) (effects (font (size 1.27 1.27)) hide))
-    (property "Footprint" "Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate" (at ${x_sch} ${fpY} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Reference" "${k.ref}" (at ${sw_x} ${sw_refY} 0))
+    (property "Value" "SW_Push" (at ${sw_x} ${sw_fpY} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Footprint" "Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate" (at ${sw_x} ${sw_fpY} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidPin1}"))
     (pin "2" (uuid "${k.uuidPin2}"))
   )
 `;
-        // Labels for Switch connections
-        // Pin 1 -> ROW
-        content += `
-  (label "${k.netRowName}" (at ${sw_pin1_x} ${sw_pin_y} 180) (fields_autoplaced yes)
-    (effects (font (size 1.27 1.27)) (justify right))
-    (uuid "${crypto.randomUUID()}")
-  )
-`;
-        // Pin 2 -> MID (Net-SWx-Pad2)
-        // We place a local label or global label? "Net-" implies local usually.
-        content += `
-  (label "${k.netMidName}" (at ${sw_pin2_x} ${sw_pin_y} 0) (fields_autoplaced yes)
-    (effects (font (size 1.27 1.27)) (justify left))
-    (uuid "${crypto.randomUUID()}")
-  )
-`;
 
-        // Diode Instance
-        // Place it offset by 12.7mm (0.5 inch) to avoid overlap.
-        // Diode symbol pins:
-        // Pin 1 (K) at -3.81
-        // Pin 2 (A) at 3.81
-
-        const d_x_sch = (parseFloat(x_sch) + 12.7).toFixed(2); // Increased spacing
-        const d_y_sch = y_sch;
-        const d_refY = (parseFloat(d_y_sch) + 2.54).toFixed(2);
-
-        const d_pin1_x = (parseFloat(d_x_sch) - 3.81).toFixed(2); // Pin 1 (Cathode)
-        const d_pin2_x = (parseFloat(d_x_sch) + 3.81).toFixed(2); // Pin 2 (Anode)
+        // 2. Diode Instance at (baseX + 20.32, baseY)
+        // Rotated 180 degrees so Anode (Pin 2) faces left (towards Switch)
+        const d_baseX = baseX + 20.32;
+        const d_baseY = baseY;
+        const d_x = r(d_baseX);
+        const d_y = r(d_baseY);
+        const d_refY = r(d_baseY + 2.54);
 
         content += `
-  (symbol (lib_id "Device:D_Small") (at ${d_x_sch} ${d_y_sch} 0) (unit 1)
+  (symbol (lib_id "Device:D_Small") (at ${d_x} ${d_y} 180) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced yes)
     (uuid "${k.uuidDiode}")
-    (property "Reference" "${k.diodeRef}" (at ${d_x_sch} ${d_refY} 0))
-    (property "Value" "D" (at ${d_x_sch} ${d_y_sch} 0) (effects (font (size 1.27 1.27)) hide))
-    (property "Footprint" "Diode_SMD:D_SOD-123" (at ${d_x_sch} ${d_y_sch} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Reference" "${k.diodeRef}" (at ${d_x} ${d_refY} 0))
+    (property "Value" "D" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Footprint" "Diode_SMD:D_SOD-123" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidDiodePin1}"))
     (pin "2" (uuid "${k.uuidDiodePin2}"))
   )
 `;
 
-        // Labels for Diode connections
-        // Pin 2 (Anode) -> MID (Net-SWx-Pad2)
-        // Note: Diode Pin 2 is at +3.81 (Right side of diode symbol).
-        // Wait, standard diode symbol: Pin 2 is Anode.
-        // In "Device:D_Small" definition below:
-        // Pin 2 is at +3.81 (Right).
-        // Pin 1 is at -3.81 (Left).
-        // Usually, current flows Anode -> Cathode.
-        // Matrix: Row -> Switch -> Diode Anode -> Diode Cathode -> Col.
-        // Switch Pin 2 (Right) connects to Diode Anode (Right?).
-        // If we place diode to the right of switch...
-        // Switch Pin 2 is at X+5.08.
-        // Diode is at X+12.7.
-        // Diode Pin 1 (Left, Cathode) is at 12.7 - 3.81 = 8.89.
-        // Diode Pin 2 (Right, Anode) is at 12.7 + 3.81 = 16.51.
-        //
-        // Topology requested: Row -> Switch -> Diode -> Col.
-        // Switch Pin 2 -> Diode Pin 2 (Anode).
-        // So we connect Switch Pin 2 (Label MID) and Diode Pin 2 (Label MID).
-        // Diode Pin 1 (Cathode) -> Col.
+        // 3. Wires and Labels
 
-        // Label for MID at Diode Pin 2 (Right side of Diode)
+        // A. ROW Connection
+        // Switch Pin 1 is at (baseX - 5.08, baseY)
+        // Wire from (baseX - 5.08, baseY) to (baseX - 7.62, baseY) length 2.54
+        const row_start_x = r(baseX - 5.08);
+        const row_end_x = r(baseX - 7.62);
+        const row_y = r(baseY);
+
         content += `
-  (label "${k.netMidName}" (at ${d_pin2_x} ${d_y_sch} 0) (fields_autoplaced yes)
-    (effects (font (size 1.27 1.27)) (justify left))
+  (wire (pts (xy ${row_start_x} ${row_y}) (xy ${row_end_x} ${row_y}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+        // Label ROW at (baseX - 7.62, baseY)
+        content += `
+  (label "${k.netRowName}" (at ${row_end_x} ${row_y} 180) (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
 `;
 
-        // Label for COL at Diode Pin 1 (Left side of Diode)
+        // B. Internal Connection (Switch -> Diode)
+        // Switch Pin 2 is at (baseX + 5.08, baseY)
+        // Diode Pin 2 (Anode) is at (baseX + 20.32 + 3.81, baseY) IF ROTATION 0
+        // BUT ROTATION IS 180.
+        // Diode at (X, Y) rot 180:
+        // Pin 2 (Anode, orig +3.81) becomes (X - 3.81, Y).
+        // Pin 1 (Cathode, orig -3.81) becomes (X + 3.81, Y).
+        //
+        // So:
+        // Switch Pin 2: (baseX + 5.08)
+        // Diode Pin 2: (baseX + 20.32 - 3.81) = (baseX + 16.51)
+        // Wire from (baseX + 5.08) to (baseX + 16.51)
+
+        const internal_start_x = r(baseX + 5.08);
+        const internal_end_x = r(baseX + 20.32 - 3.81);
+        const internal_y = r(baseY);
+
         content += `
-  (label "${k.netColName}" (at ${d_pin1_x} ${d_y_sch} 180) (fields_autoplaced yes)
-    (effects (font (size 1.27 1.27)) (justify right))
+  (wire (pts (xy ${internal_start_x} ${internal_y}) (xy ${internal_end_x} ${internal_y}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+
+        // C. COL Connection
+        // Diode Pin 1 (Cathode) is at (baseX + 20.32 + 3.81) = (baseX + 24.13)
+        // Wire from (baseX + 24.13) to (baseX + 24.13 + 2.54) = (baseX + 26.67)
+
+        const col_start_x = r(baseX + 20.32 + 3.81);
+        const col_end_x = r(baseX + 26.67);
+        const col_y = r(baseY);
+
+        content += `
+  (wire (pts (xy ${col_start_x} ${col_y}) (xy ${col_end_x} ${col_y}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
+`;
+        // Label COL at (baseX + 26.67)
+        content += `
+  (label "${k.netColName}" (at ${col_end_x} ${col_y} 0) (fields_autoplaced yes)
+    (effects (font (size 1.27 1.27)) (justify left))
     (uuid "${crypto.randomUUID()}")
   )
 `;
@@ -230,11 +227,9 @@ function generateSch(keys: ExportKey[]): string {
 
     // Ensure no markdown code blocks or backticks are present in the output
     // Also remove any AI citation tags like <source>...</source>
-    // We use a broader regex to catch any tag-like structures that might be hallucinated,
-    // assuming valid KiCad S-expressions won't contain angle brackets in this context.
     const cleanContent = content
         .replace(/<source>[\s\S]*?<\/source>/g, '')
-        .replace(/<[^>]+>/g, '') // Aggressively strip other XML-like tags
+        .replace(/<[^>]+>/g, '')
         .replace(/`/g, '');
 
     return cleanContent.trim();

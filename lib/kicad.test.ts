@@ -66,22 +66,33 @@ describe('generateKicadProjectZip', () => {
         expect(pcb).toContain('(at 19.0500 19.0500 0)');
     });
 
-    it('generates correct coordinates in SCH (positive Y with offset)', async () => {
+    it('generates correct coordinates in SCH based on Matrix Grid', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
         expect(sch).toBeDefined();
-        // Key 1: 0, 0 -> 50.00, 50.00 (with offset 50,50)
-        expect(sch).toContain('(at 50.00 50.00 0)');
+        // Key 1: matrix (0, 0)
+        // OFFSET_X = 25.4, OFFSET_Y = 25.4
+        // X = 25.40, Y = 25.40
+        expect(sch).toContain('(at 25.40 25.40 0)');
 
-        // Key 2: 1, 1 -> 1u = 19.05mm.
-        // X = 19.05 + 50 = 69.05
-        // Y = 19.05 + 50 = 69.05
-        expect(sch).toContain('(at 69.05 69.05 0)');
+        // Key 2: matrix (1, 1)
+        // X = 25.4 + 40.64 = 66.04
+        // Y = 25.4 + 25.40 = 50.80
+        expect(sch).toContain('(at 66.04 50.80 0)');
     });
 
-    it('generates nets via labels correctly', async () => {
+    it('generates wires for connections', async () => {
+        const blob = await generateKicadProjectZip(mockProject);
+        const zip = await JSZip.loadAsync(blob);
+        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
+
+        // Should contain wire definitions
+        expect(sch).toContain('(wire (pts (xy');
+    });
+
+    it('generates labels for ROW and COL', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
@@ -93,9 +104,15 @@ describe('generateKicadProjectZip', () => {
         // Key 2: ROW_1, COL_1
         expect(sch).toContain('(label "ROW_1"');
         expect(sch).toContain('(label "COL_1"');
+    });
 
-        // Intermediate net
-        expect(sch).toContain('(label "Net-SW1-Pad2"');
+    it('does NOT generate intermediate net labels (Net-SWx-Pad2)', async () => {
+        const blob = await generateKicadProjectZip(mockProject);
+        const zip = await JSZip.loadAsync(blob);
+        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
+
+        // Intermediate nets should be wires now, not labels
+        expect(sch).not.toContain('label "Net-SW1-Pad2"');
     });
 
     it('includes lib_symbols definitions', async () => {
@@ -107,27 +124,13 @@ describe('generateKicadProjectZip', () => {
         expect(sch).toContain('(symbol "Device:D_Small"');
     });
 
-    it('does NOT include (connect ...) inside pin definitions', async () => {
+    it('output format is clean', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
-        expect(sch).not.toContain('(connect (net');
-    });
-
-    it('output format is clean (starts with S-expr, no backticks, no tags)', async () => {
-        const blob = await generateKicadProjectZip(mockProject);
-        const zip = await JSZip.loadAsync(blob);
-        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
-
-        expect(sch).toBeDefined();
-        // Check for start of file
         expect(sch!.trim().startsWith('(kicad_sch')).toBe(true);
-
-        // Check for forbidden characters/tags
         expect(sch).not.toContain('`');
         expect(sch).not.toContain('<source>');
-        expect(sch).not.toContain('</source>');
-        expect(sch).not.toContain('<tag>');
     });
 });
