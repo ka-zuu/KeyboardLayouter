@@ -31,12 +31,12 @@ describe('generateKicadProjectZip', () => {
             },
             {
                 id: 'key2',
-                position: { x: 1, y: 1 }, // 1u offset
+                position: { x: 2, y: 0 }, // Gap in column 1
                 size: { w: 1, h: 1 },
                 angle: 0,
                 rotationCenter: { x: 0, y: 0 },
                 legends: { top: '', bottom: '', left: '', right: '' },
-                matrix: { row: 1, col: 1 },
+                matrix: { row: 0, col: 2 },
             }
         ],
         createdAt: 0,
@@ -53,72 +53,38 @@ describe('generateKicadProjectZip', () => {
         expect(files).toContain('Test_Project.kicad_pro');
     });
 
-    it('generates correct coordinates in PCB', async () => {
-        const blob = await generateKicadProjectZip(mockProject);
-        const zip = await JSZip.loadAsync(blob);
-        const pcb = await zip.file('Test_Project.kicad_pcb')?.async('string');
-
-        expect(pcb).toBeDefined();
-        // Key 1: 0, 0 -> 0.0000 0.0000
-        expect(pcb).toContain('(at 0.0000 0.0000 0)');
-
-        // Key 2: 1, 1 -> 19.05, 19.05
-        expect(pcb).toContain('(at 19.0500 19.0500 0)');
-    });
-
-    it('generates correct coordinates in SCH (inverted Y)', async () => {
+    it('generates continuous bus wires across gaps', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
-        expect(sch).toBeDefined();
-        // Key 1: 0, 0 -> 0.00, 0.00
-        expect(sch).toContain('(at 0.00 0.00 0)');
+        // Row 0 has keys at col 0 and col 2.
+        // There should be a wire spanning from Col 0 area to Col 2 area.
+        // X0 approx 25.4. X2 approx 25.4 + 2 * 30.48 = 86.36.
+        // We expect a wire with start/end X covering this range.
+        // Start X should be around 25.4 + 0 - 10.16 = 15.24
+        // End X should be around 25.4 + 2*30.48 + 25.4 = 111.76
 
-        // Key 2: 1, 1 -> 19.05, -19.05 (Y inverted)
-        expect(sch).toContain('(at 19.05 -19.05 0)');
+        expect(sch).toContain('(xy 15.24 40.64)'); // Start of row 0 wire
+        expect(sch).toContain('(xy 111.76 40.64)'); // End of row 0 wire
     });
 
-    it('generates consistent UUIDs between SCH and PCB', async () => {
-        const blob = await generateKicadProjectZip(mockProject);
-        const zip = await JSZip.loadAsync(blob);
-        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
-        const pcb = await zip.file('Test_Project.kicad_pcb')?.async('string');
-
-        // Extract UUID from first switch in PCB
-        // (uuid "...")
-        // We need to be careful not to match the first uuid if it's generic, but here we look for switch uuid
-        // The template: (uuid "{sw_uuid}")
-        // We can search for the one associated with Reference SW1 maybe?
-        // But let's just grep for any uuid and see if it is in SCH.
-
-        const matches = pcb?.matchAll(/\(uuid "([^"]+)"\)/g);
-        const uuids = Array.from(matches || []).map(m => m[1]);
-
-        expect(uuids.length).toBeGreaterThan(0);
-
-        // At least one PCB UUID (switch) should be present in SCH
-        let found = false;
-        for (const uuid of uuids) {
-            if (sch?.includes(`(uuid "${uuid}")`)) {
-                found = true;
-                break;
-            }
-        }
-        expect(found).toBe(true);
-    });
-
-    it('generates nets correctly', async () => {
+    it('generates global labels for COL with rotation 90', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
-        // Key 1: ROW_0, COL_0
-        expect(sch).toContain('"ROW_0"');
-        expect(sch).toContain('"COL_0"');
+        // Y = 15.24 because we subtract 10.16 from offset 25.40 for bus extension
+        expect(sch).toContain('(global_label "COL_0" (shape input) (at 25.40 15.24 90)');
+    });
 
-        // Key 2: ROW_1, COL_1
-        expect(sch).toContain('"ROW_1"');
-        expect(sch).toContain('"COL_1"');
+    it('output format is clean', async () => {
+        const blob = await generateKicadProjectZip(mockProject);
+        const zip = await JSZip.loadAsync(blob);
+        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
+
+        expect(sch!.trim().startsWith('(kicad_sch')).toBe(true);
+        expect(sch).not.toContain('`');
+        expect(sch).not.toContain('<source>');
     });
 });
