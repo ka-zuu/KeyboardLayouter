@@ -269,6 +269,45 @@ const MainCanvas = () => {
                     const kw = key.size.w * PIXELS_PER_U;
                     const kh = key.size.h * PIXELS_PER_U;
 
+                    if (key.angle === 0) {
+                        // Fast path: AABB intersection
+                        const minX = kx;
+                        const maxX = kx + kw;
+                        const minY = ky;
+                        const maxY = ky + kh;
+
+                        if (maxX >= x1 && minX <= x2 && maxY >= y1 && minY <= y2) {
+                            newSelectedIds.push(key.id);
+                        }
+                        return;
+                    }
+
+                    // Rotated key: Conservative bounding circle check first
+                    const rcx = key.rotationCenter.x * PIXELS_PER_U;
+                    const rcy = key.rotationCenter.y * PIXELS_PER_U;
+                    const cx = kx + rcx;
+                    const cy = ky + rcy;
+
+                    // Calculate squared radius (max distance from rotation center to any corner)
+                    // Corners relative to center: (-rcx, -rcy), (kw-rcx, -rcy), (kw-rcx, kh-rcy), (-rcx, kh-rcy)
+                    const d1 = rcx * rcx + rcy * rcy;
+                    const d2 = (kw - rcx) * (kw - rcx) + rcy * rcy;
+                    const d3 = (kw - rcx) * (kw - rcx) + (kh - rcy) * (kh - rcy);
+                    const d4 = rcx * rcx + (kh - rcy) * (kh - rcy);
+                    const maxDistSq = Math.max(d1, d2, d3, d4);
+
+                    // Check if circle intersects selection AABB
+                    // Find closest point on AABB to circle center
+                    const closestX = Math.max(x1, Math.min(cx, x2));
+                    const closestY = Math.max(y1, Math.min(cy, y2));
+
+                    const distX = cx - closestX;
+                    const distY = cy - closestY;
+
+                    if (distX * distX + distY * distY > maxDistSq) {
+                        return;
+                    }
+
                     // Get Key Polygon (Rotated)
                     const keyPoints = getRotatedRectPoints(
                         kx,
@@ -276,11 +315,11 @@ const MainCanvas = () => {
                         kw,
                         kh,
                         key.angle,
-                        key.rotationCenter.x * PIXELS_PER_U,
-                        key.rotationCenter.y * PIXELS_PER_U
+                        rcx,
+                        rcy
                     );
 
-                    // AABB Check optimization (from conflict source)
+                    // Original AABB Check optimization (still useful for tight fit check after circle check)
                     const firstPoint = keyPoints[0];
                     if (!firstPoint) return;
 
