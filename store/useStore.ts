@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, PersistStorage, StorageValue } from 'zustand/middleware';
 import { temporal } from 'zundo';
 import { KeyData, Position, ProjectData } from '@/types/mkd';
 import { v4 as uuidv4 } from 'uuid';
+import * as idb from '@/lib/idb';
 
 export interface EditorState {
   project: ProjectData;
@@ -54,25 +55,58 @@ const DEFAULT_PROJECT: ProjectData = {
   updatedAt: Date.now(),
 };
 
-const storageTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+const storageDebounceTimer: Record<string, ReturnType<typeof setTimeout>> = {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const pendingStorage: Record<string, any> = {};
 
-const debouncedStorage = {
-  getItem: (name: string) => {
-    if (typeof localStorage === 'undefined') return null;
-    return localStorage.getItem(name);
+// Custom storage that debounces serialization and writes to IndexedDB
+// This prevents blocking the main thread during rapid updates (e.g. dragging)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const customStorage: PersistStorage<any> = {
+  getItem: async (name) => {
+    // Try IDB first
+    const fromIDB = await idb.get<StorageValue<EditorState>>(name);
+    if (fromIDB) return fromIDB;
+
+    // Fallback/Migration from LocalStorage
+    if (typeof localStorage !== 'undefined') {
+       const fromLocal = localStorage.getItem(name);
+       if (fromLocal) {
+          try {
+             const parsed = JSON.parse(fromLocal);
+             // Migrate to IDB asynchronously
+             idb.set(name, parsed).then(() => {
+                 localStorage.removeItem(name);
+             }).catch(console.error);
+             return parsed;
+          } catch (e) { console.error(e); }
+       }
+    }
+    return null;
   },
-  setItem: (name: string, value: string) => {
-    if (typeof localStorage === 'undefined') return;
-    if (storageTimers[name]) clearTimeout(storageTimers[name]);
-    storageTimers[name] = setTimeout(() => {
-        localStorage.setItem(name, value);
-        delete storageTimers[name];
-    }, 1000);
+  setItem: (name, value) => {
+      pendingStorage[name] = value;
+      if (storageDebounceTimer[name]) clearTimeout(storageDebounceTimer[name]);
+
+      storageDebounceTimer[name] = setTimeout(() => {
+          const val = pendingStorage[name];
+          // Try IDB
+          idb.set(name, val).catch(err => {
+             console.error('IDB set error, falling back to localStorage', err);
+             if (typeof localStorage !== 'undefined') {
+                 localStorage.setItem(name, JSON.stringify(val));
+             }
+          });
+          delete storageDebounceTimer[name];
+      }, 1000);
   },
-  removeItem: (name: string) => {
-    if (typeof localStorage === 'undefined') return;
-    localStorage.removeItem(name);
-  },
+  removeItem: (name) => {
+     if (storageDebounceTimer[name]) clearTimeout(storageDebounceTimer[name]);
+     delete pendingStorage[name];
+     idb.del(name).then(() => {
+         if (typeof localStorage !== 'undefined') localStorage.removeItem(name);
+     });
+  }
 };
 
 export const useStore = create<EditorState>()(
@@ -482,7 +516,7 @@ export const useStore = create<EditorState>()(
     ),
     {
       name: 'mkd-storage',
-      storage: createJSONStorage(() => debouncedStorage),
+      storage: customStorage,
       partialize: (state) => ({
          project: state.project,
          savedProjects: state.savedProjects 
