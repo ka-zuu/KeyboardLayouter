@@ -33,7 +33,7 @@ export const get = async <T>(key: string): Promise<T | undefined> => {
   }
 };
 
-export const set = async (key: string, val: any): Promise<void> => {
+export const set = async (key: string, val: unknown): Promise<void> => {
    if (typeof indexedDB === 'undefined') return;
    const db = await getDB();
    return new Promise((resolve, reject) => {

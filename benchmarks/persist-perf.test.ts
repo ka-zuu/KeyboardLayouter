@@ -1,4 +1,4 @@
-import { describe, test, expect, jest } from '@jest/globals';
+import { describe, test, jest } from '@jest/globals';
 import { useStore } from '@/store/useStore';
 
 // Mock uuid
