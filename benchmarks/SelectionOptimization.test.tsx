@@ -2,8 +2,8 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import MainCanvas from '../components/editor/CanvasArea/MainCanvas';
 import { useStore } from '../store/useStore';
-import KeyList from '../components/editor/CanvasArea/KeyList';
 import * as geometry from '../lib/geometry';
+import { KeyData } from '../types/mkd';
 
 // Mock KeyList
 jest.mock('../components/editor/CanvasArea/KeyList', () => {
@@ -37,6 +37,7 @@ jest.mock('react-konva', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Stage = React.forwardRef((props: any, ref: any) => {
     const stageRef = React.useRef({
         getPointerPosition: () => mockPointerPosition,
@@ -51,6 +52,7 @@ jest.mock('react-konva', () => {
 
     React.useImperativeHandle(ref, () => stageRef.current);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const wrapEvent = (e: any) => {
         return {
             evt: e.nativeEvent || e,
@@ -77,16 +79,18 @@ jest.mock('react-konva', () => {
   const Layer = ({ children }: { children: React.ReactNode }) => <div data-testid="layer">{children}</div>;
   Layer.displayName = 'Layer';
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Rect = React.forwardRef((props: any, ref: any) => {
       const attrs = React.useRef({ x: 0, y: 0, width: 0, height: 0, visible: false });
 
       React.useImperativeHandle(ref, () => ({
-          visible: (v) => { if (v !== undefined) attrs.current.visible = v; return attrs.current.visible; },
-          width: (v) => { if (v !== undefined) attrs.current.width = v; return attrs.current.width; },
-          height: (v) => { if (v !== undefined) attrs.current.height = v; return attrs.current.height; },
-          x: (v) => { if (v !== undefined) attrs.current.x = v; return attrs.current.x; },
-          y: (v) => { if (v !== undefined) attrs.current.y = v; return attrs.current.y; },
-          setAttrs: (newAttrs) => { Object.assign(attrs.current, newAttrs); },
+          visible: (v: boolean) => { if (v !== undefined) attrs.current.visible = v; return attrs.current.visible; },
+          width: (v: number) => { if (v !== undefined) attrs.current.width = v; return attrs.current.width; },
+          height: (v: number) => { if (v !== undefined) attrs.current.height = v; return attrs.current.height; },
+          x: (v: number) => { if (v !== undefined) attrs.current.x = v; return attrs.current.x; },
+          y: (v: number) => { if (v !== undefined) attrs.current.y = v; return attrs.current.y; },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setAttrs: (newAttrs: any) => { Object.assign(attrs.current, newAttrs); },
           getLayer: () => ({ batchDraw: () => {} }),
       }));
       return <div data-testid="rect">Rect</div>;
@@ -110,6 +114,7 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
 
 describe('Selection Optimization Benchmark', () => {
@@ -149,7 +154,7 @@ describe('Selection Optimization Benchmark', () => {
       project: {
         id: '1',
         name: 'Test Project',
-        keys: keys as any,
+        keys: keys as KeyData[],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
