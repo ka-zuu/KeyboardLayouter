@@ -31,10 +31,9 @@ const KeyboardShortcuts = () => {
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                 e.preventDefault(); // maintain scroll position
 
-                // Use 0.25U as base movement step
-                // If Shift is held, maybe move by 1U?
-                // For now, let's keep it simple: 0.25U (standard grid)
-                const delta = e.shiftKey ? 1 : 0.25;
+                // Use current grid size
+                const gridSize = useStore.getState().gridSize;
+                const delta = e.shiftKey ? 1 : gridSize;
 
                 switch (e.key) {
                     case 'ArrowUp': moveSelectedKeys({ x: 0, y: -delta }); break;
