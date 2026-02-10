@@ -3,9 +3,17 @@ import { test, expect } from '@playwright/test';
 test.describe('Multi-select Drag Interaction', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/');
-        // Ensure clean state by clearing localStorage
-        await page.evaluate(() => {
+        // Ensure clean state by clearing IDB and localStorage
+        await page.evaluate(async () => {
             localStorage.clear();
+            if (window.indexedDB) {
+                await new Promise<void>((resolve, reject) => {
+                    const req = indexedDB.deleteDatabase('mkd-db');
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                    req.onblocked = () => resolve();
+                });
+            }
         });
         await page.reload();
         await expect(page.getByRole('button', { name: 'Add Keys' })).toBeVisible();
@@ -17,12 +25,33 @@ test.describe('Multi-select Drag Interaction', () => {
         await countInput.fill('2');
         await page.getByRole('button', { name: 'Add Keys' }).click();
 
-        // Wait for keys to be created in store using evaluate
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return false;
-             const data = JSON.parse(storage).state.project;
-             return data.keys.length >= 2;
+        // Wait for keys to be rendered (canvas activity)
+        // Since persistence is debounced/async, checking UI is better.
+        // We can check if "2 keys" are visually present or if the store has them (via IDB).
+        // Let's use a helper to check IDB.
+        await page.waitForFunction(async () => {
+             return new Promise((resolve) => {
+                 const req = indexedDB.open('mkd-db', 1);
+                 req.onsuccess = () => {
+                     const db = req.result;
+                     if (!db.objectStoreNames.contains('keyval')) {
+                        resolve(false); return;
+                     }
+                     const tx = db.transaction('keyval', 'readonly');
+                     const store = tx.objectStore('keyval');
+                     const getReq = store.get('mkd-storage');
+                     getReq.onsuccess = () => {
+                         const val = getReq.result;
+                         if (val && val.state && val.state.project && val.state.project.keys.length >= 2) {
+                             resolve(true);
+                         } else {
+                             resolve(false);
+                         }
+                     };
+                     getReq.onerror = () => resolve(false);
+                 };
+                 req.onerror = () => resolve(false);
+             });
         });
 
         // 2. Locate Canvas
@@ -61,22 +90,46 @@ test.describe('Multi-select Drag Interaction', () => {
 
         // 6. Verify positions in Store
         // Wait for store update (Key 1 should have moved > 1U)
-        await page.waitForFunction(() => {
-            const storage = localStorage.getItem('mkd-storage');
-            if (!storage) return false;
-            const data = JSON.parse(storage).state.project;
-            if (!data.keys || data.keys.length < 2) return false;
-            // Key 1 (index 0 usually if sorted, but we just check if ANY key moved significantly)
-            // But we know keys[0] is k1 because we didn't change order logic?
-            // Safer to check if the specific key we moved has updated.
-            // But here we'll just wait for the persistence.
-            return data.keys.some((k: { position: { y: number } }) => k.position.y > 1);
+        // Debounce is 1000ms, so we wait.
+        await page.waitForTimeout(1100); // Give it time to debounce
+
+        await page.waitForFunction(async () => {
+            return new Promise((resolve) => {
+                 const req = indexedDB.open('mkd-db', 1);
+                 req.onsuccess = () => {
+                     const db = req.result;
+                     const tx = db.transaction('keyval', 'readonly');
+                     const store = tx.objectStore('keyval');
+                     const getReq = store.get('mkd-storage');
+                     getReq.onsuccess = () => {
+                         const val = getReq.result;
+                         if (val && val.state && val.state.project && val.state.project.keys) {
+                             // Check if any key moved > 1U (approx 1.0)
+                             const moved = val.state.project.keys.some((k: { position: { y: number } }) => k.position.y > 1);
+                             resolve(moved);
+                         } else {
+                             resolve(false);
+                         }
+                     };
+                     getReq.onerror = () => resolve(false);
+                 };
+                 req.onerror = () => resolve(false);
+            });
         });
 
-        const projectData = await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return null;
-             return JSON.parse(storage).state.project;
+        const projectData = await page.evaluate(async () => {
+             return new Promise((resolve, reject) => {
+                 const req = indexedDB.open('mkd-db', 1);
+                 req.onsuccess = () => {
+                     const db = req.result;
+                     const tx = db.transaction('keyval', 'readonly');
+                     const store = tx.objectStore('keyval');
+                     const getReq = store.get('mkd-storage');
+                     getReq.onsuccess = () => resolve(getReq.result ? getReq.result.state.project : null);
+                     getReq.onerror = () => reject(getReq.error);
+                 };
+                 req.onerror = () => reject(req.error);
+             });
         });
 
         const keys = projectData.keys.sort((a: { position: { x: number } }, b: { position: { x: number } }) => a.position.x - b.position.x);
