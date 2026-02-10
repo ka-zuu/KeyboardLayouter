@@ -105,7 +105,7 @@ test.describe('Multi-select Drag Interaction', () => {
                          const val = getReq.result;
                          if (val && val.state && val.state.project && val.state.project.keys) {
                              // Check if any key moved > 1U (approx 1.0)
-                             const moved = val.state.project.keys.some((k: any) => k.position.y > 1);
+                             const moved = val.state.project.keys.some((k: { position: { y: number } }) => k.position.y > 1);
                              resolve(moved);
                          } else {
                              resolve(false);
