@@ -7,7 +7,7 @@ import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
 import KeyList from './KeyList';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
-import { doPolygonsIntersect, getRotatedRectPoints } from '@/lib/geometry';
+import { doPolygonsIntersect, getRotatedRectPoints, getRotatedRectAABB } from '@/lib/geometry';
 import Konva from 'konva';
 
 const MainCanvas = () => {
@@ -308,6 +308,17 @@ const MainCanvas = () => {
                         return;
                     }
 
+                    // Pre-calculate trig values for reuse
+                    const rad = (key.angle * Math.PI) / 180;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+
+                    // Optimized AABB check
+                    const aabb = getRotatedRectAABB(kx, ky, kw, kh, key.angle, rcx, rcy, { sin, cos });
+                    if (aabb.maxX < x1 || aabb.minX > x2 || aabb.maxY < y1 || aabb.minY > y2) {
+                        return;
+                    }
+
                     // Get Key Polygon (Rotated)
                     const keyPoints = getRotatedRectPoints(
                         kx,
@@ -316,30 +327,9 @@ const MainCanvas = () => {
                         kh,
                         key.angle,
                         rcx,
-                        rcy
+                        rcy,
+                        { sin, cos }
                     );
-
-                    // Original AABB Check optimization (still useful for tight fit check after circle check)
-                    const firstPoint = keyPoints[0];
-                    if (!firstPoint) return;
-
-                    let minX = firstPoint.x;
-                    let maxX = firstPoint.x;
-                    let minY = firstPoint.y;
-                    let maxY = firstPoint.y;
-
-                    for (let i = 1; i < keyPoints.length; i++) {
-                        const p = keyPoints[i];
-                        if (!p) continue;
-                        if (p.x < minX) minX = p.x;
-                        if (p.x > maxX) maxX = p.x;
-                        if (p.y < minY) minY = p.y;
-                        if (p.y > maxY) maxY = p.y;
-                    }
-
-                    if (maxX < x1 || minX > x2 || maxY < y1 || minY > y2) {
-                        return;
-                    }
 
                     if (doPolygonsIntersect(selectionRectPoints, keyPoints)) {
                         newSelectedIds.push(key.id);
