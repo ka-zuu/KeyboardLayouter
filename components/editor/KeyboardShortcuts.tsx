@@ -4,11 +4,6 @@ import { useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 
 const KeyboardShortcuts = () => {
-    const deleteSelectedKeys = useStore((state) => state.deleteSelectedKeys);
-    const copyKeys = useStore((state) => state.copyKeys);
-    const pasteKeys = useStore((state) => state.pasteKeys);
-    const moveSelectedKeys = useStore((state) => state.moveSelectedKeys);
-
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             // Ignore if user is typing in an input field
@@ -23,7 +18,7 @@ const KeyboardShortcuts = () => {
 
             // Delete / Backspace
             if (e.key === 'Delete' || e.key === 'Backspace') {
-                deleteSelectedKeys();
+                useStore.getState().deleteSelectedKeys();
                 return;
             }
 
@@ -32,8 +27,10 @@ const KeyboardShortcuts = () => {
                 e.preventDefault(); // maintain scroll position
 
                 // Use current grid size
-                const gridSize = useStore.getState().gridSize;
+                const store = useStore.getState();
+                const gridSize = store.gridSize;
                 const delta = e.shiftKey ? 1 : gridSize;
+                const moveSelectedKeys = store.moveSelectedKeys;
 
                 switch (e.key) {
                     case 'ArrowUp': moveSelectedKeys({ x: 0, y: -delta }); break;
@@ -47,20 +44,20 @@ const KeyboardShortcuts = () => {
             // Copy / Paste (Cmd+C, Cmd+V or Ctrl+C, Ctrl+V)
             if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
                 e.preventDefault();
-                copyKeys();
+                useStore.getState().copyKeys();
                 return;
             }
 
             if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
                 e.preventDefault();
-                pasteKeys();
+                useStore.getState().pasteKeys();
                 return;
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [deleteSelectedKeys, copyKeys, pasteKeys, moveSelectedKeys]);
+    }, []);
 
     return null;
 };
