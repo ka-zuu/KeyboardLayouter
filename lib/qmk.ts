@@ -18,11 +18,18 @@ interface QMKLayout {
 
 interface QMKInfo {
     keyboard_name: string;
+    manufacturer: string;
+    maintainer: string;
+    url: string;
+    usb: {
+        vid: string;
+        pid: string;
+        device_version: string;
+    };
+    diode_direction: string;
     layouts: {
         [key: string]: QMKLayout;
     };
-    width?: number;
-    height?: number;
 }
 
 export function generateQMKInfo(project: ProjectData): string {
@@ -51,6 +58,15 @@ export function generateQMKInfo(project: ProjectData): string {
 
     const info: QMKInfo = {
         keyboard_name: project.name,
+        manufacturer: 'Unknown',
+        maintainer: 'qmk',
+        url: '',
+        usb: {
+            vid: '0xFEED',
+            pid: '0x0000',
+            device_version: '0.0.1',
+        },
+        diode_direction: 'COL2ROW',
         layouts: {
             "LAYOUT": {
                 "layout": qmkKeys,

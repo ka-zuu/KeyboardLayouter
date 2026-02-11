@@ -48,6 +48,15 @@ describe('qmk', () => {
 
             expect(parsed).toEqual({
                 keyboard_name: 'Test Keyboard',
+                manufacturer: 'Unknown',
+                maintainer: 'qmk',
+                url: '',
+                usb: {
+                    vid: '0xFEED',
+                    pid: '0x0000',
+                    device_version: '0.0.1'
+                },
+                diode_direction: 'COL2ROW',
                 layouts: {
                     LAYOUT: {
                         layout: [
