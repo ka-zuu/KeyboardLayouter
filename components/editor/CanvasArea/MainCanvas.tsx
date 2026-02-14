@@ -511,14 +511,18 @@ const MainCanvas = () => {
                     }}
                     ref={stageRef}
                 >
-                    <Layer>
+                    <Layer listening={false}>
                         <GridBackground width={dimensions.width} height={dimensions.height} />
+                    </Layer>
+                    <Layer>
                         <KeyList
                             keyIds={projectKeyIds}
                             selectedKeysSet={selectedKeysSet}
                             onSelect={selectKey}
                             onDragEnd={handleKeyDragEnd}
                         />
+                    </Layer>
+                    <Layer listening={false}>
                         {/* Selection Box */}
                         <Rect
                             ref={selectionBoxRef}
