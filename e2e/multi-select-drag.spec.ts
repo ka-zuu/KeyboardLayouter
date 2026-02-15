@@ -92,6 +92,7 @@ test.describe('Multi-select Drag Interaction', () => {
         // Wait for store update (Key 1 should have moved > 1U)
         // Debounce is 1000ms, so we wait.
         // Removed hardcoded timeout in favor of polling via manual loop to ensure robustness
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let projectData: any = null;
         for (let i = 0; i < 30; i++) { // Poll for up to 6 seconds (200ms * 30)
             projectData = await page.evaluate(async () => {
