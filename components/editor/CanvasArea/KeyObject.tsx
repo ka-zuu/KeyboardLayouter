@@ -65,6 +65,9 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
     const centerY = y + halfH;
 
     const handleDragEndCenter = (e: Konva.KonvaEventObject<DragEvent>) => {
+        // Prevent event bubbling to avoid duplicate handling in parent layers
+        e.cancelBubble = true;
+
         const nx = e.target.x();
         const ny = e.target.y();
         // nx, ny is new Center.
@@ -91,17 +94,6 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
              const selectedSet = new Set(selectedKeyIds);
              allKeys.forEach(k => {
                  if (selectedSet.has(k.id)) {
-                     // Add delta to original position
-                     // Wait, we need original position?
-                     // Or just current position + delta?
-                     // Current position in Store hasn't changed during drag (only visual).
-                     // So yes, store pos + delta.
-
-                     // Exception: The dragged key itself?
-                     // Ideally we treat all uniformly based on Store state + Delta.
-                     // But the dragged key `data` prop might be stale if store updated?
-                     // No, drag is local.
-
                      updates.push({
                          id: k.id,
                          data: {
@@ -336,35 +328,20 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             {/* Key Shape centered at 0,0 */}
             {data.variant === 'iso_enter' ? (
                 <Path
-                    x={-halfW} // Path starts at 0,0. We need to center it. 
-                    // ISO Enter Width is 1.5U approx (actually bounding box is what we used for width).
-                    // Our path definition "M 0,0 ..." is in U units.
-                    // We simply scale the Group or Path?
-                    // Better to scale the Path data? No, simpler to use scale attribute on Path?
-                    // Or pre-calculate path string in pixels?
-                    // Let's use scale transform on Path.
-                    // But width/height calculation in parent was based on data.size.
-                    // If variant is ISO Enter, data.size should be {w: 1.5, h: 2.0}.
-                    // Path is defined in U.
+                    x={-halfW}
                     y={-halfH}
                     data={ISO_ENTER_PATH}
                     scaleX={PIXELS_PER_U}
                     scaleY={PIXELS_PER_U}
                     fill={keyColor}
                     stroke={strokeColor}
-                    strokeWidth={strokeWidth / PIXELS_PER_U} // Stroke acts weird with scale?
-                    // If we scale the Path object, stroke scales too.
-                    // Better to keep strokeWidth constant?
-                    // Konva 'vectorEffect' non-scaling-stroke? Not supported well.
-                    // Alternative: Define path in Pixels.
-                    // M 0,0 L 1.5*60,0 ...
-                    // Let's do dynamic path generation string.
+                    strokeWidth={strokeWidth / PIXELS_PER_U}
                     fillAfterStrokeEnabled={true}
                     shadowBlur={2}
                     shadowColor="black"
                     shadowOpacity={0.2}
                     shadowOffset={{ x: 2, y: 2 }}
-                    hitStrokeWidth={10} // easier selection
+                    hitStrokeWidth={10}
                 />
             ) : (
                 <Rect
@@ -382,7 +359,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                     shadowOffset={{ x: 2, y: 2 }}
                 />
             )}
-            {/* Legends: Top, Bottom, Left, Right */}
+
             {/* Top Center */}
             <Text
                 x={-halfW}

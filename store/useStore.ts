@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { temporal } from 'zundo';
+import { shallow } from 'zustand/shallow';
 import { KeyData, Position, ProjectData } from '@/types/mkd';
 import { v4 as uuidv4 } from 'uuid';
 import { customStorage } from '@/lib/storage';
@@ -459,6 +460,7 @@ export const useStore = create<EditorState>()(
       {
         partialize: (state) => ({ project: state.project }),
         limit: 50,
+        equality: shallow,
       }
     ),
     {

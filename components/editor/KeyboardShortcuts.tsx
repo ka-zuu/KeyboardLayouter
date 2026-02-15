@@ -16,6 +16,26 @@ const KeyboardShortcuts = () => {
                 return;
             }
 
+            // Undo / Redo
+            // Cmd+Z or Ctrl+Z -> Undo
+            // Cmd+Shift+Z or Ctrl+Shift+Z -> Redo
+            // Ctrl+Y -> Redo (Windows standard)
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    useStore.temporal.getState().redo();
+                } else {
+                    useStore.temporal.getState().undo();
+                }
+                return;
+            }
+
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                useStore.temporal.getState().redo();
+                return;
+            }
+
             // Delete / Backspace
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 useStore.getState().deleteSelectedKeys();
@@ -42,13 +62,13 @@ const KeyboardShortcuts = () => {
             }
 
             // Copy / Paste (Cmd+C, Cmd+V or Ctrl+C, Ctrl+V)
-            if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
                 e.preventDefault();
                 useStore.getState().copyKeys();
                 return;
             }
 
-            if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'v') {
                 e.preventDefault();
                 useStore.getState().pasteKeys();
                 return;
