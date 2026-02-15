@@ -91,46 +91,41 @@ test.describe('Multi-select Drag Interaction', () => {
         // 6. Verify positions in Store
         // Wait for store update (Key 1 should have moved > 1U)
         // Debounce is 1000ms, so we wait.
-        await page.waitForTimeout(1100); // Give it time to debounce
-
-        await page.waitForFunction(async () => {
-            return new Promise((resolve) => {
-                 const req = indexedDB.open('mkd-db', 1);
-                 req.onsuccess = () => {
-                     const db = req.result;
-                     const tx = db.transaction('keyval', 'readonly');
-                     const store = tx.objectStore('keyval');
-                     const getReq = store.get('mkd-storage');
-                     getReq.onsuccess = () => {
-                         const val = getReq.result;
-                         if (val && val.state && val.state.project && val.state.project.keys) {
-                             // Check if any key moved > 1U (approx 1.0)
-                             const moved = val.state.project.keys.some((k: { position: { y: number } }) => k.position.y > 1);
-                             resolve(moved);
-                         } else {
-                             resolve(false);
-                         }
+        // Removed hardcoded timeout in favor of polling via manual loop to ensure robustness
+        let projectData: any = null;
+        for (let i = 0; i < 30; i++) { // Poll for up to 6 seconds (200ms * 30)
+            projectData = await page.evaluate(async () => {
+                 return new Promise((resolve) => {
+                     const req = indexedDB.open('mkd-db', 1);
+                     req.onsuccess = () => {
+                         const db = req.result;
+                         const tx = db.transaction('keyval', 'readonly');
+                         const store = tx.objectStore('keyval');
+                         const getReq = store.get('mkd-storage');
+                         getReq.onsuccess = () => {
+                             const val = getReq.result;
+                             if (val && val.state && val.state.project && val.state.project.keys) {
+                                 // Check if any key moved > 1U (approx 1.0)
+                                 const moved = val.state.project.keys.some((k: { position: { y: number } }) => k.position.y > 1);
+                                 if (moved) {
+                                    resolve(val.state.project);
+                                 } else {
+                                    resolve(null);
+                                 }
+                             } else {
+                                 resolve(null);
+                             }
+                         };
+                         getReq.onerror = () => resolve(null);
                      };
-                     getReq.onerror = () => resolve(false);
-                 };
-                 req.onerror = () => resolve(false);
+                     req.onerror = () => resolve(null);
+                 });
             });
-        });
+            if (projectData) break;
+            await page.waitForTimeout(200);
+        }
 
-        const projectData = await page.evaluate(async () => {
-             return new Promise((resolve, reject) => {
-                 const req = indexedDB.open('mkd-db', 1);
-                 req.onsuccess = () => {
-                     const db = req.result;
-                     const tx = db.transaction('keyval', 'readonly');
-                     const store = tx.objectStore('keyval');
-                     const getReq = store.get('mkd-storage');
-                     getReq.onsuccess = () => resolve(getReq.result ? getReq.result.state.project : null);
-                     getReq.onerror = () => reject(getReq.error);
-                 };
-                 req.onerror = () => reject(req.error);
-             });
-        });
+        if (!projectData) throw new Error("Project data was not updated in IDB after drag");
 
         const keys = projectData.keys.sort((a: { position: { x: number } }, b: { position: { x: number } }) => a.position.x - b.position.x);
         
