@@ -38,9 +38,6 @@ test.describe('Keyboard Shortcuts', () => {
         // Need to click the key to select it.
         // Assuming default key added at (0,0) 1U size.
         // Canvas usually fills the area.
-        const canvas = page.locator('canvas').first();
-        const box = await canvas.boundingBox();
-        if (!box) throw new Error('Canvas not found');
         
         // Programmatically select the key to ensure test stability
         // We are testing shortcuts, not the selection click logic (covered in other tests)
