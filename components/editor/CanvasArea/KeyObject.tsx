@@ -5,19 +5,19 @@ import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
-import { useShallow } from 'zustand/react/shallow';
 import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
     id: string;
+    data: KeyData;
     isSelected: boolean;
     onSelect: (id: string, multi: boolean) => void;
     onDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragEnd }) => {
-    const data = useStore(useShallow(state => state.project.keys.find(k => k.id === id)));
+const KeyObject: React.FC<KeyObjectProps> = ({ id, data, isSelected, onSelect, onDragEnd }) => {
+    // data is now passed via props to avoid O(N) selector
     const snapEnabled = useStore(state => state.snapEnabled);
     const gridSize = useStore(state => state.gridSize);
     const updateKeys = useStore(state => state.updateKeys);
@@ -342,6 +342,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                     shadowOpacity={0.2}
                     shadowOffset={{ x: 2, y: 2 }}
                     hitStrokeWidth={10}
+                    perfectDrawEnabled={false}
                 />
             ) : (
                 <Rect
@@ -357,6 +358,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                     shadowColor="black"
                     shadowOpacity={0.2}
                     shadowOffset={{ x: 2, y: 2 }}
+                    perfectDrawEnabled={false}
                 />
             )}
 

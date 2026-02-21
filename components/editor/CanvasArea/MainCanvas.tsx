@@ -11,7 +11,6 @@ import { doPolygonsIntersect, getRotatedRectPoints, getRotatedRectAABB } from '@
 import Konva from 'konva';
 
 const MainCanvas = () => {
-    const projectKeyIds = useStore(useShallow(state => state.project.keys.map(k => k.id)));
     const { scale, pan, gridSize, selectedKeyIds } = useStore(useShallow(state => ({
         scale: state.scale,
         pan: state.pan,
@@ -516,7 +515,6 @@ const MainCanvas = () => {
                     </Layer>
                     <Layer>
                         <KeyList
-                            keyIds={projectKeyIds}
                             selectedKeysSet={selectedKeysSet}
                             onSelect={selectKey}
                             onDragEnd={handleKeyDragEnd}
