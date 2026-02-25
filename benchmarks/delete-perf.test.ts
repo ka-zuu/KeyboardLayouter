@@ -1,5 +1,3 @@
-import { describe, test, expect, jest } from '@jest/globals';
-
 // Mock uuid to avoid ESM issues and improve setup speed
 jest.mock('uuid', () => ({
   v4: () => 'test-uuid-' + Math.random(),
@@ -28,6 +26,7 @@ describe('Performance Benchmark', () => {
       id: `key-${i}`,
       position: { x: i, y: 0 },
       size: { w: 1, h: 1 },
+      angle: 0,
       rotationCenter: { x: 0, y: 0 },
       matrix: { row: 0, col: i },
       legends: { top: 'A', bottom: '', left: '', right: '' },

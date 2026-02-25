@@ -10,14 +10,18 @@ import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
-    id: string;
+    id?: string;
+    data?: KeyData;
     isSelected: boolean;
     onSelect: (id: string, multi: boolean) => void;
     onDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragEnd }) => {
-    const data = useStore(useShallow(state => state.project.keys.find(k => k.id === id)));
+const KeyObject: React.FC<KeyObjectProps> = ({ id, data, isSelected, onSelect, onDragEnd }) => {
+    // Legacy support: If data is not provided, fetch by ID (slower)
+    const storeData = useStore(useShallow(state => id ? state.project.keys.find(k => k.id === id) : undefined));
+    const keyData = data || storeData;
+
     const snapEnabled = useStore(state => state.snapEnabled);
     const gridSize = useStore(state => state.gridSize);
     const updateKeys = useStore(state => state.updateKeys);
@@ -30,18 +34,17 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
     // Performance optimization: Cache participating keys during rotation drag
     const rotationContextRef = useRef<{
         participatingKeys: KeyData[];
-        participatingNodes: Map<string, Konva.Node>;
         pivotId: string;
     } | null>(null);
 
     // Performance optimization: Cache participating nodes during move drag
     const draggedNodesRef = useRef<Konva.Node[]>([]);
 
-    // Calculate derived values safely, even if data is undefined (though effect depends on it)
-    const width = data ? data.size.w * PIXELS_PER_U : 0;
-    const height = data ? data.size.h * PIXELS_PER_U : 0;
-    const x = data ? data.position.x * PIXELS_PER_U : 0;
-    const y = data ? data.position.y * PIXELS_PER_U : 0;
+    // Calculate derived values safely
+    const width = keyData ? keyData.size.w * PIXELS_PER_U : 0;
+    const height = keyData ? keyData.size.h * PIXELS_PER_U : 0;
+    const x = keyData ? keyData.position.x * PIXELS_PER_U : 0;
+    const y = keyData ? keyData.position.y * PIXELS_PER_U : 0;
 
     // Visual styling
     const keyColor = '#f0f0f0';
@@ -50,14 +53,14 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
     const strokeWidth = isSelected ? 3 : 1;
 
     useEffect(() => {
-        if (!data) return;
+        if (!keyData) return;
         const group = groupRef.current;
         if (group) {
             group.cache({ pixelRatio: 2 });
         }
-    }, [data, isSelected, width, height, keyColor, strokeColor, strokeWidth]);
+    }, [keyData, isSelected, width, height, keyColor, strokeColor, strokeWidth]);
 
-    if (!data) return null;
+    if (!keyData) return null;
 
     // Calculate Center for Pivot
     const halfW = width / 2;
@@ -79,7 +82,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
 
         // Check for Multi-Selection
         const selectedKeyIds = useStore.getState().selectedKeyIds;
-        if (selectedKeyIds.length > 1 && selectedKeyIds.includes(data.id) && dragStartPos.current) {
+        if (selectedKeyIds.length > 1 && selectedKeyIds.includes(keyData.id) && dragStartPos.current) {
              // Calculate Total Delta in U
              const initialCenter = dragStartPos.current; // Center PX
              // Current Center PX is nx, ny
@@ -115,7 +118,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
              draggedNodesRef.current = [];
         } else {
              // Single Key Update
-             onDragEnd(data.id, uX, uY);
+             onDragEnd(keyData.id, uX, uY);
         }
     };
 
@@ -179,17 +182,17 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
         // If single selection or no context, just update this key
         if (!context) {
             // Imperative update for single selection
-            const node = stage.findOne('#' + data.id);
+            const node = stage.findOne('#' + keyData.id);
             if (node) {
                 node.rotation(newRotation);
             }
-            pendingRotationUpdates.current = [{ id: data.id, data: { angle: newRotation } }];
+            pendingRotationUpdates.current = [{ id: keyData.id, data: { angle: newRotation } }];
             return;
         }
 
         // Batch Rotation
-        const pivotId = data.id;
-        const previousAngle = data.angle;
+        const pivotId = keyData.id;
+        const previousAngle = keyData.angle;
         // Calculate delta
         const deltaRotation = newRotation - previousAngle;
 
@@ -201,19 +204,17 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
         const updates: { id: string, data: Partial<KeyData> }[] = [];
 
         // Pivot Center in U units
-        const pivotCenterX = data.position.x + data.size.w / 2;
-        const pivotCenterY = data.position.y + data.size.h / 2;
+        const pivotCenterX = keyData.position.x + keyData.size.w / 2;
+        const pivotCenterY = keyData.position.y + keyData.size.h / 2;
 
         // Iterate over cached participating keys instead of all project keys
         context.participatingKeys.forEach(k => {
-            // Retrieve node from cache
-            const node = context.participatingNodes.get(k.id);
-
             if (k.id === pivotId) {
                 const update = { id: k.id, data: { angle: newRotation } };
                 updates.push(update);
 
                 // Imperative Update
+                const node = stage.findOne('#' + k.id);
                 if (node) {
                     node.rotation(newRotation);
                 }
@@ -249,6 +250,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                 });
 
                 // Imperative Update
+                const node = stage.findOne('#' + k.id);
                 if (node) {
                     node.rotation(kNewAngle);
                     // Convert U to Px for Konva Node
@@ -265,7 +267,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
 
     return (
         <Group
-            id={data.id} // ID for selection lookup
+            id={keyData.id} // ID for selection lookup
             data-testid="key-object"
             data-selected={isSelected ? "true" : "false"}
             x={centerX}
@@ -274,7 +276,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             height={height}
             offsetX={0}
             offsetY={0}
-            rotation={data.angle}
+            rotation={keyData.angle}
             draggable
             onDragStart={(e) => {
                 // Initialize drag start position for delta calculation
@@ -285,12 +287,12 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
 
                 const state = useStore.getState();
                 const currentSelectedIds = state.selectedKeyIds;
-                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(data.id)) {
+                if (currentSelectedIds.length > 1 && currentSelectedIds.includes(keyData.id)) {
                     const stage = e.target.getStage();
                     if (stage) {
                         draggedNodesRef.current = [];
                         currentSelectedIds.forEach(id => {
-                             if (id === data.id) return; // Skip self
+                             if (id === keyData.id) return; // Skip self
                              const node = stage.findOne('#' + id);
                              if (node) {
                                  draggedNodesRef.current.push(node);
@@ -323,12 +325,12 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             dragBoundFunc={dragBoundFunc}
             onClick={(e) => {
                 e.cancelBubble = true;
-                onSelect(data.id, e.evt.shiftKey || e.evt.ctrlKey);
+                onSelect(keyData.id, e.evt.shiftKey || e.evt.ctrlKey);
             }}
             ref={groupRef}
         >
             {/* Key Shape centered at 0,0 */}
-            {data.variant === 'iso_enter' ? (
+            {keyData.variant === 'iso_enter' ? (
                 <Path
                     x={-halfW}
                     y={-halfH}
@@ -344,6 +346,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                     shadowOpacity={0.2}
                     shadowOffset={{ x: 2, y: 2 }}
                     hitStrokeWidth={10}
+                    perfectDrawEnabled={false}
                 />
             ) : (
                 <Rect
@@ -359,6 +362,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                     shadowColor="black"
                     shadowOpacity={0.2}
                     shadowOffset={{ x: 2, y: 2 }}
+                    perfectDrawEnabled={false}
                 />
             )}
 
@@ -366,7 +370,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             <Text
                 x={-halfW}
                 y={-halfH + 4}
-                text={data.legends?.top || ''}
+                text={keyData.legends?.top || ''}
                 width={width}
                 height={height / 2 - 4}
                 align="center"
@@ -379,7 +383,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             <Text
                 x={-halfW}
                 y={0}
-                text={data.legends?.bottom || ''}
+                text={keyData.legends?.bottom || ''}
                 width={width}
                 height={height / 2 - 4}
                 align="center"
@@ -392,7 +396,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             <Text
                 x={-halfW + 4}
                 y={-halfH}
-                text={data.legends?.left || ''}
+                text={keyData.legends?.left || ''}
                 width={width / 2 - 4}
                 height={height}
                 align="left"
@@ -405,7 +409,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             <Text
                 x={0}
                 y={-halfH}
-                text={data.legends?.right || ''}
+                text={keyData.legends?.right || ''}
                 width={width / 2 - 4}
                 height={height}
                 align="right"
@@ -419,7 +423,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
             <Text
                 x={-halfW + 3}
                 y={-halfH + 3}
-                text={`${data.matrix?.row ?? 0}, ${data.matrix?.col ?? 0}`}
+                text={`${keyData.matrix?.row ?? 0}, ${keyData.matrix?.col ?? 0}`}
                 fontSize={10}
                 fill="#999"
                 listening={false}
@@ -439,6 +443,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                     />
                     {/* Knob */}
                     <Circle
+                        data-testid="rotation-handle"
                         x={0}
                         y={-halfH - 25}
                         radius={6}
@@ -454,26 +459,14 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                             const selectedIds = state.selectedKeyIds;
 
                             // Check if this key is part of the selection (it should be if handle is visible)
-                            if (selectedIds.length > 1 && selectedIds.includes(data.id)) {
-                                const stage = e.target.getStage();
-                                const participatingNodes = new Map<string, Konva.Node>();
+                            if (selectedIds.length > 1 && selectedIds.includes(keyData.id)) {
                                 const selectedSet = new Set(selectedIds);
                                 // Filter project keys ONCE at start of drag
                                 const participatingKeys = state.project.keys.filter(k => selectedSet.has(k.id));
 
-                                if (stage) {
-                                    participatingKeys.forEach(k => {
-                                        const node = stage.findOne('#' + k.id);
-                                        if (node) {
-                                            participatingNodes.set(k.id, node);
-                                        }
-                                    });
-                                }
-
                                 rotationContextRef.current = {
                                     participatingKeys,
-                                    participatingNodes,
-                                    pivotId: data.id
+                                    pivotId: keyData.id
                                 };
                             } else {
                                 rotationContextRef.current = null;

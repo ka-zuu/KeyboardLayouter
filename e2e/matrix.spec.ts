@@ -13,7 +13,7 @@ test.describe('Matrix Auto-Assignment', () => {
         await page.getByRole('button', { name: 'Add Keys' }).click();
 
         // 2. Clear selection (click background far away)
-        await page.getByTestId('main-canvas').locator('.konvajs-content').click({ position: { x: 500, y: 500 } });
+        await page.locator('canvas').click({ position: { x: 500, y: 500 } });
 
         // 3. Run Auto-assign (All) with default 0,0
         // Use test id
@@ -48,7 +48,7 @@ test.describe('Matrix Auto-Assignment', () => {
         await page.getByRole('button', { name: 'Add Keys' }).click();
 
         // 2. Clear selection
-        await page.getByTestId('main-canvas').locator('.konvajs-content').click({ position: { x: 500, y: 500 } });
+        await page.locator('canvas').click({ position: { x: 500, y: 500 } });
 
         // 3. Set custom start row/col
         const startRowInput = page.getByTestId('matrix-start-row');

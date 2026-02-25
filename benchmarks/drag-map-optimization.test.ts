@@ -1,5 +1,3 @@
-import { describe, test } from '@jest/globals';
-
 describe('Map Construction vs Set Lookup Optimization', () => {
     const NUM_KEYS = 2000;
     const SELECT_RATIOS = [0.01, 0.1, 0.5, 1.0]; // 1%, 10%, 50%, 100%

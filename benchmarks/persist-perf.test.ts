@@ -1,4 +1,3 @@
-import { describe, test, jest } from '@jest/globals';
 import { useStore } from '@/store/useStore';
 
 // Mock uuid
@@ -15,6 +14,7 @@ describe('Persistence Benchmark', () => {
       id: `key-${i}`,
       position: { x: i, y: 0 },
       size: { w: 1, h: 1 },
+      angle: 0,
       rotationCenter: { x: 0, y: 0 },
       matrix: { row: 0, col: i },
       legends: { top: 'A', bottom: '', left: '', right: '' },
