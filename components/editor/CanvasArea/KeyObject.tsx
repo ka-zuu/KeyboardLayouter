@@ -207,7 +207,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
         // Iterate over cached participating keys instead of all project keys
         context.participatingKeys.forEach(k => {
             // Retrieve node from cache
-            const node = context.participatingNodes.get(k.id) || stage.findOne('#' + k.id);
+            const node = context.participatingNodes.get(k.id);
 
             if (k.id === pivotId) {
                 const update = { id: k.id, data: { angle: newRotation } };
