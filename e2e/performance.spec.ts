@@ -55,7 +55,6 @@ test.describe('Performance Tests', () => {
         });
 
         // Get position of the first key to drag
-        // Get position of the first key to drag
         const firstKeyPos = await page.evaluate(() => {
             const storage = localStorage.getItem('mkd-storage');
             if (!storage) return { x: 0, y: 0 };
@@ -66,7 +65,7 @@ test.describe('Performance Tests', () => {
         // Canvas offset needs to be accounted for? 
         // Usually Konva canvas covers the area. 
         // We will assume the canvas starts at some offset or we interact with the canvas element directly.
-        const canvas = page.locator('canvas');
+        const canvas = page.getByTestId('main-canvas').locator('.konvajs-content');
         const box = await canvas.boundingBox();
         if (!box) throw new Error('Canvas not found');
 
