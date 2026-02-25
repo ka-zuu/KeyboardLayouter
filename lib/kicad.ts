@@ -316,7 +316,7 @@ function getLibSymbols(): string {
       (on_board yes)
       (property "Reference" "SW" (at 3.81 2.794 0) (effects (font (size 1.27 1.27))))
       (property "Value" "SW_PUSH" (at 0 -2.032 0) (effects (font (size 1.27 1.27))))
-      (symbol "SW_PUSH_1_0_1"
+      (symbol "SW_PUSH_1_1"
         (rectangle (start -4.318 1.27) (end 4.318 1.524) (stroke (width 0) (type solid)) (fill (type none)))
         (polyline
           (pts (xy -1.016 1.524) (xy -0.762 2.286) (xy 0.762 2.286) (xy 1.016 1.524))
