@@ -111,7 +111,7 @@ describe('Rotation Performance', () => {
         mockFindOne.mockClear();
     });
 
-    it('calls findOne repeatedly during drag (Before Optimization)', () => {
+    it('avoids calling findOne during drag move after optimization', () => {
         const NUM_KEYS = 100;
         setupStore(NUM_KEYS);
 
