@@ -227,7 +227,7 @@ function generateSch(keys: ExportKey[]): string {
 
         content += `
   (symbol (lib_id "kbd:SW_PUSH") (at ${sw_x} ${sw_y} 0) (unit 1)
-    (in_bom yes) (on_board yes) (pin_numbers hide)
+    (in_bom yes) (on_board yes)
     (uuid "${k.uuidSw}")
     (property "Reference" "${k.ref}" (at ${sw_x} ${sw_refY} 0))
     (property "Value" "SW_PUSH" (at ${sw_x} ${r(baseY + 5.08)} 0) (effects (font (size 1.27 1.27))))
@@ -247,7 +247,7 @@ function generateSch(keys: ExportKey[]): string {
 
         content += `
   (symbol (lib_id "Device:D") (at ${d_x} ${d_y} 270) (unit 1)
-    (in_bom yes) (on_board yes) (pin_numbers hide)
+    (in_bom yes) (on_board yes)
     (uuid "${k.uuidDiode}")
     (property "Reference" "${k.diodeRef}" (at ${d_x} ${d_refY} 0))
     (property "Value" "D" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27))))
