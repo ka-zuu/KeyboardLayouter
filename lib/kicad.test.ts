@@ -87,4 +87,18 @@ describe('generateKicadProjectZip', () => {
         expect(sch).not.toContain('`');
         expect(sch).not.toContain('<source>');
     });
+
+    it('uses updated symbol defaults', async () => {
+        const blob = await generateKicadProjectZip(mockProject);
+        const zip = await JSZip.loadAsync(blob);
+        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
+
+        // Check for new Lib IDs
+        expect(sch).toContain('(lib_id "Device:D")');
+        expect(sch).toContain('(lib_id "kbd:SW_PUSH")');
+
+        // Check for updated Value properties
+        expect(sch).toContain('(property "Value" "D"');
+        expect(sch).toContain('(property "Value" "SW_PUSH"');
+    });
 });
