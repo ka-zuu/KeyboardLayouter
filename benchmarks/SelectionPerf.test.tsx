@@ -106,13 +106,13 @@ describe('Selection Performance', () => {
   });
 
   beforeEach(() => {
-    (KeyList as jest.Mock).mockClear();
+    (KeyList as unknown as jest.Mock).mockClear();
     useStore.setState({
       project: {
         id: '1',
         name: 'Test Project',
         keys: [
-            { id: 'k1', position: { x: 0, y: 0 }, size: { w: 1, h: 1 }, angle: 0, rotationCenter: { x: 0, y: 0 }, legends: {}, matrix: { row: 0, col: 0 }, variant: 'rect' }
+            { id: 'k1', position: { x: 0, y: 0 }, size: { w: 1, h: 1 }, angle: 0, rotationCenter: { x: 0, y: 0 }, legends: { top: '', bottom: '', left: '', right: '' }, matrix: { row: 0, col: 0 }, variant: 'rect' }
         ],
         createdAt: Date.now(),
         updatedAt: Date.now(),

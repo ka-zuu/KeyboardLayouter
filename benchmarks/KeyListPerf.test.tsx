@@ -6,10 +6,12 @@ import { KeyData } from '@/types/mkd';
 
 // Mock KeyObject to be simple, using relative path to avoid resolution issues
 jest.mock('../components/editor/CanvasArea/KeyObject', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const React = require('react');
     // KeyObject no longer subscribes to store for data!
-    return React.memo(({ id, data }: { id: string, data: any }) => {
-        return <div data-testid="key-object">{id}</div>;
+    // eslint-disable-next-line react/display-name, @typescript-eslint/no-explicit-any
+    return React.memo(({ data }: { data: any }) => {
+        return <div data-testid="key-object">{data.id}</div>;
     });
 });
 
@@ -24,7 +26,7 @@ describe('KeyList Performance', () => {
                 size: { w: 1, h: 1 },
                 angle: 0,
                 rotationCenter: { x: 0, y: 0 },
-                legends: {},
+                legends: { top: '', bottom: '', left: '', right: '' },
                 matrix: { row: 0, col: i },
                 variant: 'rect'
             });
@@ -42,7 +44,7 @@ describe('KeyList Performance', () => {
         });
 
         // Render KeyList (no props needed for keys)
-        const { rerender } = render(
+        render(
             <KeyList
                 selectedKeysSet={new Set()}
                 onSelect={() => {}}

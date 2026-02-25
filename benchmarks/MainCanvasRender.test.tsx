@@ -55,7 +55,7 @@ describe('MainCanvas Performance', () => {
 
     // Initial render should have called Stage
     expect(Stage).toHaveBeenCalled();
-    const initialCallCount = (Stage as jest.Mock).mock.calls.length;
+    const initialCallCount = (Stage as unknown as jest.Mock).mock.calls.length;
 
     // Change Project Name
     await act(async () => {

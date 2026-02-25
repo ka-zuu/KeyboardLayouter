@@ -9,14 +9,13 @@ import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
-    id: string;
     data: KeyData;
     isSelected: boolean;
     onSelect: (id: string, multi: boolean) => void;
     onDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const KeyObject: React.FC<KeyObjectProps> = ({ id, data, isSelected, onSelect, onDragEnd }) => {
+const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
     // data is now passed via props to avoid O(N) selector
     const snapEnabled = useStore(state => state.snapEnabled);
     const gridSize = useStore(state => state.gridSize);

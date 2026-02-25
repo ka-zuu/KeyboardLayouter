@@ -17,7 +17,6 @@ const KeyList: React.FC<KeyListProps> = ({ selectedKeysSet, onSelect, onDragEnd 
             {keys.map((key) => (
                 <KeyObject
                     key={key.id}
-                    id={key.id}
                     data={key}
                     isSelected={selectedKeysSet.has(key.id)}
                     onSelect={onSelect}
