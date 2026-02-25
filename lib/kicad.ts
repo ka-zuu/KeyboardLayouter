@@ -1,10 +1,10 @@
-import JSZip from 'jszip';
-import { ProjectData, KeyData } from '@/types/mkd';
+import JSZip from "jszip";
+import { ProjectData, KeyData } from "@/types/mkd";
 
 // We need crypto for randomUUID.
-// in browser it is on window.crypto, in node (tests) it is in 'crypto' module but globally available in Node 19+.
+// in browser it is on window.crypto, in node (tests) it is in "crypto" module but globally available in Node 19+.
 // For safety in older node envs or jest, we might need a fallback or polyfill, but typical Next.js setup has it.
-// If not, we'll see in tests.
+// If not, we"ll see in tests.
 
 interface ExportKey {
     key: KeyData;
@@ -27,7 +27,7 @@ interface ExportKey {
 
 export async function generateKicadProjectZip(project: ProjectData): Promise<Blob> {
     const zip = new JSZip();
-    const projectName = project.name.replace(/\s+/g, '_') || "keyboard";
+    const projectName = project.name.replace(/\s+/g, "_") || "keyboard";
 
     // 1. Prepare Data
     const exportKeys: ExportKey[] = [];
@@ -83,7 +83,7 @@ export async function generateKicadProjectZip(project: ProjectData): Promise<Blo
     zip.file(`${projectName}.kicad_pro`, proContent);
 
     // 5. Generate ZIP
-    return zip.generateAsync({ type: 'blob' });
+    return zip.generateAsync({ type: "blob" });
 }
 
 function generateSch(keys: ExportKey[]): string {
@@ -154,15 +154,15 @@ function generateSch(keys: ExportKey[]): string {
 
         const y = OFFSET_Y + row.visualRow * KEY_SPACING_Y + 15.24;
 
-        // Start X: Slightly left of the first key's switch connection point (baseX - 5.08)
-        // Let's extend it a bit more to the left for the label.
+        // Start X: Slightly left of the first key"s switch connection point (baseX - 5.08)
+        // Let"s extend it a bit more to the left for the label.
         const startX = OFFSET_X + row.minCol * KEY_SPACING_X - 10.16;
 
-        // End X: Slightly right of the last key's switch connection point.
+        // End X: Slightly right of the last key"s switch connection point.
         // Actually, the last key connects at (baseX - 5.08).
         // So the bus must reach at least there.
-        // Let's extend it past the last key for aesthetics? Or just to the last key?
-        // Let's extend to (baseX + 25.4) to cover the whole cell width of the last key.
+        // Let"s extend it past the last key for aesthetics? Or just to the last key?
+        // Let"s extend to (baseX + 25.4) to cover the whole cell width of the last key.
         const endX = OFFSET_X + row.maxCol * KEY_SPACING_X + 25.4;
 
         content += `
@@ -190,7 +190,7 @@ function generateSch(keys: ExportKey[]): string {
         // Start Y: Top. Above the first key. (baseY - 5.08)
         const startY = OFFSET_Y + col.minRow * KEY_SPACING_Y - 10.16;
 
-        // End Y: Bottom. Below the last key's connection point.
+        // End Y: Bottom. Below the last key"s connection point.
         // Last key connects at (baseY + 20.32).
         const endY = OFFSET_Y + col.maxRow * KEY_SPACING_Y + 20.32;
 
@@ -299,32 +299,35 @@ function generateSch(keys: ExportKey[]): string {
     content += `)\n`;
 
     const cleanContent = content
-        .replace(/<source>[\s\S]*?<\/source>/g, '')
-        .replace(/<[^>]+>/g, '')
-        .replace(/`/g, '');
+        .replace(/<source>[\s\S]*?<\/source>/g, "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/`/g, "");
 
     return cleanContent.trim();
 }
 
 function getLibSymbols(): string {
     return `
-    (symbol "kbd:SW_PUSH" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes) (pin_numbers hide)
-      (property "Reference" "SW" (at 0 2.54 0) (effects (font (size 1.27 1.27))))
-      (property "Value" "SW_PUSH" (at 0 -2.54 0) (effects (font (size 1.27 1.27))))
+    (symbol "kbd:SW_PUSH"
+      (pin_numbers (hide yes))
+      (pin_names (offset 1.016) (hide yes))
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "SW" (at 3.81 2.794 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "SW_PUSH" (at 0 -2.032 0) (effects (font (size 1.27 1.27))))
       (symbol "SW_PUSH_1_1"
+        (rectangle (start -4.318 1.27) (end 4.318 1.524) (stroke (width 0) (type solid)) (fill (type none)))
         (polyline
-          (pts
-            (xy -1.27 0)
-            (xy 1.27 0)
-          )
-          (stroke (width 0) (type default))
+          (pts (xy -1.016 1.524) (xy -0.762 2.286) (xy 0.762 2.286) (xy 1.016 1.524))
+          (stroke (width 0) (type solid))
           (fill (type none))
         )
-        (pin passive line (at -5.08 0 0) (length 2.54)
+        (pin passive inverted (at -7.62 0 0) (length 5.08)
           (name "1" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
-        (pin passive line (at 5.08 0 180) (length 2.54)
+        (pin passive inverted (at 7.62 0 180) (length 5.08)
           (name "2" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
         )
