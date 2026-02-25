@@ -12,7 +12,7 @@ test.describe('Multi-Legend Support', () => {
         
         // 2. Select the key (Click at 30,30 relative to canvas, assuming key size is ~60px and at 0,0)
         // Note: Canvas container might be shifted, but locator('canvas') click is relative to the element.
-        await page.locator('canvas').click({ position: { x: 30, y: 30 } });
+        await page.getByTestId('main-canvas').locator('.konvajs-content').click({ position: { x: 30, y: 30 } });
 
         // 3. Verify Right Sidebar inputs
         // "A" is default for Top
@@ -43,7 +43,7 @@ test.describe('Multi-Legend Support', () => {
     test('should persist legends after page reload', async ({ page }) => {
         // Add key and set legends
         await page.getByRole('button', { name: 'Add Keys' }).click();
-        await page.locator('canvas').click({ position: { x: 30, y: 30 } });
+        await page.getByTestId('main-canvas').locator('.konvajs-content').click({ position: { x: 30, y: 30 } });
         
         await page.getByPlaceholder('Right').fill('Test');
         // Check input update instead of text visible
@@ -55,7 +55,7 @@ test.describe('Multi-Legend Support', () => {
         
         // Select key again to check properties
         // Store persistence should keep the key
-        await page.locator('canvas').click({ position: { x: 30, y: 30 } });
+        await page.getByTestId('main-canvas').locator('.konvajs-content').click({ position: { x: 30, y: 30 } });
 
         // Verify "Test" is still in input
         await expect(page.getByPlaceholder('Right')).toHaveValue('Test');
