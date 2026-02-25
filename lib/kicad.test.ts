@@ -101,4 +101,23 @@ describe('generateKicadProjectZip', () => {
         expect(sch).toContain('(property "Value" "D"');
         expect(sch).toContain('(property "Value" "SW_PUSH"');
     });
+
+    it('hides pin numbers and names, shows Value', async () => {
+        const blob = await generateKicadProjectZip(mockProject);
+        const zip = await JSZip.loadAsync(blob);
+        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
+
+        // Check for hidden pin names
+        expect(sch).toContain('(pin_names (offset 1.016) hide)');
+
+        // Check for hidden pin numbers
+        expect(sch).toContain('(pin_numbers hide)');
+
+        // Check for VISIBLE Value property (no hide keyword in effects)
+        expect(sch).toContain('(property "Value" "SW_PUSH"');
+        expect(sch).toContain('(property "Value" "D"');
+
+        // Ensure "hide" is NOT present in the Value line
+        expect(sch).not.toContain('(property "Value" "SW_PUSH" (at 0 -2.54 0) (effects (font (size 1.27 1.27)) hide))');
+    });
 });

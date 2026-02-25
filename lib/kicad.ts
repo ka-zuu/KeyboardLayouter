@@ -227,10 +227,10 @@ function generateSch(keys: ExportKey[]): string {
 
         content += `
   (symbol (lib_id "kbd:SW_PUSH") (at ${sw_x} ${sw_y} 0) (unit 1)
-    (in_bom yes) (on_board yes) (fields_autoplaced yes)
+    (in_bom yes) (on_board yes) (pin_numbers hide)
     (uuid "${k.uuidSw}")
     (property "Reference" "${k.ref}" (at ${sw_x} ${sw_refY} 0))
-    (property "Value" "SW_PUSH" (at ${sw_x} ${r(baseY + 5.08)} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Value" "SW_PUSH" (at ${sw_x} ${r(baseY + 5.08)} 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate" (at ${sw_x} ${r(baseY + 5.08)} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidPin1}"))
     (pin "2" (uuid "${k.uuidPin2}"))
@@ -247,10 +247,10 @@ function generateSch(keys: ExportKey[]): string {
 
         content += `
   (symbol (lib_id "Device:D") (at ${d_x} ${d_y} 270) (unit 1)
-    (in_bom yes) (on_board yes) (fields_autoplaced yes)
+    (in_bom yes) (on_board yes) (pin_numbers hide)
     (uuid "${k.uuidDiode}")
     (property "Reference" "${k.diodeRef}" (at ${d_x} ${d_refY} 0))
-    (property "Value" "D" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Value" "D" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Diode_SMD:D_SOD-123" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidDiodePin1}"))
     (pin "2" (uuid "${k.uuidDiodePin2}"))
@@ -308,7 +308,7 @@ function generateSch(keys: ExportKey[]): string {
 
 function getLibSymbols(): string {
     return `
-    (symbol "kbd:SW_PUSH" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+    (symbol "kbd:SW_PUSH" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes) (pin_numbers hide)
       (property "Reference" "SW" (at 0 2.54 0) (effects (font (size 1.27 1.27))))
       (property "Value" "SW_PUSH" (at 0 -2.54 0) (effects (font (size 1.27 1.27))))
       (symbol "SW_PUSH_1_1"
@@ -330,7 +330,7 @@ function getLibSymbols(): string {
         )
       )
     )
-    (symbol "Device:D" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+    (symbol "Device:D" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes) (pin_numbers hide)
       (property "Reference" "D" (at 0 2.54 0) (effects (font (size 1.27 1.27))))
       (property "Value" "D" (at 0 -2.54 0) (effects (font (size 1.27 1.27))))
       (symbol "D_1_1"
