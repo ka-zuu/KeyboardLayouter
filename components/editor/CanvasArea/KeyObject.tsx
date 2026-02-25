@@ -438,6 +438,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     />
                     {/* Knob */}
                     <Circle
+                        data-testid="rotation-handle"
                         x={0}
                         y={-halfH - 25}
                         radius={6}
