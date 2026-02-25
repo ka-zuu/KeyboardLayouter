@@ -55,7 +55,7 @@ test.describe('Multi-select Drag Interaction', () => {
         });
 
         // 2. Locate Canvas
-        const canvas = page.getByTestId('main-canvas').locator('.konvajs-content');
+        const canvas = page.locator('canvas').first();
         const box = await canvas.boundingBox();
         if (!box) throw new Error('Canvas not found');
 

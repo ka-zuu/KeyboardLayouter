@@ -69,7 +69,7 @@ test.describe('Undo/Redo Functionality', () => {
         const initialPos = initialProject!.keys[0].position;
 
         // 2. Drag the key
-        const canvas = page.getByTestId('main-canvas').locator('.konvajs-content');
+        const canvas = page.locator('canvas').first();
         const box = await canvas.boundingBox();
         if (!box) throw new Error('Canvas not found');
 
@@ -129,7 +129,7 @@ test.describe('Undo/Redo Functionality', () => {
         const initialPos = initialProject!.keys[0].position;
 
         // 2. Drag the key
-        const canvas = page.getByTestId('main-canvas').locator('.konvajs-content');
+        const canvas = page.locator('canvas').first();
         const box = await canvas.boundingBox();
         if (!box) throw new Error('Canvas not found');
 
