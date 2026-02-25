@@ -69,13 +69,25 @@ describe('generateKicadProjectZip', () => {
         expect(sch).toContain('(xy 111.76 40.64)'); // End of row 0 wire
     });
 
-    it('generates global labels for COL with rotation 90', async () => {
+    it('generates global labels for COL with rotation 270', async () => {
         const blob = await generateKicadProjectZip(mockProject);
         const zip = await JSZip.loadAsync(blob);
         const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
 
         // Y = 15.24 because we subtract 10.16 from offset 25.40 for bus extension
-        expect(sch).toContain('(global_label "COL_0" (shape input) (at 25.40 15.24 90)');
+        expect(sch).toContain('(global_label "COL_0" (shape input) (at 25.40 15.24 270)');
+    });
+
+    it('places component text correctly', async () => {
+        const blob = await generateKicadProjectZip(mockProject);
+        const zip = await JSZip.loadAsync(blob);
+        const sch = await zip.file('Test_Project.kicad_sch')?.async('string');
+
+        // SW Reference: (at 35.56 21.59 0)
+        expect(sch).toContain('(property "Reference" "SW1" (at 35.56 21.59 0))');
+
+        // Diode Reference: (at 43.18 33.02 0)
+        expect(sch).toContain('(property "Reference" "D1" (at 43.18 33.02 0))');
     });
 
     it('output format is clean', async () => {

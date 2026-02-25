@@ -205,7 +205,7 @@ function generateSch(keys: ExportKey[]): string {
         // Previous was 270. 270+180 = 450 = 90.
         // 90 degrees points UP.
         content += `
-  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 90) (fields_autoplaced)
+  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 270) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
@@ -223,7 +223,7 @@ function generateSch(keys: ExportKey[]): string {
         // Switch at (baseX + 10.16, baseY)
         const sw_x = r(baseX + 10.16);
         const sw_y = r(baseY);
-        const sw_refY = r(baseY + 2.54);
+        const sw_refY = r(baseY - 3.81);
 
         content += `
   (symbol (lib_id "kbd:SW_PUSH") (at ${sw_x} ${sw_y} 0) (unit 1)
@@ -243,13 +243,12 @@ function generateSch(keys: ExportKey[]): string {
         // Move to + 5.08 or + 7.62?
         const d_x = r(baseX + 15.24);
         const d_y = r(baseY + 7.62);
-        const d_refY = r(baseY + 7.62 + 5.08); // Moved down
 
         content += `
   (symbol (lib_id "Device:D") (at ${d_x} ${d_y} 270) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid "${k.uuidDiode}")
-    (property "Reference" "${k.diodeRef}" (at ${d_x} ${d_refY} 0))
+    (property "Reference" "${k.diodeRef}" (at ${r(baseX + 17.78)} ${d_y} 0))
     (property "Value" "D" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Diode_SMD:D_SOD-123" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidDiodePin1}"))
