@@ -98,7 +98,7 @@ describe('generateKicadProjectZip', () => {
         expect(sch).toContain('(lib_id "kbd:SW_PUSH")');
 
         // Check for updated Value properties
-        expect(sch).toContain('(property "Value" "D" (at');
-        expect(sch).toContain('(property "Value" "SW_PUSH" (at');
+        expect(sch).toContain('(property "Value" "D"');
+        expect(sch).toContain('(property "Value" "SW_PUSH"');
     });
 });

@@ -311,7 +311,7 @@ function getLibSymbols(): string {
     (symbol "kbd:SW_PUSH" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
       (property "Reference" "SW" (at 0 2.54 0) (effects (font (size 1.27 1.27))))
       (property "Value" "SW_PUSH" (at 0 -2.54 0) (effects (font (size 1.27 1.27))))
-      (symbol "SW_Push_1_1"
+      (symbol "SW_PUSH_1_1"
         (polyline
           (pts
             (xy -1.27 0)
@@ -333,7 +333,7 @@ function getLibSymbols(): string {
     (symbol "Device:D" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
       (property "Reference" "D" (at 0 2.54 0) (effects (font (size 1.27 1.27))))
       (property "Value" "D" (at 0 -2.54 0) (effects (font (size 1.27 1.27))))
-      (symbol "D_Small_1_1"
+      (symbol "D_1_1"
         (polyline
           (pts
             (xy -1.27 1.27)
