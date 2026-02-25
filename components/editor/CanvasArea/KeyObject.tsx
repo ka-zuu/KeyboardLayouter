@@ -30,6 +30,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
     // Performance optimization: Cache participating keys during rotation drag
     const rotationContextRef = useRef<{
         participatingKeys: KeyData[];
+        participatingNodes: Map<string, Konva.Node>;
         pivotId: string;
     } | null>(null);
 
@@ -205,12 +206,14 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
 
         // Iterate over cached participating keys instead of all project keys
         context.participatingKeys.forEach(k => {
+            // Retrieve node from cache
+            const node = context.participatingNodes.get(k.id);
+
             if (k.id === pivotId) {
                 const update = { id: k.id, data: { angle: newRotation } };
                 updates.push(update);
 
                 // Imperative Update
-                const node = stage.findOne('#' + k.id);
                 if (node) {
                     node.rotation(newRotation);
                 }
@@ -246,7 +249,6 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
                 });
 
                 // Imperative Update
-                const node = stage.findOne('#' + k.id);
                 if (node) {
                     node.rotation(kNewAngle);
                     // Convert U to Px for Konva Node
@@ -453,12 +455,24 @@ const KeyObject: React.FC<KeyObjectProps> = ({ id, isSelected, onSelect, onDragE
 
                             // Check if this key is part of the selection (it should be if handle is visible)
                             if (selectedIds.length > 1 && selectedIds.includes(data.id)) {
+                                const stage = e.target.getStage();
+                                const participatingNodes = new Map<string, Konva.Node>();
                                 const selectedSet = new Set(selectedIds);
                                 // Filter project keys ONCE at start of drag
                                 const participatingKeys = state.project.keys.filter(k => selectedSet.has(k.id));
 
+                                if (stage) {
+                                    participatingKeys.forEach(k => {
+                                        const node = stage.findOne('#' + k.id);
+                                        if (node) {
+                                            participatingNodes.set(k.id, node);
+                                        }
+                                    });
+                                }
+
                                 rotationContextRef.current = {
                                     participatingKeys,
+                                    participatingNodes,
                                     pivotId: data.id
                                 };
                             } else {
