@@ -123,6 +123,8 @@ export const useStore = create<EditorState>()(
             if (index === -1) return {}; // No change if key not found
 
             const k = keys[index];
+            if (!k) return {}; // Type guard
+
             const newKey = { ...k, ...data };
 
             // Deep merge for specific nested objects
@@ -160,6 +162,8 @@ export const useStore = create<EditorState>()(
 
             for (let i = 0; i < newKeys.length; i++) {
               const k = newKeys[i];
+              if (!k) continue; // Type guard
+
               const data = updateMap.get(k.id);
 
               if (data) {
