@@ -239,18 +239,18 @@ function generateSch(keys: ExportKey[]): string {
 
         // Diode at (baseX + 15.24, baseY + 7.62) rotated 270
         // Fix text overlap: Move Reference/Value further away.
-        // Current: at d_x, baseY + 7.62 + 2.54.
-        // Move to + 5.08 or + 7.62?
         const d_x = r(baseX + 15.24);
         const d_y = r(baseY + 7.62);
-        const d_refY = r(baseY + 7.62 + 5.08); // Moved down
+        const text_x = r(baseX + 17.78);
+        const d_refY = r(baseY + 7.62 - 1.27);
+        const d_valY = r(baseY + 7.62 + 1.27);
 
         content += `
   (symbol (lib_id "Device:D") (at ${d_x} ${d_y} 270) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid "${k.uuidDiode}")
-    (property "Reference" "${k.diodeRef}" (at ${d_x} ${d_refY} 0))
-    (property "Value" "D" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27))))
+    (property "Reference" "${k.diodeRef}" (at ${text_x} ${d_refY} 0) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Value" "D" (at ${text_x} ${d_valY} 0) (effects (font (size 1.27 1.27)) (justify left)))
     (property "Footprint" "Diode_SMD:D_SOD-123" (at ${d_x} ${d_y} 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "${k.uuidDiodePin1}"))
     (pin "2" (uuid "${k.uuidDiodePin2}"))
