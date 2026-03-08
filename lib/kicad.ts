@@ -339,18 +339,18 @@ function getLibSymbols(): string {
       (symbol "D_1_1"
         (polyline
           (pts
-            (xy -1.27 1.27)
-            (xy -1.27 -1.27)
-            (xy 1.27 0)
-            (xy -1.27 1.27)
+            (xy 1.27 1.27)
+            (xy 1.27 -1.27)
+            (xy -1.27 0)
+            (xy 1.27 1.27)
           )
           (stroke (width 0.254) (type default))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy 1.27 1.27)
-            (xy 1.27 -1.27)
+            (xy -1.27 1.27)
+            (xy -1.27 -1.27)
           )
           (stroke (width 0.254) (type default))
           (fill (type none))
