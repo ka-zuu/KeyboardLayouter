@@ -1,13 +1,9 @@
 import { act } from "@testing-library/react";
+
 import { useStore } from '@/store/useStore';
 
-// Mock uuid to avoid ESM issues
-jest.mock('uuid', () => ({
-    v4: () => 'test-uuid'
-}));
-
-describe('Delete Performance', () => {
-    it('measures deleteSelectedKeys performance', () => {
+describe('Move Performance', () => {
+    it('measures moveSelectedKeys performance', () => {
         // Create 10000 keys
         const keys = Array.from({ length: 10000 }).map((_, i) => ({
             id: `key-${i}`,
@@ -28,12 +24,10 @@ describe('Delete Performance', () => {
         const start = performance.now();
 
         act(() => {
-            useStore.getState().deleteSelectedKeys();
+            useStore.getState().moveSelectedKeys({ x: 1, y: 1 });
         });
         const end = performance.now();
 
-        console.log(`\nBENCHMARK: deleteSelectedKeys took ${(end - start).toFixed(2)}ms for 10000 keys`);
-
-        expect(useStore.getState().project.keys.length).toBe(5000);
+        console.log(`\nBENCHMARK: moveSelectedKeys took ${(end - start).toFixed(2)}ms for 10000 keys`);
     });
 });
