@@ -5,22 +5,18 @@ import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
 import { useStore } from '@/store/useStore';
-import { useShallow } from 'zustand/react/shallow';
 import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
 
 interface KeyObjectProps {
-    id?: string;
-    data?: KeyData;
+    data: KeyData;
     isSelected: boolean;
     onSelect: (id: string, multi: boolean) => void;
     onDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const KeyObject: React.FC<KeyObjectProps> = ({ id, data, isSelected, onSelect, onDragEnd }) => {
-    // Legacy support: If data is not provided, fetch by ID (slower)
-    const storeData = useStore(useShallow(state => id ? state.project.keys.find(k => k.id === id) : undefined));
-    const keyData = data || storeData;
+const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDragEnd }) => {
+    const keyData = data;
 
     const snapEnabled = useStore(state => state.snapEnabled);
     const gridSize = useStore(state => state.gridSize);
