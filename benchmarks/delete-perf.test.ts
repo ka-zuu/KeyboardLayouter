@@ -17,7 +17,7 @@ describe('Delete Performance', () => {
             rotationCenter: { x: 0, y: 0 },
             legends: { top: '', bottom: '', left: '', right: '' },
             matrix: { row: 0, col: 0 },
-            variant: 'rect' as any
+            variant: 'rect'
         }));
 
         useStore.setState({

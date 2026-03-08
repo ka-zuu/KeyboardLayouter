@@ -11,7 +11,7 @@ describe('Auto Assign Matrix Optimization Performance', () => {
             rotationCenter: { x: 0, y: 0 },
             legends: { top: '', bottom: '', left: '', right: '' },
             matrix: { row: 0, col: 0 },
-            variant: 'rect' as any
+            variant: 'rect'
         }));
 
         const updates = new Map();

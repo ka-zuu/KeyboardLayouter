@@ -1,5 +1,4 @@
 
-import { useStore } from '@/store/useStore';
 
 describe('Update Keys Optimization Performance', () => {
     it('measures map + map vs copy + for loop', () => {
@@ -12,7 +11,7 @@ describe('Update Keys Optimization Performance', () => {
             rotationCenter: { x: 0, y: 0 },
             legends: { top: '', bottom: '', left: '', right: '' },
             matrix: { row: 0, col: 0 },
-            variant: 'rect' as any
+            variant: 'rect'
         }));
 
         const updates = Array.from({ length: 50 }).map((_, i) => ({
@@ -59,7 +58,7 @@ describe('Update Keys Optimization Performance', () => {
             rotationCenter: { x: 0, y: 0 },
             legends: { top: '', bottom: '', left: '', right: '' },
             matrix: { row: 0, col: 0 },
-            variant: 'rect' as any
+            variant: 'rect'
         }));
 
         const updates = Array.from({ length: 5000 }).map((_, i) => ({

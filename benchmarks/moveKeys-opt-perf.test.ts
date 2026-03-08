@@ -1,5 +1,4 @@
 
-import { useStore } from '@/store/useStore';
 
 describe('Move Selected Keys Optimization Performance', () => {
     it('measures finding index vs map', () => {
@@ -12,7 +11,7 @@ describe('Move Selected Keys Optimization Performance', () => {
             rotationCenter: { x: 0, y: 0 },
             legends: { top: '', bottom: '', left: '', right: '' },
             matrix: { row: 0, col: 0 },
-            variant: 'rect' as any
+            variant: 'rect'
         }));
 
         const selectedKeyIds = ['key-0', 'key-50000', 'key-99999'];

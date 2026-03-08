@@ -1,5 +1,4 @@
 
-import { useStore } from '@/store/useStore';
 
 describe('Update Key Optimization Performance', () => {
     it('measures finding index vs map', () => {
@@ -12,7 +11,7 @@ describe('Update Key Optimization Performance', () => {
             rotationCenter: { x: 0, y: 0 },
             legends: { top: '', bottom: '', left: '', right: '' },
             matrix: { row: 0, col: 0 },
-            variant: 'rect' as any
+            variant: 'rect'
         }));
 
         const idToUpdate = 'key-99999';

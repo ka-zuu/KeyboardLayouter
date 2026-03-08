@@ -11,7 +11,7 @@ describe('Copy Selected Keys Optimization Performance', () => {
             rotationCenter: { x: 0, y: 0 },
             legends: { top: '', bottom: '', left: '', right: '' },
             matrix: { row: 0, col: 0 },
-            variant: 'rect' as any
+            variant: 'rect'
         }));
 
         const selectedKeyIds = Array.from({ length: 5000 }).map((_, i) => `key-${i * 10}`);
