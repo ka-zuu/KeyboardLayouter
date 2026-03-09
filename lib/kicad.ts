@@ -205,7 +205,7 @@ function generateSch(keys: ExportKey[]): string {
         // Previous was 270. 270+180 = 450 = 90.
         // 90 degrees points UP.
         content += `
-  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 90) (fields_autoplaced)
+  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 270) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
@@ -246,7 +246,7 @@ function generateSch(keys: ExportKey[]): string {
         const d_valY = r(baseY + 7.62 + 1.27);
 
         content += `
-  (symbol (lib_id "Device:D") (at ${d_x} ${d_y} 270) (unit 1)
+  (symbol (lib_id "Device:D") (at ${d_x} ${d_y} 90) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid "${k.uuidDiode}")
     (property "Reference" "${k.diodeRef}" (at ${text_x} ${d_refY} 0) (effects (font (size 1.27 1.27)) (justify left)))
@@ -258,9 +258,9 @@ function generateSch(keys: ExportKey[]): string {
 `;
 
         // A. SW Pin 1 -> Vertical Bus Stub
-        // Wire from SW Pin 1 (baseX + 5.08, baseY) to Bus (baseX, baseY)
+        // Wire from SW Pin 1 (baseX + 2.54, baseY) to Bus (baseX, baseY)
         content += `
-  (wire (pts (xy ${r(baseX + 5.08)} ${sw_y}) (xy ${r(baseX)} ${sw_y}))
+  (wire (pts (xy ${r(baseX + 2.54)} ${sw_y}) (xy ${r(baseX)} ${sw_y}))
     (stroke (width 0) (type solid) (color 0 0 0 0))
     (uuid "${crypto.randomUUID()}")
   )
@@ -274,6 +274,10 @@ function generateSch(keys: ExportKey[]): string {
 
         // B. SW Pin 2 -> D Pin 2 (Internal)
         content += `
+  (wire (pts (xy ${r(baseX + 17.78)} ${sw_y}) (xy ${r(baseX + 15.24)} ${sw_y}))
+    (stroke (width 0) (type solid) (color 0 0 0 0))
+    (uuid "${crypto.randomUUID()}")
+  )
   (wire (pts (xy ${r(baseX + 15.24)} ${sw_y}) (xy ${r(baseX + 15.24)} ${r(baseY + 3.81)}))
     (stroke (width 0) (type solid) (color 0 0 0 0))
     (uuid "${crypto.randomUUID()}")
@@ -323,11 +327,11 @@ function getLibSymbols(): string {
           (stroke (width 0) (type solid))
           (fill (type none))
         )
-        (pin passive inverted (at -7.62 0 0) (length 5.08)
+        (pin passive line (at -7.62 0 0) (length 5.08)
           (name "1" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
-        (pin passive inverted (at 7.62 0 180) (length 5.08)
+        (pin passive line (at 7.62 0 180) (length 5.08)
           (name "2" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
         )
