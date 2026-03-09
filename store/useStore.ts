@@ -121,6 +121,8 @@ export const useStore = create<EditorState>()(
             if (index === -1) return {}; // Key not found, no state change
 
             const k = state.project.keys[index];
+            if (!k) return {}; // Type guard
+
             // Deep merge for specific nested objects
             const newKey = { ...k, ...data };
             if (data.position) {
