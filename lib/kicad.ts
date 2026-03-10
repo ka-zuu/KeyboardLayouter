@@ -201,11 +201,9 @@ function generateSch(keys: ExportKey[]): string {
   )
 `;
         // Col Label at the top
-        // Rotation changed to 90 (or 270 inverted? User asked "rotate 180").
-        // Previous was 270. 270+180 = 450 = 90.
-        // 90 degrees points UP.
+        // Horizontal text reads normally.
         content += `
-  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 90) (fields_autoplaced)
+  (global_label "${col.name}" (shape bidirectional) (at ${r(x)} ${r(startY)} 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
