@@ -201,9 +201,9 @@ function generateSch(keys: ExportKey[]): string {
   )
 `;
         // Col Label at the top
-        // Horizontal text reads normally.
+        // 90 degrees points UP.
         content += `
-  (global_label "${col.name}" (shape bidirectional) (at ${r(x)} ${r(startY)} 0) (fields_autoplaced)
+  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 90) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
