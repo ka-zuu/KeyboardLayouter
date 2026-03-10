@@ -1,0 +1,22 @@
+--- lib/kicad.ts
++++ lib/kicad.ts
+@@ -250,7 +250,7 @@
+   )
+ `;
+
+-        // B. SW Pin 2 -> D Pin 2 (Internal)
++        // B. SW Pin 2 -> D Pin 1 (Cathode)
+         content += `
+   (wire (pts (xy ${r(baseX + 17.78)} ${sw_y}) (xy ${r(baseX + 15.24)} ${sw_y}))
+     (stroke (width 0) (type solid) (color 0 0 0 0))
+@@ -262,8 +262,8 @@
+   )
+ `;
+
+-        // C. D Pin 1 -> Horizontal Bus Stub
+-        // Wire from D Pin 1 (baseX + 15.24, baseY + 11.43) to Bus (baseX + 15.24, baseY + 15.24)
++        // C. D Pin 2 (Anode) -> Horizontal Bus Stub
++        // Wire from D Pin 2 (baseX + 15.24, baseY + 11.43) to Bus (baseX + 15.24, baseY + 15.24)
+         content += `
+   (wire (pts (xy ${r(baseX + 15.24)} ${r(baseY + 11.43)}) (xy ${r(baseX + 15.24)} ${r(baseY + 15.24)}))
+     (stroke (width 0) (type solid) (color 0 0 0 0))
