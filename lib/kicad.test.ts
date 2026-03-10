@@ -75,7 +75,7 @@ describe("generateKicadProjectZip", () => {
         const sch = await zip.file("Test_Project.kicad_sch")?.async("string");
 
         // Y = 15.24 because we subtract 10.16 from offset 25.40 for bus extension
-        expect(sch).toContain("(global_label \"COL_0\" (shape input) (at 25.40 15.24 270)");
+        expect(sch).toContain(`(global_label "COL_0" (shape input) (at 25.40 15.24 90)`);
     });
 
     it("output format is clean", async () => {

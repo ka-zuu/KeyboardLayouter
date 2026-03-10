@@ -205,7 +205,7 @@ function generateSch(keys: ExportKey[]): string {
         // Previous was 270. 270+180 = 450 = 90.
         // 90 degrees points UP.
         content += `
-  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 270) (fields_autoplaced)
+  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 90) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid "${crypto.randomUUID()}")
   )
@@ -237,11 +237,11 @@ function generateSch(keys: ExportKey[]): string {
   )
 `;
 
-        // Diode at (baseX + 15.24, baseY + 7.62) rotated 270
+        // Diode at (baseX + 17.78, baseY + 7.62) rotated 90
         // Fix text overlap: Move Reference/Value further away.
-        const d_x = r(baseX + 15.24);
+        const d_x = r(baseX + 17.78);
         const d_y = r(baseY + 7.62);
-        const text_x = r(baseX + 17.78);
+        const text_x = r(baseX + 20.32);
         const d_refY = r(baseY + 7.62 - 1.27);
         const d_valY = r(baseY + 7.62 + 1.27);
 
@@ -274,27 +274,23 @@ function generateSch(keys: ExportKey[]): string {
 
         // B. SW Pin 2 -> D Pin 2 (Internal)
         content += `
-  (wire (pts (xy ${r(baseX + 17.78)} ${sw_y}) (xy ${r(baseX + 15.24)} ${sw_y}))
-    (stroke (width 0) (type solid) (color 0 0 0 0))
-    (uuid "${crypto.randomUUID()}")
-  )
-  (wire (pts (xy ${r(baseX + 15.24)} ${sw_y}) (xy ${r(baseX + 15.24)} ${r(baseY + 3.81)}))
+  (wire (pts (xy ${r(baseX + 17.78)} ${sw_y}) (xy ${r(baseX + 17.78)} ${r(baseY + 3.81)}))
     (stroke (width 0) (type solid) (color 0 0 0 0))
     (uuid "${crypto.randomUUID()}")
   )
 `;
 
         // C. D Pin 1 -> Horizontal Bus Stub
-        // Wire from D Pin 1 (baseX + 15.24, baseY + 11.43) to Bus (baseX + 15.24, baseY + 15.24)
+        // Wire from D Pin 1 (baseX + 17.78, baseY + 11.43) to Bus (baseX + 17.78, baseY + 15.24)
         content += `
-  (wire (pts (xy ${r(baseX + 15.24)} ${r(baseY + 11.43)}) (xy ${r(baseX + 15.24)} ${r(baseY + 15.24)}))
+  (wire (pts (xy ${r(baseX + 17.78)} ${r(baseY + 11.43)}) (xy ${r(baseX + 17.78)} ${r(baseY + 15.24)}))
     (stroke (width 0) (type solid) (color 0 0 0 0))
     (uuid "${crypto.randomUUID()}")
   )
 `;
-        // Junction at Bus (baseX + 15.24, baseY + 15.24)
+        // Junction at Bus (baseX + 17.78, baseY + 15.24)
         content += `
-  (junction (at ${r(baseX + 15.24)} ${r(baseY + 15.24)}) (diameter 0) (color 0 0 0 0)
+  (junction (at ${r(baseX + 17.78)} ${r(baseY + 15.24)}) (diameter 0) (color 0 0 0 0)
     (uuid "${crypto.randomUUID()}")
   )
 `;
