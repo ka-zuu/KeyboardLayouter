@@ -173,9 +173,7 @@ function generateSch(keys: ExportKey[]): string {
 `;
         // Row Label at the far left
         content += `
-  (global_label "${row.name}" (shape input) (at ${r(startX)} ${r(y)} 180) (fields_autoplaced)
-    (effects (font (size 1.27 1.27)))
-    (uuid "${crypto.randomUUID()}")
+  (global_label "${row.name}" (shape bidirectional) (at ${r(startX)} ${r(y)} 180) (fields_autoplaced) (effects (font (size 1.27 1.27))) (uuid "${crypto.randomUUID()}")
   )
 `;
     });
