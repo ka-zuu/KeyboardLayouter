@@ -174,7 +174,7 @@ function generateSch(keys: ExportKey[]): string {
         // Row Label at the far left
         content += `
   (global_label "${row.name}" (shape input) (at ${r(startX)} ${r(y)} 180) (fields_autoplaced)
-    (effects (font (size 1.27 1.27)) (justify right))
+    (effects (font (size 1.27 1.27)))
     (uuid "${crypto.randomUUID()}")
   )
 `;
@@ -203,9 +203,7 @@ function generateSch(keys: ExportKey[]): string {
         // Col Label at the top
         // 90 degrees points UP.
         content += `
-  (global_label "${col.name}" (shape input) (at ${r(x)} ${r(startY)} 90) (fields_autoplaced)
-    (effects (font (size 1.27 1.27)) (justify right))
-    (uuid "${crypto.randomUUID()}")
+  (global_label "${col.name}" (shape bidirectional) (at ${r(x)} ${r(startY)} 90) (fields_autoplaced) (effects (font (size 1.27 1.27))) (uuid "${crypto.randomUUID()}")
   )
 `;
     });
