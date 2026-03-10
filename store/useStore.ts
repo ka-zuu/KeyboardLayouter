@@ -117,26 +117,29 @@ export const useStore = create<EditorState>()(
 
         updateKey: (id, data) =>
           set((state) => {
-            const index = state.project.keys.findIndex((k) => k.id === id);
-            if (index === -1) return {}; // Key not found, no state change
+            const keys = state.project.keys;
+            const index = keys.findIndex(k => k.id === id);
 
-            const k = state.project.keys[index];
+            if (index === -1) return {}; // No change if key not found
+
+            const k = keys[index];
             if (!k) return {}; // Type guard
 
-            // Deep merge for specific nested objects
             const newKey = { ...k, ...data };
+
+            // Deep merge for specific nested objects
             if (data.position) {
-               newKey.position = {
-                 x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
-                 y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
-               };
+              newKey.position = {
+                x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
+                y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+              };
             }
             if (data.size) newKey.size = { ...k.size, ...data.size };
             if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
             if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
             if (data.legends) newKey.legends = { ...k.legends, ...data.legends };
 
-            const newKeys = [...state.project.keys];
+            const newKeys = [...keys];
             newKeys[index] = newKey;
 
             return {
@@ -150,29 +153,45 @@ export const useStore = create<EditorState>()(
 
         updateKeys: (updates) =>
           set((state) => {
+            if (updates.length === 0) return {};
+
+            const keys = state.project.keys;
             const updateMap = new Map(updates.map((u) => [u.id, u.data]));
+            const newKeys = [...keys];
+            let modified = false;
+
+            for (let i = 0; i < newKeys.length; i++) {
+              const k = newKeys[i];
+              if (!k) continue; // Type guard
+
+              const data = updateMap.get(k.id);
+
+              if (data) {
+                const newKey = { ...k, ...data };
+
+                // Deep merge for specific nested objects
+                if (data.position) {
+                   newKey.position = {
+                     x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
+                     y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
+                   };
+                }
+                if (data.size) newKey.size = { ...k.size, ...data.size };
+                if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
+                if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
+                if (data.legends) newKey.legends = { ...k.legends, ...data.legends };
+
+                newKeys[i] = newKey;
+                modified = true;
+              }
+            }
+
+            if (!modified) return {};
+
             return {
               project: {
                 ...state.project,
-                keys: state.project.keys.map((k) => {
-                  const data = updateMap.get(k.id);
-                  if (!data) return k;
-
-                  // Deep merge for specific nested objects
-                  const newKey = { ...k, ...data };
-                  if (data.position) {
-                     newKey.position = {
-                       x: Math.max(0, (data.position.x !== undefined ? data.position.x : k.position.x)),
-                       y: Math.max(0, (data.position.y !== undefined ? data.position.y : k.position.y))
-                     };
-                  }
-                  if (data.size) newKey.size = { ...k.size, ...data.size };
-                  if (data.rotationCenter) newKey.rotationCenter = { ...k.rotationCenter, ...data.rotationCenter };
-                  if (data.matrix) newKey.matrix = { ...k.matrix, ...data.matrix };
-                  if (data.legends) newKey.legends = { ...k.legends, ...data.legends };
-
-                  return newKey;
-                }),
+                keys: newKeys,
                 updatedAt: Date.now(),
               },
             };

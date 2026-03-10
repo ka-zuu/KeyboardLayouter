@@ -3,15 +3,13 @@ import { test, expect } from '@playwright/test';
 test.describe('Bug Reproduction: Project Name Input', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/');
-        // Wait for hydration/store init
-        await page.waitForTimeout(1000);
+        // Wait for hydration/store init deterministically
+        await expect(page.getByRole('button', { name: 'Add Keys' })).toBeVisible();
     });
 
     test('should allow deleting and replacing project name even with selected keys', async ({ page }) => {
         // 1. Add a key to ensure something can be selected
         await page.getByRole('button', { name: 'Add Keys' }).click();
-        
-
         
         const nameInput = page.getByPlaceholder('Project Name');
         await expect(nameInput).toBeVisible();
