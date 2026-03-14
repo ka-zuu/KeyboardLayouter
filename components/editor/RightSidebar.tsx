@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { Trash2, Copy, Grid } from 'lucide-react';
 import { KeyVariant } from '@/types/mkd';
 
@@ -42,13 +43,20 @@ const MatrixStartInput: React.FC<MatrixStartInputProps> = ({ row, onRowChange, c
 );
 
 const RightSidebar = () => {
-    const { project, selectedKeyIds, updateKey, removeKey, duplicateSelectedKeys, autoAssignMatrix } = useStore();
+    const { projectKeys, selectedKeyIds, updateKey, deleteSelectedKeys, duplicateSelectedKeys, autoAssignMatrix } = useStore(useShallow(state => ({
+        projectKeys: state.project.keys,
+        selectedKeyIds: state.selectedKeyIds,
+        updateKey: state.updateKey,
+        deleteSelectedKeys: state.deleteSelectedKeys,
+        duplicateSelectedKeys: state.duplicateSelectedKeys,
+        autoAssignMatrix: state.autoAssignMatrix,
+    })));
 
     const [startRow, setStartRow] = React.useState(0);
     const [startCol, setStartCol] = React.useState(0);
 
     const selectedKeySet = React.useMemo(() => new Set(selectedKeyIds), [selectedKeyIds]);
-    const selectedKeys = React.useMemo(() => project.keys.filter((k) => selectedKeySet.has(k.id)), [project.keys, selectedKeySet]);
+    const selectedKeys = React.useMemo(() => projectKeys.filter((k) => selectedKeySet.has(k.id)), [projectKeys, selectedKeySet]);
     const hasSelection = selectedKeys.length > 0;
     const singleSelection = selectedKeys.length === 1;
     const primaryKey = selectedKeys[0];
@@ -105,7 +113,7 @@ const RightSidebar = () => {
             const direction = e.shiftKey ? -1 : 1;
 
             // Sort keys by position (Y then X) to determine visual order
-            const sortedKeys = [...project.keys].sort((a, b) => {
+            const sortedKeys = [...projectKeys].sort((a, b) => {
                 const yDiff = a.position.y - b.position.y;
                 if (Math.abs(yDiff) > 0.01) return yDiff; // Use epsilon for potential float inaccuracies
                 return a.position.x - b.position.x;
@@ -130,7 +138,8 @@ const RightSidebar = () => {
     };
 
     const handleDelete = () => {
-        selectedKeyIds.forEach((id) => removeKey(id));
+        // Optimization: Use the bulk delete action to avoid O(N) Zustand state updates.
+        deleteSelectedKeys();
     };
 
     const handleDuplicate = () => {
