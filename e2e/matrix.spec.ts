@@ -13,7 +13,7 @@ test.describe('Matrix Auto-Assignment', () => {
         await page.getByRole('button', { name: 'Add Keys' }).click();
 
         // 2. Clear selection (click background far away)
-        await page.locator('canvas').click({ position: { x: 500, y: 500 } });
+        await page.getByTestId('main-canvas').locator('.konvajs-content').click({ position: { x: 500, y: 500 } });
 
         // 3. Run Auto-assign (All) with default 0,0
         // Use test id
@@ -24,13 +24,41 @@ test.describe('Matrix Auto-Assignment', () => {
         await page.getByRole('button', { name: 'Auto-assign Matrix (All)' }).click();
         
         // 4. Verify
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const projectData: any = await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return null;
-             return JSON.parse(storage).state.project;
-        });
-        
+        // 4. Verify
+        let projectData: any = null;
+        await expect.poll(async () => {
+            projectData = await page.evaluate(async () => {
+                return new Promise((resolve) => {
+                    const req = indexedDB.open('mkd-db', 1);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        if (!db.objectStoreNames.contains('keyval')) {
+                            db.close();
+                            resolve(null); return;
+                        }
+                        const tx = db.transaction('keyval', 'readonly');
+                        const store = tx.objectStore('keyval');
+                        const getReq = store.get('mkd-storage');
+                        getReq.onsuccess = () => {
+                            const val = getReq.result;
+                            db.close();
+                            if (val && val.state && val.state.project) {
+                                resolve(val.state.project);
+                            } else {
+                                resolve(null);
+                            }
+                        };
+                        getReq.onerror = () => {
+                            db.close();
+                            resolve(null);
+                        };
+                    };
+                    req.onerror = () => resolve(null);
+                });
+            });
+            return projectData?.keys?.[0]?.matrix?.row;
+        }, { timeout: 3000 }).toBe(0);
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const keys = projectData.keys as any[];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,7 +76,7 @@ test.describe('Matrix Auto-Assignment', () => {
         await page.getByRole('button', { name: 'Add Keys' }).click();
 
         // 2. Clear selection
-        await page.locator('canvas').click({ position: { x: 500, y: 500 } });
+        await page.getByTestId('main-canvas').locator('.konvajs-content').click({ position: { x: 500, y: 500 } });
 
         // 3. Set custom start row/col
         const startRowInput = page.getByTestId('matrix-start-row');
@@ -61,12 +89,39 @@ test.describe('Matrix Auto-Assignment', () => {
         await page.getByRole('button', { name: 'Auto-assign Matrix (All)' }).click();
 
         // 5. Verify
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const projectData: any = await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return null;
-             return JSON.parse(storage).state.project;
-        });
+        let projectData: any = null;
+        await expect.poll(async () => {
+            projectData = await page.evaluate(async () => {
+                return new Promise((resolve) => {
+                    const req = indexedDB.open('mkd-db', 1);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        if (!db.objectStoreNames.contains('keyval')) {
+                            db.close();
+                            resolve(null); return;
+                        }
+                        const tx = db.transaction('keyval', 'readonly');
+                        const store = tx.objectStore('keyval');
+                        const getReq = store.get('mkd-storage');
+                        getReq.onsuccess = () => {
+                            const val = getReq.result;
+                            db.close();
+                            if (val && val.state && val.state.project) {
+                                resolve(val.state.project);
+                            } else {
+                                resolve(null);
+                            }
+                        };
+                        getReq.onerror = () => {
+                            db.close();
+                            resolve(null);
+                        };
+                    };
+                    req.onerror = () => resolve(null);
+                });
+            });
+            return projectData?.keys?.[0]?.matrix?.row;
+        }, { timeout: 3000 }).toBe(4);
         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const keys = projectData.keys as any[];

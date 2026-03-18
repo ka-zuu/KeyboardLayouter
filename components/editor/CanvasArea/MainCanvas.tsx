@@ -485,6 +485,7 @@ const MainCanvas = () => {
             ref={containerRef}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
+            data-testid="main-canvas"
         >
             {dimensions.width > 0 && dimensions.height > 0 && (
                 <Stage

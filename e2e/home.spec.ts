@@ -13,7 +13,7 @@ test.describe('Home Page', () => {
   test('should display the project name', async ({ page }) => {
     // Default project name from store seems to be used
     // Use exact: true to avoid matching "Untitled Project (Active)" in the sidebar
-    await expect(page.getByText('Untitled Project', { exact: true })).toBeVisible();
+    await expect(page.getByPlaceholder('Project Name')).toHaveValue('Untitled Project');
   });
 
   test('should have "Add Keys" button', async ({ page }) => {
@@ -23,6 +23,6 @@ test.describe('Home Page', () => {
   test('should have canvas', async ({ page }) => {
      // Canvas is rendered by Konva.
      // Konva creates a canvas element.
-     await expect(page.locator('canvas')).toBeVisible();
+     await expect(page.getByTestId('main-canvas').locator('.konvajs-content')).toBeVisible();
   });
 });

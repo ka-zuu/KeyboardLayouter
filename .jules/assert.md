@@ -1,3 +1,4 @@
-# Assert's Journal
-
-- **Test Hydration Determinism:** In Next.js/React applications with client-side hydration or asynchronous stores (like Zustand with IndexedDB persistence), waiting for hydration should rely on deterministic assertions of the resulting UI state (e.g., `expect(locator).toBeVisible()`) rather than arbitrary `waitForTimeout` calls. Fixed-duration sleep introduces flakiness when environments are slower and needlessly pads execution time on faster environments.
+✅ Assert: Replaced fragile locators and fixed IDB polling timeouts in E2E tests
+- This specific mock pattern causes memory leaks in this environment: using raw evaluate IDB open promises without calling db.close() causes playwright test context to hang or block future DB upgrades.
+- Why a certain flaky test required a specific race condition fix: the e2e tests for matrix auto-assignment and home page were flaking due to using page.locator('canvas') which resolved to 3 elements after layers optimization. Updated to strictly use page.getByTestId('main-canvas').locator('.konvajs-content').
+- Why storage state polling timed out: tests checking localStorage timed out because the main store uses debounced asynchronous indexedDB writes. Replaced synchronous localStorage polling with expect.poll to query indexedDB.
