@@ -8,7 +8,9 @@ export interface Size {
   h: number;
 }
 
-export type KeyVariant = 'rect' | 'iso_enter' | 'stepped_caps' | 'bae';
+// Note: only 'rect' and 'iso_enter' are currently rendered on the canvas.
+// 'stepped_caps' is declared but not yet implemented (falls back to rect rendering).
+export type KeyVariant = 'rect' | 'iso_enter' | 'stepped_caps';
 
 export interface KeyData {
   id: string;

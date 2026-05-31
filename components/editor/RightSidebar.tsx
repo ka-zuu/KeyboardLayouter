@@ -42,7 +42,7 @@ const MatrixStartInput: React.FC<MatrixStartInputProps> = ({ row, onRowChange, c
 );
 
 const RightSidebar = () => {
-    const { project, selectedKeyIds, updateKey, removeKey, duplicateSelectedKeys, autoAssignMatrix } = useStore();
+    const { project, selectedKeyIds, updateKey, deleteSelectedKeys, duplicateSelectedKeys, autoAssignMatrix } = useStore();
 
     const [startRow, setStartRow] = React.useState(0);
     const [startCol, setStartCol] = React.useState(0);
@@ -130,7 +130,8 @@ const RightSidebar = () => {
     };
 
     const handleDelete = () => {
-        selectedKeyIds.forEach((id) => removeKey(id));
+        // Use the optimized single-action delete (O(N), one undo step)
+        deleteSelectedKeys();
     };
 
     const handleDuplicate = () => {
@@ -210,7 +211,6 @@ const RightSidebar = () => {
             <h2 className="font-semibold mb-4 text-white">Properties</h2>
 
             <div className="space-y-4">
-                {/* Legends */}
                 {/* Legends */}
                 <div>
                     <label className="text-xs text-gray-500 uppercase block mb-1">Legends</label>
