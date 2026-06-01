@@ -58,7 +58,10 @@ interface KeyData {
     row: number;       // 電気的マトリクスの行インデックス
     col: number;       // 電気的マトリクスの列インデックス
   };
-  variant?: string;    // キー形状 ('rect' | 'iso_enter' 等)
+  variant?: KeyVariant; // キー形状 'rect' | 'iso_enter' | 'stepped_caps' (省略時 'rect')
+                        // 現状キャンバス描画は 'rect' と 'iso_enter' のみ対応。
+                        // 'stepped_caps' は未実装 (矩形として描画)。
+  isSelected?: boolean; // 選択状態 (UI 用の一時フラグ)
 }
 ```
 
@@ -119,14 +122,15 @@ interface KeyData {
   ```
 
 #### 3. KiCad エクスポート (`.zip`)
-PCB設計に使用可能な完全なKiCadプロジェクトを生成します。
-- **形式**: S-Expression (`.kicad_sch`, `.kicad_pcb`).
+KiCadプロジェクト一式 (`.kicad_sch`, `.kicad_pcb`, `.kicad_pro`) を生成します。
+- **形式**: S-Expression (`.kicad_sch`, `.kicad_pcb`) および JSON (`.kicad_pro`).
+- **注意**: PCB (`.kicad_pcb`) エクスポートは開発中です。現状はスイッチのフットプリント配置のみを行い、ダイオード配置・ネット/配線の出力は未対応です。
 - **回路図 (`.kicad_sch`)**:
   - マトリクスグリッドを生成。
   - `ROW_x`, `COL_y` のグローバルラベルを配置。
   - スイッチとダイオードを `Row -> Switch -> Diode -> Col` のトポロジーで結線。
-  - ライブラリ依存を避けるため、最小限のシンボル定義 (`SW_Push`, `D_Small`) を埋め込み。
-- **PCB (`.kicad_pcb`)**:
-  - フットプリント (`SW_Cherry_MX_1.00u_Plate`) を物理座標 `(x * 19.05mm, y * 19.05mm)` に配置。
+  - 外部ライブラリ依存を避けるため、シンボル定義 (`kbd:SW_PUSH`, `Device:D`) を `lib_symbols` に埋め込み。
+- **PCB (`.kicad_pcb`)** (開発中):
+  - フットプリント (`Button_Switch_Keyboard:SW_Cherry_MX_1.00u_Plate`) を物理座標 `(x * 19.05mm, y * 19.05mm)` に配置。
   - 回転を適用。
   - UUIDを使用して回路図コンポーネントとリンク。
