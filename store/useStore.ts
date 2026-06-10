@@ -235,9 +235,8 @@ export const useStore = create<EditorState>()(
         pasteKeys: () =>
           set((state) => {
             if (!state.clipboard || state.clipboard.length === 0) return {};
-            
-            // Determine offset to avoid exact overlap (e.g. +0.5U, +0.5U)
-            const offset = 0.5;
+
+            const offset = state.gridSize;
 
             const newKeys: KeyData[] = state.clipboard.map((k: KeyData) => ({
               ...k,
@@ -266,8 +265,7 @@ export const useStore = create<EditorState>()(
               selectedSet.has(k.id)
             );
 
-            // Offset for duplication
-            const offset = 0.5;
+            const offset = state.gridSize;
 
             const newKeys: KeyData[] = keysToDuplicate.map((k) => ({
               ...k,
@@ -434,16 +432,17 @@ export const useStore = create<EditorState>()(
                
              if (targets.length === 0) return {};
              
-             // 2. Sort targets by position to determine visual order
-             // We'll group by "Rough Y" to handle slight misalignments
+             // 2. Sort targets by position to determine visual order.
+             // Quantize Y into 0.1U buckets before comparing to ensure the comparator
+             // satisfies transitivity (a tolerance-based diff check does not).
+             const Y_BUCKET = 0.1;
              const sortedFn = (a: KeyData, b: KeyData) => {
-                // Tolerance for row alignment (e.g. 0.5U or similar, let's say 0.25 is enough)
-                const yDiff = a.position.y - b.position.y;
-                if (Math.abs(yDiff) > 0.1) return yDiff; 
+                const aBucket = Math.round(a.position.y / Y_BUCKET);
+                const bBucket = Math.round(b.position.y / Y_BUCKET);
+                if (aBucket !== bBucket) return a.position.y - b.position.y;
                 return a.position.x - b.position.x;
              };
-             
-             // Sort all targets to find global order within the selection
+
              const sortedTargets = [...targets].sort(sortedFn);
              
              // 3. Assign row/cols
@@ -457,7 +456,7 @@ export const useStore = create<EditorState>()(
              let currentColIndex = startCol; 
              
              for (const key of sortedTargets) {
-                if (Math.abs(key.position.y - currentRowY) > 0.1) {
+                if (Math.abs(key.position.y - currentRowY) > Y_BUCKET) {
                    // New Row
                    currentRowY = key.position.y;
                    currentRowIndex++;
