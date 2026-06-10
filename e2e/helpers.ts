@@ -47,6 +47,11 @@ export async function selectKeyById(page: Page, id: string, multi = false) {
   );
 }
 
+/** Clear key selection via store (avoids canvas click issues with Konva layers) */
+export async function clearSelection(page: Page) {
+  await page.evaluate(() => window.__mkd_store!.getState().clearSelection());
+}
+
 /** Set pan via store action (no reload needed) */
 export async function setPan(page: Page, x: number, y: number) {
   await page.evaluate(([px, py]) => window.__mkd_store!.getState().setPan({ x: px as number, y: py as number }), [x, y]);
