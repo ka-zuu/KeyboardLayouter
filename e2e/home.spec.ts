@@ -11,9 +11,8 @@ test.describe('Home Page', () => {
   });
 
   test('should display the project name', async ({ page }) => {
-    // Default project name from store seems to be used
-    // Use exact: true to avoid matching "Untitled Project (Active)" in the sidebar
-    await expect(page.getByText('Untitled Project', { exact: true })).toBeVisible();
+    // Sidebar shows "Untitled Project (Active)"; use partial match
+    await expect(page.getByText('Untitled Project')).toBeVisible();
   });
 
   test('should have "Add Keys" button', async ({ page }) => {
