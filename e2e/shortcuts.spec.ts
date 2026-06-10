@@ -1,183 +1,79 @@
 import { test, expect } from '@playwright/test';
+import { waitForKeys, getProject, selectKeyById, clearStorageAndReload, setPan } from './helpers';
 
 test.describe('Keyboard Shortcuts', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/');
-        await page.evaluate(() => localStorage.clear());
-        await page.reload();
-        
-        // Add a test key
-        await page.click('button:has-text("Add Keys")');
-        
-        // Wait for key to exist in store
-        await page.waitForFunction(() => {
-            const storage = localStorage.getItem('mkd-storage');
-            if (!storage) return false;
-            const data = JSON.parse(storage).state.project;
-            return data.keys.length > 0;
-        });
-        
-        // Move pan to (100, 100) to ensure keys at (0,0) are visible and not clipped
-        await page.evaluate(() => {
-            const storage = localStorage.getItem('mkd-storage');
-            if (!storage) return;
-            const state = JSON.parse(storage).state;
-            state.pan = { x: 100, y: 100 };
-            localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-        });
-        await page.reload(); // Reload to apply store change
-        
-        // Wait for key again after reload
-        await page.waitForFunction(() => {
-             return document.querySelector('canvas') !== null;
-        });
-        await page.waitForTimeout(500);
-    });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await clearStorageAndReload(page);
+    await page.click('button:has-text("Add Keys")');
+    await waitForKeys(page, 1);
+    // Move pan so key at (0,0) is visible
+    await setPan(page, 100, 100);
+  });
 
-    test('should delete selected key with Delete/Backspace', async ({ page }) => {
-        // Need to click the key to select it.
-        // Assuming default key added at (0,0) 1U size.
-        // Canvas usually fills the area.
-        const canvas = page.locator('canvas').first();
-        const box = await canvas.boundingBox();
-        if (!box) throw new Error('Canvas not found');
-        
-        // Programmatically select the key to ensure test stability
-        // We are testing shortcuts, not the selection click logic (covered in other tests)
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             const keys = state.project.keys;
-             if (keys.length > 0) {
-                 state.selectedKeyIds = [keys[0].id];
-                 localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-             }
-        });
-        await page.reload();
+  test('should delete selected key with Delete/Backspace', async ({ page }) => {
+    const project = await getProject(page);
+    await selectKeyById(page, project.keys[0]!.id);
 
-        // Delete
-        await page.keyboard.press('Delete');
-        
-        // Verify key gone
-        await page.waitForFunction(() => {
-            const storage = localStorage.getItem('mkd-storage');
-            const data = JSON.parse(storage!).state.project;
-            return data.keys.length === 0;
-        });
-    });
+    await page.keyboard.press('Delete');
 
-    test('should move selected key with Arrow keys', async ({ page }) => {
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             const keys = state.project.keys;
-             if (keys.length > 0) {
-                 state.selectedKeyIds = [keys[0].id];
-                 localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-             }
-        });
-        await page.reload();
-        
-        // Get initial position
-        const initialPos = await page.evaluate(() => {
-            const storage = localStorage.getItem('mkd-storage');
-            return JSON.parse(storage!).state.project.keys[0].position;
-        });
-        
-        // Move Right
-        await page.keyboard.press('ArrowRight');
-        await page.waitForTimeout(100); // Wait for update
-        
-        const afterRight = await page.evaluate(() => {
-            const storage = localStorage.getItem('mkd-storage');
-            return JSON.parse(storage!).state.project.keys[0].position;
-        });
-        
-        expect(afterRight.x).toBeGreaterThan(initialPos.x);
-        expect(afterRight.y).toBe(initialPos.y); // Y should not change
-        
-        // Move Down
-        await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
-        
-        const afterDown = await page.evaluate(() => {
-            const storage = localStorage.getItem('mkd-storage');
-            return JSON.parse(storage!).state.project.keys[0].position;
-        });
-        
-        expect(afterDown.y).toBeGreaterThan(afterRight.y);
-    });
+    await page.waitForFunction(
+      () => (window.__mkd_store?.getState()?.project?.keys?.length ?? -1) === 0
+    );
+  });
 
-    test('should copy and paste keys', async ({ page }) => {
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             const keys = state.project.keys;
-             if (keys.length > 0) {
-                 state.selectedKeyIds = [keys[0].id];
-                 localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-             }
-        });
-        await page.reload();
-        
-        // Copy (Meta+C)
-        await page.keyboard.press('Meta+c');
-        await page.waitForTimeout(100);
+  test('should move selected key with Arrow keys', async ({ page }) => {
+    const project = await getProject(page);
+    await selectKeyById(page, project.keys[0]!.id);
 
-        // Paste (Meta+V)
-        await page.keyboard.press('Meta+v');
-        await page.waitForTimeout(100);
-        
-        // Should have 2 keys
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             const data = JSON.parse(storage!).state.project;
-             return data.keys.length === 2;
-        });
-        
-        // Verify selection by deleting the pasted key immediately
-        // If Paste selects the new key, Delete should remove it.
-        await page.keyboard.press('Delete');
-        
-        await page.waitForFunction(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             const data = JSON.parse(storage!).state.project;
-             return data.keys.length === 1;
-        });
-    });
-    
-    test('should not trigger shortcuts when typing in input', async ({ page }) => {
-        await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             if (!storage) return;
-             const state = JSON.parse(storage).state;
-             const keys = state.project.keys;
-             if (keys.length > 0) {
-                 state.selectedKeyIds = [keys[0].id];
-                 localStorage.setItem('mkd-storage', JSON.stringify({ state, version: 0 }));
-             }
-        });
-        await page.reload();
-        
-        // Click Project Name input
-        const nameInput = page.locator('input[value="Untitled Project"]');
-        await nameInput.click();
-        await nameInput.fill('Test');
-        
-        // Press Backspace inside input
-        await page.keyboard.press('Backspace');
-        
-        // Key should still exist
-        const keyCount = await page.evaluate(() => {
-             const storage = localStorage.getItem('mkd-storage');
-             const data = JSON.parse(storage!).state.project;
-             return data.keys.length;
-        });
-        expect(keyCount).toBe(1);
-        
-        await expect(nameInput).toHaveValue('Tes');
-    });
+    const initialPos = project.keys[0]!.position;
+
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(100);
+
+    const afterRight = await getProject(page).then(p => p.keys[0]!.position);
+    expect(afterRight.x).toBeGreaterThan(initialPos.x);
+    expect(afterRight.y).toBe(initialPos.y);
+
+    await page.keyboard.press('ArrowDown');
+    await page.waitForTimeout(100);
+
+    const afterDown = await getProject(page).then(p => p.keys[0]!.position);
+    expect(afterDown.y).toBeGreaterThan(afterRight.y);
+  });
+
+  test('should copy and paste keys', async ({ page }) => {
+    const project = await getProject(page);
+    await selectKeyById(page, project.keys[0]!.id);
+
+    await page.keyboard.press('Meta+c');
+    await page.keyboard.press('Meta+v');
+
+    await page.waitForFunction(
+      () => (window.__mkd_store?.getState()?.project?.keys?.length ?? 0) === 2
+    );
+
+    // Pasted key is selected — delete it
+    await page.keyboard.press('Delete');
+
+    await page.waitForFunction(
+      () => (window.__mkd_store?.getState()?.project?.keys?.length ?? 0) === 1
+    );
+  });
+
+  test('should not trigger shortcuts when typing in input', async ({ page }) => {
+    const project = await getProject(page);
+    await selectKeyById(page, project.keys[0]!.id);
+
+    const nameInput = page.locator('input[placeholder="Project Name"]');
+    await nameInput.click();
+    await nameInput.fill('Test');
+    await page.keyboard.press('Backspace');
+
+    // Key should still exist
+    const keyCount = await getProject(page).then(p => p.keys.length);
+    expect(keyCount).toBe(1);
+
+    await expect(nameInput).toHaveValue('Tes');
+  });
 });

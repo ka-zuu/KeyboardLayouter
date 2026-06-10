@@ -5,7 +5,7 @@ import { useStore } from '@/store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { Folder, Plus, Trash2, Box } from 'lucide-react';
 import clsx from 'clsx'; // Assuming standard clsx or just use template literals
-import { PIXELS_PER_U } from '@/lib/constants';
+import { PIXELS_PER_U, SIDEBAR_WIDTH } from '@/lib/constants';
 import { KeyVariant } from '@/types/mkd';
 
 interface Preset {
@@ -61,17 +61,12 @@ const LeftSidebar = () => {
     const handlePresetClick = (preset: Preset) => {
         const { pan, scale, gridSize, project } = useStore.getState();
 
-        // Calculate center of the Canvas
-        // Sidebar is 64 tailwind units = 16rem = 256px
-        const sidebarWidth = 256;
-        const rightSidebarWidth = 256; // RightSidebar is also w-64
-        const canvasWidth = window.innerWidth - sidebarWidth - rightSidebarWidth;
-        // Center of the canvas relative to the window
-        const screenCenterX = sidebarWidth + (canvasWidth / 2);
+        // Calculate center of the Canvas between the two sidebars
+        const canvasWidth = window.innerWidth - SIDEBAR_WIDTH * 2;
+        const screenCenterX = SIDEBAR_WIDTH + (canvasWidth / 2);
         const screenCenterY = window.innerHeight / 2;
 
-        // Container offset is sidebarWidth
-        const stageContainerX = screenCenterX - sidebarWidth;
+        const stageContainerX = screenCenterX - SIDEBAR_WIDTH;
         const stageContainerY = screenCenterY;
 
         // World Coordinates in Pixels

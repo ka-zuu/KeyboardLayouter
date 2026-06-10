@@ -38,6 +38,7 @@ const KeyboardShortcuts = () => {
 
             // Delete / Backspace
             if (e.key === 'Delete' || e.key === 'Backspace') {
+                e.preventDefault();
                 useStore.getState().deleteSelectedKeys();
                 return;
             }
