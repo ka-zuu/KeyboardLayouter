@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForStore, waitForKeys, getProject, selectKeyById, clearStorageAndReload } from './helpers';
+import { waitForKeys, getProject, selectKeyById, clearStorageAndReload } from './helpers';
 
 test.describe('Key Duplication', () => {
   test.beforeEach(async ({ page }) => {

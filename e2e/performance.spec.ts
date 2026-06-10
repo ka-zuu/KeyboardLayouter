@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { waitForStore, clearStorageAndReload } from './helpers';
+import { clearStorageAndReload } from './helpers';
 
 test.describe('Performance Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -44,7 +44,7 @@ test.describe('Performance Tests', () => {
       () => window.__mkd_store!.getState().project.keys[0]!.position
     );
 
-    const canvas = page.locator('canvas');
+    const canvas = page.locator('canvas').first();
     const box = await canvas.boundingBox();
     if (!box) throw new Error('Canvas not found');
 

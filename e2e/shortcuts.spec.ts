@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForStore, waitForKeys, getProject, selectKeyById, clearStorageAndReload, setPan } from './helpers';
+import { waitForKeys, getProject, selectKeyById, clearStorageAndReload, setPan } from './helpers';
 
 test.describe('Keyboard Shortcuts', () => {
   test.beforeEach(async ({ page }) => {

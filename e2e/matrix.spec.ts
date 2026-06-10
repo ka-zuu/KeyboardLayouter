@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForStore, waitForKeys, getProject, clearStorageAndReload } from './helpers';
+import { waitForKeys, getProject, clearStorageAndReload } from './helpers';
 
 test.describe('Matrix Auto-Assignment', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe('Matrix Auto-Assignment', () => {
     await waitForKeys(page, 3);
 
     // Clear selection by clicking empty canvas area
-    await page.locator('canvas').click({ position: { x: 500, y: 500 } });
+    await page.locator('canvas').first().click({ position: { x: 500, y: 500 } });
 
     const startRowInput = page.getByTestId('matrix-start-row');
     await expect(startRowInput).toBeVisible();
@@ -37,7 +37,7 @@ test.describe('Matrix Auto-Assignment', () => {
     await page.getByRole('button', { name: 'Add Keys' }).click();
     await waitForKeys(page, 3);
 
-    await page.locator('canvas').click({ position: { x: 500, y: 500 } });
+    await page.locator('canvas').first().click({ position: { x: 500, y: 500 } });
 
     const startRowInput = page.getByTestId('matrix-start-row');
     const startColInput = page.getByTestId('matrix-start-col');

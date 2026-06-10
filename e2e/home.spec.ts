@@ -20,8 +20,7 @@ test.describe('Home Page', () => {
   });
 
   test('should have canvas', async ({ page }) => {
-     // Canvas is rendered by Konva.
-     // Konva creates a canvas element.
-     await expect(page.locator('canvas')).toBeVisible();
+     // Konva creates one canvas per layer; use .first() to avoid strict mode violation
+     await expect(page.locator('canvas').first()).toBeVisible();
   });
 });
