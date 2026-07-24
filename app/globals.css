@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens (single source of truth for the DOM/Tailwind layer).
+ * The editor is dark-only for now. To add a light theme later, override the
+ * raw semantic variables inside `:root[data-theme="light"]` below — every
+ * Tailwind utility (bg-surface, text-muted, border-border, ...) references
+ * these variables through the `@theme inline` mapping, so a single override
+ * block re-themes the whole UI. The Konva canvas layer mirrors these values
+ * in `lib/theme.ts`.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces: canvas (darkest) < surface (panels) < raised (controls) */
+  --canvas: #0d0e12;
+  --surface: #15171c;
+  --raised: #1e2027;
+  --raised-hover: #272a33;
+  --inset: #101116;
+
+  /* Borders */
+  --border: #2a2d36;
+  --border-strong: #3a3e4a;
+
+  /* Text */
+  --fg: #e6e8ec;
+  --muted: #9aa0ac;
+  --subtle: #656b78;
+
+  /* Accent (indigo-blue) */
+  --accent: #4d8dff;
+  --accent-hover: #6aa1ff;
+  --accent-subtle: rgba(77, 141, 255, 0.14);
+  --accent-border: rgba(77, 141, 255, 0.45);
+  --on-accent: #ffffff;
+
+  /* Semantic */
+  --danger: #f26169;
+  --danger-hover: #f47b82;
+  --danger-subtle: rgba(242, 97, 105, 0.14);
+  --success: #46cf8b;
+  --warning: #f2ab3c;
+
+  /* Focus ring */
+  --focus: rgba(77, 141, 255, 0.55);
 }
 
+/*
+ * Future light theme — fill in and remove the comment to enable, then add a
+ * theme toggle that sets `data-theme` on <html>. Intentionally not wired up yet.
+ *
+ * :root[data-theme="light"] {
+ *   --canvas: #f4f5f7; --surface: #ffffff; --raised: #f0f1f4; ...
+ * }
+ */
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-raised-hover: var(--raised-hover);
+  --color-inset: var(--inset);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-border: var(--accent-border);
+  --color-on-accent: var(--on-accent);
+
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Consistent, subtle focus ring for keyboard navigation across the app. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* Tame the default focus ring on canvas/Konva containers. */
+.konvajs-content:focus,
+.konvajs-content:focus-visible {
+  outline: none;
 }

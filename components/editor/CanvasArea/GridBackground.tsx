@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { Group, Line } from 'react-konva';
 import { PIXELS_PER_U } from '@/lib/constants';
+import { canvasTheme } from '@/lib/theme';
 
 interface GridBackgroundProps {
     width: number;
@@ -16,17 +17,19 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
 
     const lines = useMemo(() => {
         const gridLines = [];
-        const color = '#333';
-        const strokeWidth = 1;
+        const extent = range * PIXELS_PER_U;
+        // Two-tier grid: subtle 1U lines, emphasized every 5U for orientation.
+        const majorEvery = 5;
 
         // Vertical lines
         for (let i = 0; i <= range; i++) {
+            const isMajor = i % majorEvery === 0;
             gridLines.push(
                 <Line
                     key={`v${i}`}
-                    points={[i * PIXELS_PER_U, 0, i * PIXELS_PER_U, range * PIXELS_PER_U]}
-                    stroke={color}
-                    strokeWidth={strokeWidth}
+                    points={[i * PIXELS_PER_U, 0, i * PIXELS_PER_U, extent]}
+                    stroke={isMajor ? canvasTheme.gridMajor : canvasTheme.gridMinor}
+                    strokeWidth={1}
                     listening={false}
                 />
             );
@@ -34,23 +37,24 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
 
         // Horizontal lines
         for (let j = 0; j <= range; j++) {
+            const isMajor = j % majorEvery === 0;
             gridLines.push(
                 <Line
                     key={`h${j}`}
-                    points={[0, j * PIXELS_PER_U, range * PIXELS_PER_U, j * PIXELS_PER_U]}
-                    stroke={color}
-                    strokeWidth={strokeWidth}
+                    points={[0, j * PIXELS_PER_U, extent, j * PIXELS_PER_U]}
+                    stroke={isMajor ? canvasTheme.gridMajor : canvasTheme.gridMinor}
+                    strokeWidth={1}
                     listening={false}
                 />
             );
         }
 
-        // Origin lines (thicker or different color) - Now acting as left and top borders
+        // Origin axes (left and top borders of the layout area).
         gridLines.push(
             <Line
                 key="origin-x"
-                points={[0, 0, range * PIXELS_PER_U, 0]}
-                stroke="#555"
+                points={[0, 0, extent, 0]}
+                stroke={canvasTheme.axis}
                 strokeWidth={2}
                 listening={false}
             />
@@ -58,8 +62,8 @@ const GridBackground: React.FC<GridBackgroundProps> = () => {
         gridLines.push(
             <Line
                 key="origin-y"
-                points={[0, 0, 0, range * PIXELS_PER_U]}
-                stroke="#555"
+                points={[0, 0, 0, extent]}
+                stroke={canvasTheme.axis}
                 strokeWidth={2}
                 listening={false}
             />

@@ -4,6 +4,7 @@ import React, { useRef, useEffect } from 'react';
 import { Group, Rect, Text, Circle, Path } from 'react-konva';
 import { KeyData } from '@/types/mkd';
 import { PIXELS_PER_U, ISO_ENTER_PATH } from '@/lib/constants';
+import { canvasTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 import { rotatePointPrecalc } from '@/lib/geometry';
 import Konva from 'konva';
@@ -42,11 +43,14 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
     const x = keyData ? keyData.position.x * PIXELS_PER_U : 0;
     const y = keyData ? keyData.position.y * PIXELS_PER_U : 0;
 
-    // Visual styling
-    const keyColor = '#f0f0f0';
-    const textColor = '#333';
-    const strokeColor = isSelected ? '#3b82f6' : '#999';
+    // Visual styling (sourced from the shared canvas theme)
+    const keyFace = canvasTheme.keyFace;
+    const keyBase = canvasTheme.keyBase;
+    const textColor = canvasTheme.legendText;
+    const strokeColor = isSelected ? canvasTheme.keyStrokeSelected : canvasTheme.keyStroke;
     const strokeWidth = isSelected ? 3 : 1;
+    // Inset of the keycap "face" from its "base" bezel, for a subtle 2-tone look.
+    const faceInset = Math.min(4, Math.min(width, height) * 0.1);
 
     useEffect(() => {
         if (!keyData) return;
@@ -54,7 +58,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
         if (group) {
             group.cache({ pixelRatio: 2 });
         }
-    }, [keyData, isSelected, width, height, keyColor, strokeColor, strokeWidth]);
+    }, [keyData, isSelected, width, height]);
 
     if (!keyData) return null;
 
@@ -333,33 +337,47 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                     data={ISO_ENTER_PATH}
                     scaleX={PIXELS_PER_U}
                     scaleY={PIXELS_PER_U}
-                    fill={keyColor}
+                    fill={keyFace}
                     stroke={strokeColor}
                     strokeWidth={strokeWidth / PIXELS_PER_U}
                     fillAfterStrokeEnabled={true}
-                    shadowBlur={2}
-                    shadowColor="black"
-                    shadowOpacity={0.2}
-                    shadowOffset={{ x: 2, y: 2 }}
+                    shadowBlur={isSelected ? 12 : 4}
+                    shadowColor={isSelected ? canvasTheme.keyStrokeSelected : canvasTheme.keyShadow}
+                    shadowOpacity={isSelected ? 0.5 : 0.3}
+                    shadowOffset={{ x: 0, y: 2 }}
                     hitStrokeWidth={10}
                     perfectDrawEnabled={false}
                 />
             ) : (
-                <Rect
-                    x={-halfW}
-                    y={-halfH}
-                    width={width}
-                    height={height}
-                    fill={keyColor}
-                    stroke={strokeColor}
-                    strokeWidth={strokeWidth}
-                    cornerRadius={4}
-                    shadowBlur={2}
-                    shadowColor="black"
-                    shadowOpacity={0.2}
-                    shadowOffset={{ x: 2, y: 2 }}
-                    perfectDrawEnabled={false}
-                />
+                <React.Fragment>
+                    {/* Base / bezel */}
+                    <Rect
+                        x={-halfW}
+                        y={-halfH}
+                        width={width}
+                        height={height}
+                        fill={keyBase}
+                        stroke={strokeColor}
+                        strokeWidth={strokeWidth}
+                        cornerRadius={5}
+                        shadowBlur={isSelected ? 12 : 4}
+                        shadowColor={isSelected ? canvasTheme.keyStrokeSelected : canvasTheme.keyShadow}
+                        shadowOpacity={isSelected ? 0.5 : 0.3}
+                        shadowOffset={{ x: 0, y: 2 }}
+                        perfectDrawEnabled={false}
+                    />
+                    {/* Face */}
+                    <Rect
+                        x={-halfW + faceInset}
+                        y={-halfH + faceInset}
+                        width={width - faceInset * 2}
+                        height={height - faceInset * 2}
+                        fill={keyFace}
+                        cornerRadius={3}
+                        listening={false}
+                        perfectDrawEnabled={false}
+                    />
+                </React.Fragment>
             )}
 
             {/* Top Center */}
@@ -421,7 +439,7 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                 y={-halfH + 3}
                 text={`${keyData.matrix?.row ?? 0}, ${keyData.matrix?.col ?? 0}`}
                 fontSize={10}
-                fill="#999"
+                fill={canvasTheme.matrixText}
                 listening={false}
             />
 
@@ -443,8 +461,8 @@ const KeyObject: React.FC<KeyObjectProps> = ({ data, isSelected, onSelect, onDra
                         x={0}
                         y={-halfH - 25}
                         radius={6}
-                        fill="white"
-                        stroke={strokeColor}
+                        fill={canvasTheme.handleFill}
+                        stroke={canvasTheme.handleStroke}
                         strokeWidth={2}
                         draggable
                         onDragStart={(e) => {

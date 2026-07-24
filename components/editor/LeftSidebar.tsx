@@ -3,10 +3,11 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { useShallow } from 'zustand/react/shallow';
-import { Folder, Plus, Trash2, Box } from 'lucide-react';
-import clsx from 'clsx'; // Assuming standard clsx or just use template literals
+import { Folder, Plus, Trash2 } from 'lucide-react';
+import clsx from 'clsx';
 import { PIXELS_PER_U, SIDEBAR_WIDTH } from '@/lib/constants';
 import { KeyVariant } from '@/types/mkd';
+import { Panel, SectionHeader } from '@/components/ui';
 
 interface Preset {
     label: string;
@@ -14,6 +15,52 @@ interface Preset {
     h: number;
     variant?: KeyVariant;
 }
+
+interface PresetTileProps {
+    preset: Preset;
+    onAdd: () => void;
+    onDragStart: (e: React.DragEvent) => void;
+}
+
+/**
+ * A preset entry rendered as a scaled mini-keycap so its proportions read at a
+ * glance. Keycaps intentionally stay light (like real caps / the canvas keys)
+ * regardless of UI theme.
+ */
+const PresetTile: React.FC<PresetTileProps> = ({ preset, onAdd, onDragStart }) => {
+    // Clamp width scaling so a 6.25U space bar doesn't dwarf the 1U caps.
+    const widthPct = Math.max(0.3, Math.min(1, preset.w / 2.75));
+    const isTall = preset.h > 1;
+
+    return (
+        <div
+            draggable
+            onDragStart={onDragStart}
+            onClick={onAdd}
+            className="group relative flex cursor-pointer select-none flex-col items-center gap-2 rounded-lg border border-border bg-raised p-2.5 transition-colors hover:border-border-strong hover:bg-raised-hover"
+        >
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onAdd();
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="absolute right-1.5 top-1.5 rounded bg-accent p-0.5 text-on-accent opacity-0 transition-opacity hover:bg-accent-hover group-hover:opacity-100"
+                title="Add to Canvas"
+                aria-label={`Add ${preset.label}`}
+            >
+                <Plus size={10} />
+            </button>
+            <div className="flex h-8 w-full items-center justify-center">
+                <div
+                    className="rounded-[3px] border border-black/10 bg-gradient-to-b from-[#eceef1] to-[#d5d8de] shadow-sm"
+                    style={{ width: `${widthPct * 100}%`, height: isTall ? '100%' : '60%' }}
+                />
+            </div>
+            <span className="text-xs text-muted group-hover:text-fg">{preset.label}</span>
+        </div>
+    );
+};
 
 // Preset definitions
 const PRESETS: Preset[] = [
@@ -144,76 +191,75 @@ const LeftSidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col p-4 text-gray-300">
-
+        <Panel side="left" className="p-4">
             {/* Presets Grid */}
-            <h2 className="font-semibold mb-4 text-white">Add Keys</h2>
-            <div className="grid grid-cols-2 gap-2 mb-8">
+            <SectionHeader title="Add Keys" className="mb-3" />
+            <div className="grid grid-cols-2 gap-2 mb-6">
                 {PRESETS.map((preset) => (
-                    <div
+                    <PresetTile
                         key={preset.label}
-                        draggable
+                        preset={preset}
+                        onAdd={() => handlePresetClick(preset)}
                         onDragStart={(e) => handleDragStart(e, preset)}
-                        onClick={() => handlePresetClick(preset)}
-                        className="relative group bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded p-2 text-center text-xs cursor-pointer transition-colors flex flex-col items-center gap-1 select-none"
-                    >
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handlePresetClick(preset);
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-0.5 bg-blue-600 rounded text-white hover:bg-blue-500 transition-opacity"
-                            title="Add to Canvas"
-                        >
-                            <Plus size={10} />
-                        </button>
-                        <Box size={16} className="text-blue-400" />
-                        {preset.label}
-                    </div>
+                    />
                 ))}
             </div>
 
-            <hr className="border-gray-800 mb-6" />
+            <hr className="border-border mb-5" />
 
             {/* Projects List */}
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-white">Projects</h2>
-                <button onClick={createProject} className="text-blue-400 hover:text-blue-300">
-                    <Plus size={18} />
-                </button>
-            </div>
+            <SectionHeader
+                title="Projects"
+                className="mb-3"
+                action={
+                    <button
+                        onClick={createProject}
+                        className="rounded-md p-1 text-accent transition-colors hover:bg-accent-subtle hover:text-accent-hover"
+                        title="New project"
+                        aria-label="New project"
+                    >
+                        <Plus size={18} />
+                    </button>
+                }
+            />
 
             <div className="flex-1 overflow-y-auto space-y-1">
                 <div
                     className={clsx(
-                        "p-2 rounded cursor-pointer flex items-center gap-2",
-                        "bg-blue-900/40 text-blue-200 border border-blue-800"
+                        'flex items-center gap-2 rounded-md border p-2',
+                        'border-accent-border bg-accent-subtle text-fg'
                     )}
                 >
-                    <Folder size={14} />
-                    <span className="truncate flex-1">{projectName} (Active)</span>
-                    <button onClick={() => saveProject()} className="text-xs bg-blue-700 px-1 rounded hover:bg-blue-600">Save</button>
+                    <Folder size={14} className="text-accent" />
+                    <span className="flex-1 truncate text-sm">{projectName}</span>
+                    <button
+                        onClick={() => saveProject()}
+                        className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-on-accent transition-colors hover:bg-accent-hover"
+                    >
+                        Save
+                    </button>
                 </div>
 
                 {sortedProjects.map((p) => (
-                        <div
-                            key={p.id}
-                            className="p-2 rounded cursor-pointer hover:bg-gray-800 flex items-center gap-2 group"
-                            onClick={() => loadProject(p.id)}
+                    <div
+                        key={p.id}
+                        className="group flex cursor-pointer items-center gap-2 rounded-md p-2 transition-colors hover:bg-raised"
+                        onClick={() => loadProject(p.id)}
+                    >
+                        <Folder size={14} className="text-subtle" />
+                        <span className="flex-1 truncate text-sm text-muted group-hover:text-fg">{p.name}</span>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }}
+                            className="text-subtle opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
+                            title="Delete project"
+                            aria-label={`Delete ${p.name}`}
                         >
-                            <Folder size={14} className="text-gray-500" />
-                            <span className="truncate flex-1 text-sm">{p.name}</span>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }}
-                                className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                    ))}
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                ))}
             </div>
-        </div>
+        </Panel>
     );
 };
 

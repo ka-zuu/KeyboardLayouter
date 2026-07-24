@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { Trash2, Copy, Grid } from 'lucide-react';
+import { Trash2, Copy, Grid, MousePointerClick } from 'lucide-react';
 import { KeyVariant } from '@/types/mkd';
+import { Panel, SectionHeader, Field, InlineLabel, Input, NumberField, Select, Button } from '@/components/ui';
 
 interface MatrixStartInputProps {
     row: number;
@@ -14,31 +15,26 @@ interface MatrixStartInputProps {
 }
 
 const MatrixStartInput: React.FC<MatrixStartInputProps> = ({ row, onRowChange, col, onColChange, testIdSuffix = '' }) => (
-    <div className="mb-4">
-        <label className="text-xs text-gray-500 uppercase block mb-1">Matrix Auto-Assign Start</label>
+    <Field label="Matrix Auto-Assign Start" className="mb-4">
         <div className="grid grid-cols-2 gap-2">
-            <div>
-                <span className="text-xs text-gray-600 mr-1">Row</span>
-                <input
-                    type="number"
+            <div className="flex items-center gap-2">
+                <InlineLabel className="w-7 shrink-0">Row</InlineLabel>
+                <NumberField
                     data-testid={`matrix-start-row${testIdSuffix}`}
-                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
                     value={row}
                     onChange={(e) => onRowChange(parseInt(e.target.value) || 0)}
                 />
             </div>
-            <div>
-                <span className="text-xs text-gray-600 mr-1">Col</span>
-                <input
-                    type="number"
+            <div className="flex items-center gap-2">
+                <InlineLabel className="w-7 shrink-0">Col</InlineLabel>
+                <NumberField
                     data-testid={`matrix-start-col${testIdSuffix}`}
-                    className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
                     value={col}
                     onChange={(e) => onColChange(parseInt(e.target.value) || 0)}
                 />
             </div>
         </div>
-    </div>
+    </Field>
 );
 
 const RightSidebar = () => {
@@ -127,7 +123,7 @@ const RightSidebar = () => {
             const nextKey = sortedKeys[nextIndex];
             if (!nextKey) return;
 
-            // Just selecting the key should preserve focus on the input 
+            // Just selecting the key should preserve focus on the input
             // because React will reconcile the 'value' prop update but keep the DOM node if structure is same.
             // We use selectKey (singular) to ensure only one key is selected.
             useStore.getState().selectKey(nextKey.id, false);
@@ -143,20 +139,17 @@ const RightSidebar = () => {
         duplicateSelectedKeys();
     };
 
+    // --- No selection: project tools -------------------------------------
     if (!hasSelection) {
         return (
-            <div className="w-64 bg-gray-900 border-l border-gray-800 flex flex-col p-4 text-gray-300">
-                <h2 className="font-semibold mb-4 text-white">Project Settings</h2>
-                <div className="space-y-4">
-                    {/* Project Name removed as it is actionable in TopBar */}
-                    <div className="text-sm text-gray-500 mt-4">
-                        Select a key to edit properties.
-                    </div>
+            <Panel side="right" className="p-4">
+                <SectionHeader title="Project" className="mb-3" />
+                <div className="mb-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-raised/30 px-3 py-6 text-center">
+                    <MousePointerClick size={20} className="text-subtle" />
+                    <p className="text-sm text-muted">Select a key to edit its properties.</p>
                 </div>
 
-                <hr className="border-gray-800 my-4" />
-
-                <h2 className="font-semibold mb-4 text-white">Tools</h2>
+                <SectionHeader title="Tools" className="mb-3" />
 
                 <MatrixStartInput
                     row={startRow}
@@ -165,24 +158,22 @@ const RightSidebar = () => {
                     onColChange={setStartCol}
                 />
 
-                <button
-                    onClick={() => autoAssignMatrix(undefined, { startRow, startCol })} // all keys
-                    className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 px-3 rounded flex items-center justify-center gap-2 text-sm transition-colors"
-                >
+                <Button variant="subtle" className="w-full" onClick={() => autoAssignMatrix(undefined, { startRow, startCol })}>
                     <Grid size={16} />
                     Auto-assign Matrix (All)
-                </button>
-            </div>
+                </Button>
+            </Panel>
         );
     }
 
+    // --- Multi selection -------------------------------------------------
     if (!singleSelection) {
         return (
-            <div className="w-64 bg-gray-900 border-l border-gray-800 flex flex-col p-4 text-gray-300">
-                <h2 className="font-semibold mb-4 text-white">Selection</h2>
-                <p>{selectedKeys.length} items selected</p>
+            <Panel side="right" className="p-4">
+                <SectionHeader title="Selection" className="mb-3" />
+                <p className="mb-4 text-sm text-muted">{selectedKeys.length} items selected</p>
 
-                <div className="mt-4 space-y-2">
+                <div className="space-y-3">
                     <MatrixStartInput
                         row={startRow}
                         onRowChange={setStartRow}
@@ -191,73 +182,72 @@ const RightSidebar = () => {
                         testIdSuffix="-selection"
                     />
 
-                    <button
+                    <Button
+                        variant="subtle"
+                        className="w-full"
                         onClick={() => autoAssignMatrix(selectedKeyIds, { startRow, startCol })}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 px-3 rounded flex items-center justify-center gap-2 text-sm transition-colors"
                         title="Auto-assign Matrix to selected keys"
                     >
                         <Grid size={16} />
                         Auto-assign Matrix
-                    </button>
+                    </Button>
 
                     <div className="flex gap-2">
-                        <button onClick={handleDuplicate} className="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded flex justify-center items-center gap-2 text-sm"><Copy size={16} /> Duplicate</button>
-                        <button onClick={handleDelete} className="flex-1 bg-red-900/50 hover:bg-red-900 p-2 rounded flex justify-center text-red-200 items-center gap-2 text-sm"><Trash2 size={16} /> Delete</button>
+                        <Button variant="subtle" className="flex-1" onClick={handleDuplicate}>
+                            <Copy size={16} /> Duplicate
+                        </Button>
+                        <Button variant="danger" className="flex-1" onClick={handleDelete}>
+                            <Trash2 size={16} /> Delete
+                        </Button>
                     </div>
                 </div>
-            </div>
+            </Panel>
         );
     }
 
     if (!primaryKey) return null;
 
+    // --- Single selection: properties ------------------------------------
     return (
-        <div className="w-64 bg-gray-900 border-l border-gray-800 flex flex-col p-4 text-gray-300 overflow-y-auto">
-            <h2 className="font-semibold mb-4 text-white">Properties</h2>
+        <Panel side="right" className="overflow-y-auto p-4">
+            <SectionHeader title="Properties" className="mb-4" />
 
             <div className="space-y-4">
                 {/* Legends */}
-                <div>
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Legends</label>
+                <Field label="Legends">
                     <div className="grid grid-cols-2 gap-2">
-                        <input
+                        <Input
                             placeholder="Top"
-                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
                             value={primaryKey.legends?.top || ''}
                             onChange={(e) => handleInputChange(e, 'legends', 'top')}
                             onKeyDown={handleKeyDown}
                         />
-                        <input
+                        <Input
                             placeholder="Bottom"
-                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
                             value={primaryKey.legends?.bottom || ''}
                             onChange={(e) => handleInputChange(e, 'legends', 'bottom')}
                             onKeyDown={handleKeyDown}
                         />
-                        <input
+                        <Input
                             placeholder="Left"
-                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
                             value={primaryKey.legends?.left || ''}
                             onChange={(e) => handleInputChange(e, 'legends', 'left')}
                             onKeyDown={handleKeyDown}
                         />
-                        <input
+                        <Input
                             placeholder="Right"
-                            className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 focus:border-blue-500 outline-none text-sm"
                             value={primaryKey.legends?.right || ''}
                             onChange={(e) => handleInputChange(e, 'legends', 'right')}
                             onKeyDown={handleKeyDown}
                         />
                     </div>
-                </div>
+                </Field>
 
-                <hr className="border-gray-800" />
+                <hr className="border-border" />
 
                 {/* Variant Selector */}
-                <div>
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Shape</label>
-                    <select
-                        className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700 text-sm"
+                <Field label="Shape">
+                    <Select
                         value={primaryKey.variant || 'rect'}
                         onChange={(e) => updateKey(primaryKey.id, { variant: e.target.value as KeyVariant })}
                         onKeyDown={handleKeyDown}
@@ -265,120 +255,109 @@ const RightSidebar = () => {
                         <option value="rect">Rectangle</option>
                         <option value="iso_enter">ISO Enter</option>
                         <option value="stepped_caps">Stepped Caps (TBD)</option>
-                    </select>
-                </div>
+                    </Select>
+                </Field>
 
-                <hr className="border-gray-800" />
+                <hr className="border-border" />
 
                 {/* Position */}
-                <div>
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Position (U)</label>
+                <Field label="Position (U)">
                     <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">X</span>
-                            <input
-                                type="number"
+                        <div className="flex items-center gap-2">
+                            <InlineLabel className="w-4 shrink-0">X</InlineLabel>
+                            <NumberField
                                 step="0.25"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                                unit="U"
                                 value={primaryKey.position.x}
                                 onChange={(e) => handleInputChange(e, 'position', 'x')}
                                 onKeyDown={handleKeyDown}
                             />
                         </div>
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">Y</span>
-                            <input
-                                type="number"
+                        <div className="flex items-center gap-2">
+                            <InlineLabel className="w-4 shrink-0">Y</InlineLabel>
+                            <NumberField
                                 step="0.25"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                                unit="U"
                                 value={primaryKey.position.y}
                                 onChange={(e) => handleInputChange(e, 'position', 'y')}
                                 onKeyDown={handleKeyDown}
                             />
                         </div>
                     </div>
-                </div>
+                </Field>
 
                 {/* Size */}
-                <div>
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Size (U)</label>
+                <Field label="Size (U)">
                     <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">W</span>
-                            <input
-                                type="number"
+                        <div className="flex items-center gap-2">
+                            <InlineLabel className="w-4 shrink-0">W</InlineLabel>
+                            <NumberField
                                 step="0.25"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                                unit="U"
                                 value={primaryKey.size.w}
                                 onChange={(e) => handleInputChange(e, 'size', 'w')}
                                 onKeyDown={handleKeyDown}
                             />
                         </div>
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">H</span>
-                            <input
-                                type="number"
+                        <div className="flex items-center gap-2">
+                            <InlineLabel className="w-4 shrink-0">H</InlineLabel>
+                            <NumberField
                                 step="0.25"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                                unit="U"
                                 value={primaryKey.size.h}
                                 onChange={(e) => handleInputChange(e, 'size', 'h')}
                                 onKeyDown={handleKeyDown}
                             />
                         </div>
                     </div>
-                </div>
+                </Field>
 
                 {/* Rotation */}
-                <div>
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Rotation (°)</label>
-                    <input
-                        type="number"
-                        className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                <Field label="Rotation">
+                    <NumberField
+                        unit="°"
                         value={primaryKey.angle}
                         onChange={(e) => handleInputChange(e, 'angle')}
                         onKeyDown={handleKeyDown}
                     />
-                </div>
+                </Field>
 
-                <hr className="border-gray-800" />
+                <hr className="border-border" />
 
                 {/* Matrix */}
-                <div>
-                    <label className="text-xs text-gray-500 uppercase block mb-1">Matrix</label>
+                <Field label="Matrix">
                     <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">Row</span>
-                            <input
-                                type="number"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                        <div className="flex items-center gap-2">
+                            <InlineLabel className="w-8 shrink-0">Row</InlineLabel>
+                            <NumberField
                                 value={primaryKey.matrix.row}
                                 onChange={(e) => handleInputChange(e, 'matrix', 'row')}
                                 onKeyDown={handleKeyDown}
                             />
                         </div>
-                        <div>
-                            <span className="text-xs text-gray-600 mr-1">Col</span>
-                            <input
-                                type="number"
-                                className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                        <div className="flex items-center gap-2">
+                            <InlineLabel className="w-8 shrink-0">Col</InlineLabel>
+                            <NumberField
                                 value={primaryKey.matrix.col}
                                 onChange={(e) => handleInputChange(e, 'matrix', 'col')}
                                 onKeyDown={handleKeyDown}
                             />
                         </div>
                     </div>
+                </Field>
+
+                <hr className="border-border" />
+
+                <div className="flex gap-2">
+                    <Button variant="subtle" className="flex-1" onClick={handleDuplicate}>
+                        <Copy size={16} /> Duplicate
+                    </Button>
+                    <Button variant="danger" className="flex-1" onClick={handleDelete}>
+                        <Trash2 size={16} /> Delete
+                    </Button>
                 </div>
-
-                {/* ... */}
-                <hr className="border-gray-800" />
-
-                <div className="flex gap-2 mt-2">
-                    <button onClick={handleDuplicate} className="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded flex justify-center text-sm items-center gap-2"><Copy size={16} /> Duplicate</button>
-                    <button onClick={handleDelete} className="flex-1 bg-red-900/50 hover:bg-red-900 p-2 rounded flex justify-center text-red-200 text-sm items-center gap-2"><Trash2 size={16} /> Delete</button>
-                </div>
-
             </div>
-        </div>
+        </Panel>
     );
 };
 

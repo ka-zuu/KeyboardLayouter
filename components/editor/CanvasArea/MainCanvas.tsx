@@ -7,6 +7,7 @@ import { useShallow } from 'zustand/react/shallow';
 import GridBackground from './GridBackground';
 import KeyList from './KeyList';
 import { PIXELS_PER_U, ZOOM_MIN, ZOOM_MAX } from '@/lib/constants';
+import { canvasTheme } from '@/lib/theme';
 import { doPolygonsIntersect, getRotatedRectPoints, getRotatedRectAABB } from '@/lib/geometry';
 import Konva from 'konva';
 
@@ -481,7 +482,7 @@ const MainCanvas = () => {
 
     return (
         <div
-            className={`w-full h-full bg-neutral-900 overflow-hidden ${isSpacePressed ? 'cursor-grab' : 'cursor-default'}`}
+            className={`w-full h-full bg-canvas overflow-hidden ${isSpacePressed ? 'cursor-grab' : 'cursor-default'}`}
             ref={containerRef}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
@@ -525,8 +526,8 @@ const MainCanvas = () => {
                         <Rect
                             ref={selectionBoxRef}
                             visible={false}
-                            fill="rgba(66, 153, 225, 0.3)" // Blue 500 equivalent with opacity
-                            stroke="#4299e1"
+                            fill={canvasTheme.selectionFill}
+                            stroke={canvasTheme.selectionStroke}
                             strokeWidth={1 / scale}
                             listening={false}
                         />

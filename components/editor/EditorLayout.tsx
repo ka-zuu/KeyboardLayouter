@@ -13,7 +13,7 @@ interface EditorLayoutProps {
 
 const EditorLayout: React.FC<EditorLayoutProps> = ({ children }) => {
     return (
-        <div className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-900">
+        <div className="flex flex-col h-screen w-screen overflow-hidden bg-canvas">
             <KeyboardShortcuts />
             <TopBar />
             <div className="flex flex-1 overflow-hidden">
