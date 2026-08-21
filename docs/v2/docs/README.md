@@ -44,6 +44,5 @@
 | [../README.md](../README.md) | 見出しの製品名と冒頭の注意書き |
 | このファイルの冒頭 | 「仮称 KeyboardLayouter v2」の記述 |
 | `package.json` の `name` | パッケージ名 |
-| `vite.config.ts` の `base` | GitHub Pages のサブパス (リポジトリ名) |
 | `index.html` の `<title>` | ブラウザタブのタイトル |
 | [MIGRATION_FROM_MKD.md](MIGRATION_FROM_MKD.md) | 旧名 `MKD` との対比表記 |

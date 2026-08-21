@@ -44,7 +44,7 @@
 - 状態管理: Zustand + 独自の履歴 (Undo/Redo) 層
 - 永続化: IndexedDB (`localStorage` フォールバック付き)
 - テスト: Vitest (ユニット) / Playwright (E2E)
-- 配信: GitHub Pages
+- 配信: Vercel (v1 と同じオリジンで継続配信)
 
 選定理由は [docs/adr/](docs/adr/) を参照してください。
 

@@ -152,73 +152,67 @@ jobs:
       - run: npm run build
 ```
 
-## 8. GitHub Pages へのデプロイ
+## 8. Vercel へのデプロイ
 
-GitHub Pages はリポジトリ名のサブパスで配信されるため、`base` の設定が必要です。
+v1 から引き続き Vercel で配信します。**配信先を変えないことが重要**です。
+ブラウザ内のデータ (IndexedDB) はオリジン単位で保存されるため、URL のホストが変わると
+v1 が保存したユーザーのプロジェクトを引き継げなくなります
+([MIGRATION_FROM_MKD.md](MIGRATION_FROM_MKD.md#ブラウザに残ったデータの取り込み))。
+
+Vercel は GitHub と連携していれば push で自動的にビルド・デプロイします。
+デプロイ用の GitHub Actions ワークフローは不要です。
+
+### `vercel.json`
+
+Vercel の Framework Preset の自動判別に任せず、明示します
+(このリポジトリの Vercel プロジェクトは v1 時代に Next.js として作られているため)。
+
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
+
+`rewrites` は、将来クライアントルーティングを入れたときに直接 URL を叩いても
+`index.html` が返るようにするためのものです。単一ページのうちは無くても動きます。
+
+### `vite.config.ts`
+
+ドメインのルートで配信するため `base` の設定は不要です。
 
 ```ts
-// vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  // 例: https://<user>.github.io/<repo>/ で配信する場合
-  base: process.env.GITHUB_ACTIONS ? '/<リポジトリ名>/' : '/',
 });
 ```
 
-`.github/workflows/deploy.yml`:
+### Vercel 側の設定 (ダッシュボードでの手作業)
 
-```yaml
-name: Deploy
-on:
-  push:
-    branches: ["main"]
-  workflow_dispatch:
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-concurrency:
-  group: pages
-  cancel-in-progress: true
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-    steps:
-      - uses: actions/deploy-pages@v4
-```
+| 設定 | 値 |
+|---|---|
+| Settings → General → Framework Preset | Vite (または Other)。**Next.js のままだとビルドが失敗します** |
+| Settings → General → Build Command / Output Directory | `vercel.json` の値が使われるので変更不要 |
+| Settings → Git → Production Branch | 本番として配信したいブランチ |
 
-リポジトリの Settings → Pages で **Source を "GitHub Actions"** に設定します。
+**Production Branch の使い方**: 作り直しの途中は、本番 (`keyboard-layouter.vercel.app`) を
+v1 のまま動かしておきたいので、Production Branch を `legacy/v1` に向けます。
+main (v2) は Preview デプロイで確認し、機能等価 (M2) に到達した時点で
+Production Branch を `main` に戻して本番を切り替えます
+([ROADMAP.md](ROADMAP.md#m2-ui-とキャンバス編集-機能等価))。
 
 ### 注意点
 
-- **アセットの参照は相対にする。** `base` を設定しても、コード内で
-  `/images/foo.png` のような絶対パスを書くとサブパス配信で 404 になります。
-  `import` して Vite に解決させてください。
-- **ルーティングは使わない。** 単一ページなので `404.html` の細工は不要です。
-  将来ルーティングを入れる場合は、Pages が SPA フォールバックを持たないため
-  `dist/404.html` に `index.html` をコピーする対応が必要になります。
-- **`dist/.nojekyll`** を出力に含めます (`_` で始まるファイルが無視されるのを防ぐため)。
-  `public/.nojekyll` を空ファイルで置いておけば自動的にコピーされます。
+- **Preview デプロイは本番と別オリジン**です (`<project>-<hash>.vercel.app`)。
+  そのため Preview では本番の IndexedDB が見えず、旧データの自動移行も確認できません。
+  データ移行の検証は本番切り替え後に行います。
+- **アセットは `import` して Vite に解決させる。** `/images/foo.png` のような
+  絶対パスの直書きは避けます (配信先を変えたときに壊れるため)。
+- ビルド成果物は `dist/` の静的ファイルのみです。サーバー側の処理はありません。
 
 ## 9. 最初のコミット
 
@@ -230,4 +224,4 @@ git remote add origin git@github.com:<user>/<repo>.git
 git push -u origin main
 ```
 
-CI が緑になり、Pages に画面が出ることを確認したら M0 完了です。
+CI が緑になり、Vercel の Preview デプロイに画面が出ることを確認したら M0 完了です。

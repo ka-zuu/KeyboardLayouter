@@ -19,14 +19,14 @@ M3〜M5 は M2 完了後なら並行可能です。
 | ESLint / Prettier |
 | Vitest / Playwright の導入 |
 | CI (lint → typecheck → test → e2e → build) |
-| GitHub Pages へのデプロイ |
+| Vercel へのデプロイ (v1 と同じオリジンを継続) |
 | `docs/` の配置と README |
 
 手順は [BOOTSTRAP.md](BOOTSTRAP.md)。
 
 **完了条件**
 
-- `main` への push で CI が緑になり、GitHub Pages に「Hello」レベルの画面が出る
+- `main` への push で CI が緑になり、Vercel の Preview デプロイに「Hello」レベルの画面が出る
 - `npm ci && npm run lint && npm run typecheck && npm test && npm run build` が
   クリーンな環境で通る
 
