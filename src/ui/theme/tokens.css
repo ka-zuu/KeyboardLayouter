@@ -1,0 +1,108 @@
+/* デザイントークン。値の一覧は docs/UI_SPEC.md#デザイントークン を参照。 */
+
+:root {
+  /* 色 (ライト) */
+  --bg-app: #f5f5f5;
+  --bg-panel: #ffffff;
+  --bg-canvas: #e8e8ea;
+  --bg-input: #ffffff;
+  --border: #d8d8dc;
+  --text-primary: #18181b;
+  --text-secondary: #63636b;
+  --accent: #2563eb;
+  --accent-weak: #dbeafe;
+  --danger: #dc2626;
+  --grid-line: #d0d0d6;
+  --grid-line-major: #b8b8c0;
+  --key-face: #fbfbfc;
+  --key-side: #e2e2e6;
+  --key-legend: #18181b;
+
+  /* 寸法 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --toolbar-h: 44px;
+  --statusbar-h: 28px;
+  --panel-left-w: 240px;
+  --panel-right-w: 280px;
+
+  /* タイポグラフィ */
+  --font-ui: system-ui, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-app: #141414;
+    --bg-panel: #1d1d1f;
+    --bg-canvas: #0f0f11;
+    --bg-input: #26262a;
+    --border: #33333a;
+    --text-primary: #f2f2f4;
+    --text-secondary: #a0a0aa;
+    --accent: #3b82f6;
+    --accent-weak: #1e3a5f;
+    --danger: #ef4444;
+    --grid-line: #25252b;
+    --grid-line-major: #33333c;
+    --key-face: #3a3a42;
+    --key-side: #2b2b31;
+    --key-legend: #e8e8ec;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg-app: #141414;
+  --bg-panel: #1d1d1f;
+  --bg-canvas: #0f0f11;
+  --bg-input: #26262a;
+  --border: #33333a;
+  --text-primary: #f2f2f4;
+  --text-secondary: #a0a0aa;
+  --accent: #3b82f6;
+  --accent-weak: #1e3a5f;
+  --danger: #ef4444;
+  --grid-line: #25252b;
+  --grid-line-major: #33333c;
+  --key-face: #3a3a42;
+  --key-side: #2b2b31;
+  --key-legend: #e8e8ec;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
