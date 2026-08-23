@@ -1,63 +1,83 @@
-# Modern Keyboard Layout Editor (MKD)
+# KeyboardLayouter v2
 
-## 概要
-MKD (Modern Keyboard Layout Editor) は、自作キーボードのレイアウト設計を支援する次世代ツールです。**Next.js 16** と **React 19** を基盤に構築され、高性能な無限キャンバスインターフェースを通じて、直感的にキーボードレイアウトを作成、編集、エクスポートできます。
+> **注意**: `KeyboardLayouter v2` は仮の名称です。正式名称の決定後、
+> 名称の差し替え手順は [`docs/README.md`](docs/README.md#名称の差し替え) を参照してください。
 
-従来のツールとは異なり、MKDはモダンなワークフローに焦点を当てており、**KiCad** によるPCB設計との統合や **QMK Firmware** のサポートを強化しています。
+自作キーボードの**物理レイアウト**を設計し、ファームウェア・基板設計の各ツールが
+読める形式に書き出すためのブラウザアプリです。
+[Keyboard Layout Editor (KLE)](http://www.keyboard-layout-editor.com/) の代替として使え、
+そこから QMK Firmware / KiCad / VIA / Ergogen へ橋渡しすることを目的にしています。
 
-## 特徴
+サーバーを持たない完全なクライアントサイド SPA で、データはブラウザ内 (IndexedDB) に保存されます。
 
-### 🎨 直感的なキャンバス
-- **無限ワークスペース**: マウスやトラックパッドのジェスチャでパン・ズーム (0.5x〜3x) が可能。Space + ドラッグ・中ボタンドラッグ・ピンチジェスチャにも対応。
-- **スマートグリッド**: 1U から 0.05U まで調整可能なスナップ機能で、精密な配置をサポート。
-- **ドラッグ＆ドロップ**: プリセットからキーを追加したり、既存のキーを複製したりするのが簡単。クリックで追加する際は重なり自動回避。
-- **マルチ選択**: ドラッグ選択やShiftクリックで複数のキーをまとめて操作。複数選択時の一括回転 (オービット) にも対応。
-- **ビジュアル回転**: ハンドル操作または数値入力による正確なキー回転。
+## 主な機能
 
-### 💾 堅牢なデータ管理
-- **IndexedDB ストレージ**: プロジェクトはローカルの IndexedDB に保存され、高速な動作と大容量保存を実現 (`localStorage` へのフォールバック機能付き)。
-- **自動保存**: 変更はデバウンス処理され、自動的に保存されます。
-- **履歴管理**: 操作に対する Undo/Redo をサポート (直近 50 ステップまで保持)。
-- **インポート/エクスポート**: JSON形式での保存や共有が可能。
+### レイアウト編集
+- 無限キャンバス上でのキー配置。パン / ズーム、グリッドスナップ (1U〜0.05U)
+- 矩形選択・追加選択、複数キーの一括移動 / 複製 / 削除
+- キー単位の回転と、複数選択時のオービット回転
+- キーごとのプロパティ編集: 刻印 (12 スロット)、サイズ、座標、回転、形状 (矩形 / ISO Enter /
+  ステップド)、マトリクス Row/Col
+- 電気マトリクスの自動割り当て (物理配置から Row/Col を推定)
+- Undo / Redo、自動保存、複数プロジェクトの保存と切り替え
 
-### 🔌 ハードウェア連携
-- **KiCad エクスポート**: 以下のファイルを含む KiCad プロジェクト (`.zip`) を生成:
-  - **回路図 (`.kicad_sch`)**: スイッチとダイオードを含むマトリクス配線 (Row/Col バス) を自動生成。
-  - **PCB (`.kicad_pcb`)**: 物理座標 (1U = 19.05mm) に基づいてスイッチを配置 (※ PCB エクスポートは開発中)。
-  - **プロジェクト (`.kicad_pro`)**: KiCad プロジェクト設定ファイル。
-- **QMK エクスポート**: QMK Configurator 用の `info.json` を生成 (回転キーの `rx`, `ry` 計算もサポート)。
+### 入出力
+| 形式 | 入力 | 出力 | 仕様 |
+|---|---|---|---|
+| プロジェクト JSON (独自) | ✅ | ✅ | [docs/formats/PROJECT_JSON.md](docs/formats/PROJECT_JSON.md) |
+| KLE raw JSON | ✅ | ✅ | [docs/formats/KLE.md](docs/formats/KLE.md) |
+| QMK `info.json` | – | ✅ | [docs/formats/QMK.md](docs/formats/QMK.md) |
+| QMK `keymap.c` / `keymap.json` (雛形のみ) | – | ✅ | [docs/formats/QMK.md](docs/formats/QMK.md) |
+| KiCad プロジェクト (`.kicad_sch` / `.kicad_pcb` / `.kicad_pro` の zip) | – | ✅ | [docs/formats/KICAD.md](docs/formats/KICAD.md) |
+| VIA / Vial 定義 | – | ✅ | [docs/formats/VIA_VIAL.md](docs/formats/VIA_VIAL.md) |
+| Ergogen YAML | – | ✅ | [docs/formats/ERGOGEN.md](docs/formats/ERGOGEN.md) |
 
-### ⚡ 高度なツール
-- **マトリクス自動割り当て**: 物理的なキー配置に基づいて、Row/Col インデックスを自動的に割り当て。開始インデックス指定・選択キーのみへの適用も可能。
-- **一括キー追加**: TopBar の Count フィールドで個数を指定してキーをまとめて追加。
-- **キーボードショートカット**: コピー、ペースト、削除、矢印キー移動など、効率的な操作をサポート。Tab / Shift+Tab でキー間をナビゲーションも可能。
+キーコードの割り当てとレイヤ編集は**本アプリの対象外**です。QMK keymap は
+`KC_NO` で埋めた雛形を出力するだけで、実際のキーコードは QMK 側で編集します
+(理由は [docs/formats/QMK.md](docs/formats/QMK.md#スコープ) 参照)。
 
 ## 技術スタック
-- **Framework**: Next.js 16 (App Router)
-- **Library**: React 19
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS 4
-- **Canvas**: Konva.js / React-Konva
-- **State**: Zustand + Zundo (Temporal)
-- **Storage**: IndexedDB (ネイティブ API による独自アダプタ)
+
+- React 19 + TypeScript (strict)
+- Vite (静的 SPA ビルド)
+- キャンバス描画は SVG ベースの自前レンダラ (キャンバス描画ライブラリに依存しない)
+- 状態管理: Zustand + 独自の履歴 (Undo/Redo) 層
+- 永続化: IndexedDB (`localStorage` フォールバック付き)
+- テスト: Vitest (ユニット) / Playwright (E2E)
+- 配信: Vercel (v1 と同じオリジンで継続配信)
+
+選定理由は [docs/adr/](docs/adr/) を参照してください。
 
 ## セットアップ
 
-### 前提条件
-- Node.js 20+ (CI は Node 22 で実行)
-- npm または pnpm
-
-### インストール
-
 ```bash
-# 依存関係のインストール
-npm install
-
-# 開発サーバーの起動
-npm run dev
+# 必要環境: Node.js 22 以上
+npm ci
+npm run dev        # http://localhost:5173
 ```
 
-ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
+| コマンド | 内容 |
+|---|---|
+| `npm run dev` | 開発サーバー |
+| `npm run build` | 本番ビルド (`dist/`) |
+| `npm run preview` | ビルド結果のローカル確認 |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest (ユニット) |
+| `npm run test:e2e` | Playwright (E2E) |
+
+新規にリポジトリを立ち上げる手順は [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) にあります。
+
+## 対応ブラウザ
+
+最新版の Chrome / Edge / Firefox / Safari。IndexedDB と Pointer Events が前提です。
+モバイルはピンチによるパン・ズームと選択までを対象とし、細かなプロパティ編集は
+デスクトップを想定します。
 
 ## ドキュメント
-詳細な技術仕様、アーキテクチャ、データモデルについては [SPECIFICATION.md](./SPECIFICATION.md) を参照してください。
+
+- [docs/README.md](docs/README.md) — ドキュメント全体の索引と読む順番
+
+## ライセンス
+
+未定 (リポジトリ作成時に決定し、`LICENSE` を追加してください)。
