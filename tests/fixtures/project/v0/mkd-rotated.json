@@ -1,0 +1,17 @@
+{
+  "id": "00000000-0000-0000-0000-000000000004",
+  "name": "MKD Rotated",
+  "keys": [
+    {
+      "id": "k1",
+      "position": { "x": 3, "y": 4 },
+      "size": { "w": 1, "h": 1 },
+      "angle": 15,
+      "rotationCenter": { "x": 5, "y": 3 },
+      "legends": { "top": "Thumb", "bottom": "", "left": "", "right": "" },
+      "matrix": { "row": 4, "col": 0 }
+    }
+  ],
+  "createdAt": 1700000000003,
+  "updatedAt": 1700000000003
+}

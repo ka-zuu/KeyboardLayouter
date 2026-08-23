@@ -121,21 +121,28 @@ export function migrate(raw: unknown): ProjectModel;
 export interface ValidationIssue {
   path: string;      // 'keys[3].size.w'
   message: string;
+  /** 'error' は読み込み中止、'warning' は repairProject で自動修復のうえ続行。 */
+  severity: 'error' | 'warning';
 }
 
 export function validateProject(value: unknown): ValidationIssue[];
+
+/** severity: 'warning' の issue を自動修復する (id の振り直し、shape を rect に統一 等)。 */
+export function repairProject(project: ProjectModel, deps?: ModelDeps): { project: ProjectModel; warnings: ValidationIssue[] };
 ```
 
 検証項目は [../DATA_MODEL.md](../DATA_MODEL.md#不変条件) の不変条件に対応します。
+`severity: 'error'` の issue が 1 件でも残る場合は読み込みを中止し、`'warning'` だけなら
+`repairProject` で直したうえで読み込みを続けます。
 
-| 検査 | 不整合時の扱い |
-|---|---|
-| 必須フィールドの有無・型 | エラー (読み込み中止) |
-| `id` の重複 | 重複した方に新しい UUID を振り、警告 |
-| `size.w <= 0` / `size.h <= 0` | エラー |
-| `shape` と `secondary` / `polygon` の整合 | `shape` を `rect` に落として警告 |
-| 未知のフィールド | 無視する (前方互換のため。エラーにしない) |
-| `NaN` / `Infinity` | エラー |
+| 検査 | 不整合時の扱い | severity |
+|---|---|---|
+| 必須フィールドの有無・型 | エラー (読み込み中止) | error |
+| `id` の重複 | 重複した方に新しい UUID を振り、警告 | warning |
+| `size.w <= 0` / `size.h <= 0` | エラー | error |
+| `shape` と `secondary` / `polygon` の整合 | `shape` を `rect` に落として警告 | warning |
+| 未知のフィールド | 無視する (前方互換のため。エラーにしない) | – |
+| `NaN` / `Infinity` | エラー | error |
 
 スキーマ検証ライブラリ (zod 等) は導入しません。検証対象が 1 つの型だけで、
 手書きの検証関数の方が「どう直すか」を細かく制御できるためです。

@@ -1,0 +1,18 @@
+{
+  "id": "00000000-0000-0000-0000-000000000002",
+  "name": "MKD ISO Enter",
+  "keys": [
+    {
+      "id": "k1",
+      "position": { "x": 12, "y": 1 },
+      "size": { "w": 1.5, "h": 2 },
+      "angle": 0,
+      "rotationCenter": { "x": 0, "y": 0 },
+      "legends": { "top": "Enter", "bottom": "", "left": "", "right": "" },
+      "matrix": { "row": 1, "col": 13 },
+      "variant": "iso_enter"
+    }
+  ],
+  "createdAt": 1700000000001,
+  "updatedAt": 1700000000001
+}

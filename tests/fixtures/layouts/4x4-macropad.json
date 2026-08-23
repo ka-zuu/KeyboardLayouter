@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "10000000-0000-0000-0000-000000000001",
+  "name": "4x4 Macropad",
+  "keys": [
+    { "id": "r0c0", "position": { "x": 0, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "1" }, "matrix": { "row": 0, "col": 0 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r0c1", "position": { "x": 1, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "2" }, "matrix": { "row": 0, "col": 1 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r0c2", "position": { "x": 2, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "3" }, "matrix": { "row": 0, "col": 2 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r0c3", "position": { "x": 3, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "4" }, "matrix": { "row": 0, "col": 3 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r1c0", "position": { "x": 0, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "5" }, "matrix": { "row": 1, "col": 0 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r1c1", "position": { "x": 1, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "6" }, "matrix": { "row": 1, "col": 1 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r1c2", "position": { "x": 2, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "7" }, "matrix": { "row": 1, "col": 2 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r1c3", "position": { "x": 3, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "8" }, "matrix": { "row": 1, "col": 3 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r2c0", "position": { "x": 0, "y": 2 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "9" }, "matrix": { "row": 2, "col": 0 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r2c1", "position": { "x": 1, "y": 2 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "0" }, "matrix": { "row": 2, "col": 1 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r2c2", "position": { "x": 2, "y": 2 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "." }, "matrix": { "row": 2, "col": 2 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r2c3", "position": { "x": 3, "y": 2 }, "size": { "w": 1, "h": 2 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "Enter" }, "matrix": { "row": 2, "col": 3 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r3c0", "position": { "x": 0, "y": 3 }, "size": { "w": 2, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "Space" }, "matrix": { "row": 3, "col": 0 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" },
+    { "id": "r3c2", "position": { "x": 2, "y": 3 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "+" }, "matrix": { "row": 3, "col": 2 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "single" }
+  ],
+  "meta": {
+    "keyboardName": "4x4 Macropad",
+    "manufacturer": "",
+    "maintainer": "",
+    "url": "",
+    "usb": { "vid": "0xFEED", "pid": "0x0001", "deviceVersion": "0.0.1" },
+    "diodeDirection": "COL2ROW",
+    "split": false
+  },
+  "createdAt": 1700000001000,
+  "updatedAt": 1700000001000
+}

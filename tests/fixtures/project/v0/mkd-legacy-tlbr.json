@@ -1,0 +1,17 @@
+{
+  "id": "00000000-0000-0000-0000-000000000006",
+  "name": "MKD Legacy TLBR",
+  "keys": [
+    {
+      "id": "k1",
+      "position": { "x": 0, "y": 0 },
+      "size": { "w": 1, "h": 1 },
+      "angle": 0,
+      "rotationCenter": { "x": 0, "y": 0 },
+      "legends": { "tl": "1", "tr": "2", "bl": "3", "br": "4" },
+      "matrix": { "row": 0, "col": 0 }
+    }
+  ],
+  "createdAt": 1700000000005,
+  "updatedAt": 1700000000005
+}

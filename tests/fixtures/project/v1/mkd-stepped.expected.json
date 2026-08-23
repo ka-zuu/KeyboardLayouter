@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "00000000-0000-0000-0000-000000000003",
+  "name": "MKD Stepped",
+  "keys": [
+    {
+      "id": "k1",
+      "position": { "x": 0, "y": 0 },
+      "size": { "w": 2, "h": 1 },
+      "rotation": { "angle": 0, "origin": null },
+      "shape": "steppedCaps",
+      "secondary": { "x": 0, "y": 0, "w": 1.5, "h": 1 },
+      "polygon": null,
+      "legends": { "topCenter": "Tab" },
+      "matrix": { "row": 0, "col": 0 },
+      "decal": false,
+      "homing": false,
+      "ghost": false,
+      "color": null,
+      "legendColor": null,
+      "side": "single"
+    }
+  ],
+  "meta": {
+    "keyboardName": "MKD Stepped",
+    "manufacturer": "",
+    "maintainer": "",
+    "url": "",
+    "usb": { "vid": "0xFEED", "pid": "0x0000", "deviceVersion": "0.0.1" },
+    "diodeDirection": "COL2ROW",
+    "split": false
+  },
+  "createdAt": 1700000000002,
+  "updatedAt": 1700000000002
+}

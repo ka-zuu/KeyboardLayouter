@@ -1,0 +1,7 @@
+[
+  {
+    "code": "matrix-duplicate-suspected",
+    "message": "マトリクスが重複しています。自動割り当ての実行をおすすめします。",
+    "keyId": null
+  }
+]

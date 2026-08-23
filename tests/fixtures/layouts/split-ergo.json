@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "10000000-0000-0000-0000-000000000002",
+  "name": "Split Ergo",
+  "keys": [
+    { "id": "l-r0c0", "position": { "x": 0, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "Q" }, "matrix": { "row": 0, "col": 0 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "left" },
+    { "id": "l-r0c1", "position": { "x": 1, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "W" }, "matrix": { "row": 0, "col": 1 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "left" },
+    { "id": "l-r1c0", "position": { "x": 0, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "A" }, "matrix": { "row": 1, "col": 0 }, "decal": false, "homing": true, "ghost": false, "color": null, "legendColor": null, "side": "left" },
+    { "id": "l-r1c1", "position": { "x": 1, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "S" }, "matrix": { "row": 1, "col": 1 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "left" },
+    {
+      "id": "l-thumb",
+      "position": { "x": 0.5, "y": 2.4 },
+      "size": { "w": 1.5, "h": 1 },
+      "rotation": { "angle": -15, "origin": { "x": 0.5, "y": 3.4 } },
+      "shape": "rect",
+      "secondary": null,
+      "polygon": null,
+      "legends": { "topCenter": "Space" },
+      "matrix": { "row": 2, "col": 0 },
+      "decal": false,
+      "homing": false,
+      "ghost": false,
+      "color": null,
+      "legendColor": null,
+      "side": "left"
+    },
+    { "id": "r-r0c0", "position": { "x": 6, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "P" }, "matrix": { "row": 0, "col": 7 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "right" },
+    { "id": "r-r0c1", "position": { "x": 7, "y": 0 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "[" }, "matrix": { "row": 0, "col": 8 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "right" },
+    { "id": "r-r1c0", "position": { "x": 6, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": "L" }, "matrix": { "row": 1, "col": 7 }, "decal": false, "homing": true, "ghost": false, "color": null, "legendColor": null, "side": "right" },
+    { "id": "r-r1c1", "position": { "x": 7, "y": 1 }, "size": { "w": 1, "h": 1 }, "rotation": { "angle": 0, "origin": null }, "shape": "rect", "secondary": null, "polygon": null, "legends": { "topCenter": ";" }, "matrix": { "row": 1, "col": 8 }, "decal": false, "homing": false, "ghost": false, "color": null, "legendColor": null, "side": "right" },
+    {
+      "id": "r-thumb",
+      "position": { "x": 6, "y": 2.4 },
+      "size": { "w": 1.5, "h": 1 },
+      "rotation": { "angle": 15, "origin": { "x": 7.5, "y": 3.4 } },
+      "shape": "rect",
+      "secondary": null,
+      "polygon": null,
+      "legends": { "topCenter": "Space" },
+      "matrix": { "row": 2, "col": 7 },
+      "decal": false,
+      "homing": false,
+      "ghost": false,
+      "color": null,
+      "legendColor": null,
+      "side": "right"
+    }
+  ],
+  "meta": {
+    "keyboardName": "Split Ergo",
+    "manufacturer": "",
+    "maintainer": "",
+    "url": "",
+    "usb": { "vid": "0xFEED", "pid": "0x0002", "deviceVersion": "0.0.1" },
+    "diodeDirection": "COL2ROW",
+    "split": true
+  },
+  "createdAt": 1700000002000,
+  "updatedAt": 1700000002000
+}

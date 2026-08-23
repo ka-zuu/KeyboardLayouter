@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "00000000-0000-0000-0000-000000000001",
+  "name": "MKD Basic",
+  "keys": [
+    {
+      "id": "k1",
+      "position": { "x": 0, "y": 0 },
+      "size": { "w": 1, "h": 1 },
+      "rotation": { "angle": 0, "origin": null },
+      "shape": "rect",
+      "secondary": null,
+      "polygon": null,
+      "legends": { "topCenter": "Q" },
+      "matrix": { "row": 0, "col": 0 },
+      "decal": false,
+      "homing": false,
+      "ghost": false,
+      "color": null,
+      "legendColor": null,
+      "side": "single"
+    },
+    {
+      "id": "k2",
+      "position": { "x": 1, "y": 0 },
+      "size": { "w": 1, "h": 1 },
+      "rotation": { "angle": 0, "origin": null },
+      "shape": "rect",
+      "secondary": null,
+      "polygon": null,
+      "legends": { "topCenter": "W", "bottomCenter": "Fn", "centerLeft": "!", "centerRight": "?" },
+      "matrix": { "row": 0, "col": 1 },
+      "decal": false,
+      "homing": false,
+      "ghost": false,
+      "color": null,
+      "legendColor": null,
+      "side": "single"
+    }
+  ],
+  "meta": {
+    "keyboardName": "MKD Basic",
+    "manufacturer": "",
+    "maintainer": "",
+    "url": "",
+    "usb": { "vid": "0xFEED", "pid": "0x0000", "deviceVersion": "0.0.1" },
+    "diodeDirection": "COL2ROW",
+    "split": false
+  },
+  "createdAt": 1700000000000,
+  "updatedAt": 1700000000000
+}
