@@ -1,0 +1,104 @@
+/* キャンバスの描画スタイル。デザイントークンは src/ui/theme/tokens.css。 */
+
+.kl-canvas-area {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  /* パン・ピンチをブラウザ標準のスクロール/ズームに奪われないようにする。
+     ホイール/ポインタ操作は ui/hooks/useViewport.ts が処理する。 */
+  touch-action: none;
+}
+
+.kl-canvas-svg {
+  display: block;
+}
+
+/* グリッド */
+
+.kl-grid-line {
+  stroke: var(--grid-line);
+  stroke-width: 1;
+}
+
+.kl-grid-line-major {
+  stroke: var(--grid-line-major);
+  stroke-width: 1;
+}
+
+.kl-origin-mark line {
+  stroke: var(--text-secondary);
+  stroke-width: 1.5;
+}
+
+/* キー */
+
+.kl-key-face {
+  fill: var(--key-face);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.kl-key-face-inner {
+  fill: none;
+  stroke: var(--key-side);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.kl-key-legend {
+  fill: var(--key-legend);
+  font-family: var(--font-ui);
+  pointer-events: none;
+  user-select: none;
+}
+
+.kl-key-matrix {
+  fill: var(--accent);
+  font-family: var(--font-mono);
+  pointer-events: none;
+  user-select: none;
+}
+
+.kl-key--decal .kl-key-face {
+  fill: none;
+  stroke-dasharray: 4 3;
+}
+
+.kl-key--ghost {
+  opacity: 0.45;
+}
+
+.kl-key--selected .kl-key-face {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+/* 選択範囲 */
+
+.kl-selection-box {
+  fill: var(--accent-weak);
+  fill-opacity: 0.25;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.kl-selection-handle-stem {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.kl-selection-handle {
+  fill: var(--bg-panel);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .kl-key-face {
+    transition: fill 0.1s ease;
+  }
+}

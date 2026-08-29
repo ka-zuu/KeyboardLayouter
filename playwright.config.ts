@@ -12,7 +12,15 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(process.env.PW_LOCAL_SANDBOX_CHROME
+          ? { launchOptions: { executablePath: process.env.PW_LOCAL_SANDBOX_CHROME } }
+          : {}),
+      },
+    },
   ],
   webServer: {
     command: 'npm run build && npm run preview -- --port 4173',
