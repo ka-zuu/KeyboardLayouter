@@ -1,0 +1,18 @@
+{
+  "id": "00000000-0000-0000-0000-000000000003",
+  "name": "MKD Stepped",
+  "keys": [
+    {
+      "id": "k1",
+      "position": { "x": 0, "y": 0 },
+      "size": { "w": 2, "h": 1 },
+      "angle": 0,
+      "rotationCenter": { "x": 0, "y": 0 },
+      "legends": { "top": "Tab", "bottom": "", "left": "", "right": "" },
+      "matrix": { "row": 0, "col": 0 },
+      "variant": "stepped_caps"
+    }
+  ],
+  "createdAt": 1700000000002,
+  "updatedAt": 1700000000002
+}

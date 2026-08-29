@@ -1,0 +1,7 @@
+[
+  {
+    "code": "rotation-center-discarded",
+    "message": "キー k1 の rotationCenter (5, 3) は使われていなかったため破棄しました。",
+    "keyId": "k1"
+  }
+]

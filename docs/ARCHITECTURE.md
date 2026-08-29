@@ -44,17 +44,22 @@ src/
 ├── core/
 │   ├── model/          データ型と不変な操作 (DATA_MODEL.md と 1:1)
 │   │   ├── types.ts
+│   │   ├── deps.ts         ID 生成・現在時刻の注入点 (ModelDeps)
 │   │   ├── key.ts          キー生成・複製・更新のヘルパ
-│   │   ├── project.ts      プロジェクト生成・キー集合の操作
-│   │   └── migrate.ts      schemaVersion に基づく前方移行
+│   │   ├── project.ts      プロジェクト生成・正規化・出力順ソート
+│   │   ├── migrate.ts      schemaVersion に基づく前方移行
+│   │   └── validate.ts     構造検証 (validateProject) と自動修復 (repairProject)
 │   ├── geometry/       座標・回転・当たり判定 (GEOMETRY.md と 1:1)
 │   │   ├── units.ts        U ⇄ mm ⇄ px 換算
-│   │   ├── rect.ts         回転矩形の頂点 / AABB / 包含円
+│   │   ├── rect.ts         回転矩形の頂点 / AABB / 回転中心
 │   │   ├── sat.ts          分離軸判定
-│   │   └── snap.ts         グリッドスナップ
+│   │   ├── snap.ts         グリッドスナップ
+│   │   ├── shape.ts        キー形状の輪郭 (主矩形+副矩形の幾何和) と AABB
+│   │   └── select.ts       矩形選択の 3 段判定 (AABB→包含円→SAT)
 │   ├── matrix/         Row/Col 自動割り当て (MATRIX.md と 1:1)
 │   └── commands/       編集操作を 1 単位として表す関数群 (履歴に載る単位)
 ├── io/
+│   ├── types.ts        FormatWarning / ParseResult / SerializeResult
 │   ├── project/        独自 JSON
 │   ├── kle/            KLE raw JSON (parse / serialize)
 │   ├── qmk/            info.json / keymap 雛形
