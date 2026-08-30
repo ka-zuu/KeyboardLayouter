@@ -166,9 +166,14 @@ Vercel は GitHub と連携していれば push で自動的にビルド・デ�
 
 Vercel の Framework Preset の自動判別に任せず、明示します
 (このリポジトリの Vercel プロジェクトは v1 時代に Next.js として作られているため)。
+`"framework": null` は Vercel プロジェクト設定に残っている Next.js プリセットを
+明示的に無効化するためのものです。これが無いと `buildCommand` /
+`outputDirectory` を指定していても Next.js としてビルドが試みられ、
+「No Next.js version detected」で失敗します。
 
 ```json
 {
+  "framework": null,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
@@ -192,6 +197,9 @@ export default defineConfig({
 ```
 
 ### Vercel 側の設定 (ダッシュボードでの手作業)
+
+`vercel.json` の `"framework": null` で通常は解消しますが、それでも
+「No Next.js version detected」が再発する場合はダッシュボード側の設定を確認します。
 
 | 設定 | 値 |
 |---|---|
