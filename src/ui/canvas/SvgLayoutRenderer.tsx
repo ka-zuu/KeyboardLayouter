@@ -12,6 +12,7 @@ import type { AABB } from '@/core/geometry/shape';
 import type { ViewportSizePx } from '@/core/geometry/viewport';
 import Grid from './Grid';
 import KeyItem from './KeyItem';
+import RubberBand, { type RubberBandState } from './RubberBand';
 import SelectionOverlay from './SelectionOverlay';
 import type { RenderScene } from './scene';
 
@@ -19,9 +20,10 @@ interface SvgLayoutRendererProps {
   scene: RenderScene;
   viewportPx: ViewportSizePx;
   selectionBox: AABB | null;
+  rubberBand?: RubberBandState | null;
 }
 
-function SvgLayoutRenderer({ scene, viewportPx, selectionBox }: SvgLayoutRendererProps) {
+function SvgLayoutRenderer({ scene, viewportPx, selectionBox, rubberBand = null }: SvgLayoutRendererProps) {
   const transform = `translate(${scene.panPx.x.toString()} ${scene.panPx.y.toString()}) scale(${scene.pxPerU.toString()})`;
 
   return (
@@ -38,6 +40,7 @@ function SvgLayoutRenderer({ scene, viewportPx, selectionBox }: SvgLayoutRendere
           />
         ))}
         <SelectionOverlay box={selectionBox} />
+        <RubberBand box={rubberBand?.box ?? null} contain={rubberBand?.contain ?? false} />
       </g>
     </svg>
   );

@@ -5,7 +5,13 @@
  * - 回転は `transform="rotate(angle cx cy)"` (中心は `scene.ts` が計算した localCenter)
  * - `decal` は点線の輪郭、`ghost` は半透明
  * - マトリクス番号の重ね表示 (`showMatrix`)
+ *
+ * `ui/hooks/useCanvasInteraction.ts` は `data-key-id` でヒットテストする
+ * (`data-testid` はテスト専用に残す)。`React.memo` は `scene.ts` の
+ * `RenderKey` キャッシュとセットで、ドラッグ中に動いていないキーの
+ * 再レンダリングを避けるために必須 (docs/TESTING.md#性能テスト)。
  */
+import { memo } from 'react';
 import type { LegendSlot } from '@/core/model/types';
 import type { RenderKey } from './scene';
 
@@ -59,6 +65,7 @@ function KeyItem({ entry, selected, showLegends, showMatrix }: KeyItemProps) {
       className={classNames}
       transform={transform}
       data-testid={`key-${key.id}`}
+      data-key-id={key.id}
       data-matrix={key.matrix ? `${key.matrix.row.toString()},${key.matrix.col.toString()}` : undefined}
     >
       <path
@@ -109,4 +116,4 @@ function KeyItem({ entry, selected, showLegends, showMatrix }: KeyItemProps) {
   );
 }
 
-export default KeyItem;
+export default memo(KeyItem);

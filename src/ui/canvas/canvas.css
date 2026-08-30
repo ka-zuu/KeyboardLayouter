@@ -9,6 +9,21 @@
   /* パン・ピンチをブラウザ標準のスクロール/ズームに奪われないようにする。
      ホイール/ポインタ操作は ui/hooks/useViewport.ts が処理する。 */
   touch-action: none;
+  cursor: default;
+}
+
+/* ツールごとのカーソル。data-tool は CanvasArea.tsx が activeTool を反映する。 */
+.kl-canvas-area[data-tool='addKey'] {
+  cursor: crosshair;
+}
+.kl-canvas-area[data-tool='pan'] {
+  cursor: grab;
+}
+.kl-canvas-area[data-tool='pan']:active {
+  cursor: grabbing;
+}
+.kl-canvas-area[data-tool='select'] .kl-key-face:hover {
+  cursor: move;
 }
 
 .kl-canvas-svg {
@@ -64,6 +79,9 @@
 .kl-key--decal .kl-key-face {
   fill: none;
   stroke-dasharray: 4 3;
+  /* fill:none だと内側のクリックが背後の要素に抜けてしまうため、
+     選択・ドラッグの当たり判定用に明示的にヒットさせる。 */
+  pointer-events: all;
 }
 
 .kl-key--ghost {
@@ -95,6 +113,31 @@
   fill: var(--bg-panel);
   stroke: var(--accent);
   stroke-width: 1.5;
+  pointer-events: none;
+}
+
+/* 見えない大きめの当たり判定用の円。ズームアウト時でもつまみやすくする。 */
+.kl-selection-handle-hit {
+  fill: transparent;
+  cursor: grab;
+}
+.kl-selection-handle-hit:active {
+  cursor: grabbing;
+}
+
+/* 矩形選択 (ラバーバンド) */
+
+.kl-rubber-band {
+  fill: var(--accent-weak);
+  fill-opacity: 0.15;
+  stroke: var(--accent);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+  pointer-events: none;
+}
+
+.kl-rubber-band--contain {
+  stroke-dasharray: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {

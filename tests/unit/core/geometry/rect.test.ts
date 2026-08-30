@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getRotatedRectAABB, getRotatedRectPoints, rotatePoint, rotatePointPrecalc, precalcTrig } from '@/core/geometry/rect';
+import {
+  angleOfHandleFromPivot,
+  getRotatedRectAABB,
+  getRotatedRectPoints,
+  rotatePoint,
+  rotatePointPrecalc,
+  precalcTrig,
+} from '@/core/geometry/rect';
 
 function aabbFromPoints(points: { x: number; y: number }[]) {
   return {
@@ -68,5 +75,30 @@ describe('rotatePoint / rotatePointPrecalc', () => {
     const p = rotatePoint({ x: 3, y: 4 }, { x: 1, y: 1 }, 360);
     expect(approxEqual(p.x, 3)).toBe(true);
     expect(approxEqual(p.y, 4)).toBe(true);
+  });
+});
+
+describe('angleOfHandleFromPivot', () => {
+  const pivot = { x: 0, y: 0 };
+
+  it('真上 (0, -1) は 0°', () => {
+    expect(approxEqual(angleOfHandleFromPivot({ x: 0, y: -1 }, pivot), 0)).toBe(true);
+  });
+
+  it('真右 (1, 0) は 90°', () => {
+    expect(approxEqual(angleOfHandleFromPivot({ x: 1, y: 0 }, pivot), 90)).toBe(true);
+  });
+
+  it('真下 (0, 1) は 180°', () => {
+    expect(approxEqual(angleOfHandleFromPivot({ x: 0, y: 1 }, pivot), 180)).toBe(true);
+  });
+
+  it('真左 (-1, 0) は 270°', () => {
+    expect(approxEqual(angleOfHandleFromPivot({ x: -1, y: 0 }, pivot), 270)).toBe(true);
+  });
+
+  it('pivot がキーの中心からずれていても正しく計算する', () => {
+    const offCenterPivot = { x: 5, y: 5 };
+    expect(approxEqual(angleOfHandleFromPivot({ x: 5, y: 4 }, offCenterPivot), 0)).toBe(true);
   });
 });

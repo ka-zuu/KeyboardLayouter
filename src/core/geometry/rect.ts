@@ -123,3 +123,14 @@ export function rotationCenterOf(key: Pick<KeyModel, 'position' | 'size' | 'rota
     y: key.position.y + key.size.h / 2,
   };
 }
+
+/**
+ * pivot から point への角度 (度)。回転ハンドルは pivot の真上 (0, -r) にあるため、
+ * ハンドルがそのままの位置にあるとき (ドラッグ開始直後) に 0° になるよう
+ * `atan2` の結果に +90 のオフセットを掛ける (旧アプリの回転ハンドル実装と同じ規約)。
+ */
+export function angleOfHandleFromPivot(point: PointU, pivot: PointU): number {
+  const dx = point.x - pivot.x;
+  const dy = point.y - pivot.y;
+  return (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+}

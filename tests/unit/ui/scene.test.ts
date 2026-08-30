@@ -91,4 +91,30 @@ describe('buildScene', () => {
     });
     expect(scene.pxPerU).toBe(120);
   });
+
+  it('同じ KeyModel 参照を渡すと RenderKey の参照も同一になる (React.memo の前提)', () => {
+    const moving = createKey({ position: { x: 0, y: 0 } }, deps);
+    const untouched = createKey({ position: { x: 3, y: 0 } }, deps);
+    const project = projectWith([moving, untouched]);
+    const editorInput = { scale: 1, panPx: { x: 0, y: 0 }, selectedKeyIds: [], showMatrix: false };
+    const viewportPx = { width: 600, height: 400 };
+
+    const scene1 = buildScene(project, editorInput, viewportPx);
+
+    // moving だけ新しいオブジェクトに差し替える (core/commands/moveKeys と同じ、
+    // untouched の参照はそのまま)。
+    const movedProject: ProjectModel = {
+      ...project,
+      keys: project.keys.map((k) => (k.id === moving.id ? { ...k, position: { x: 1, y: 0 } } : k)),
+    };
+    const scene2 = buildScene(movedProject, editorInput, viewportPx);
+
+    const untouchedEntry1 = scene1.keys.find((k) => k.key.id === untouched.id);
+    const untouchedEntry2 = scene2.keys.find((k) => k.key.id === untouched.id);
+    expect(untouchedEntry2).toBe(untouchedEntry1);
+
+    const movingEntry1 = scene1.keys.find((k) => k.key.id === moving.id);
+    const movingEntry2 = scene2.keys.find((k) => k.key.id === moving.id);
+    expect(movingEntry2).not.toBe(movingEntry1);
+  });
 });
