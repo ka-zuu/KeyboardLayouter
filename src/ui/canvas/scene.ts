@@ -54,6 +54,30 @@ function isOutsideCullBox(box: AABB, cull: AABB): boolean {
   return box.maxX < cull.minX || box.minX > cull.maxX || box.maxY < cull.minY || box.minY > cull.maxY;
 }
 
+/**
+ * `KeyModel` 参照 → `RenderKey` のキャッシュ。`core/commands/*` は変更のないキーの
+ * オブジェクトを再利用する設計 (adr/0003 の構造共有) なので、ドラッグ中に動いていない
+ * キーは毎回同じ `KeyModel` 参照のまま渡ってくる。ここでキャッシュを効かせることで
+ * `RenderKey` オブジェクトの参照も安定させ、`KeyItem` の `React.memo` を機能させる
+ * (docs/TESTING.md#性能テスト の「100 キーのドラッグ移動が 1 フレーム 16ms 以内」対策)。
+ * `WeakMap` なのでキーが `project.keys` から消えれば GC される。
+ */
+const renderKeyCache = new WeakMap<KeyModel, RenderKey>();
+
+function renderKeyOf(key: KeyModel): RenderKey {
+  const cached = renderKeyCache.get(key);
+  if (cached) return cached;
+
+  const center = rotationCenterOf(key);
+  const entry: RenderKey = {
+    key,
+    path: outlineToSvgPath(outlineOf(key)),
+    localCenter: { x: center.x - key.position.x, y: center.y - key.position.y },
+  };
+  renderKeyCache.set(key, entry);
+  return entry;
+}
+
 export function buildScene(project: ProjectModel, editor: SceneEditorInput, viewportPx: ViewportSizePx): RenderScene {
   const visible = visibleAABB({ scale: editor.scale, panPx: editor.panPx }, viewportPx);
   const cullBox: AABB = {
@@ -69,13 +93,7 @@ export function buildScene(project: ProjectModel, editor: SceneEditorInput, view
   const keys: RenderKey[] = [];
   for (const key of project.keys) {
     if (isOutsideCullBox(aabbOfKey(key), cullBox)) continue;
-
-    const center = rotationCenterOf(key);
-    keys.push({
-      key,
-      path: outlineToSvgPath(outlineOf(key)),
-      localCenter: { x: center.x - key.position.x, y: center.y - key.position.y },
-    });
+    keys.push(renderKeyOf(key));
   }
 
   return {

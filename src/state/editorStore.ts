@@ -32,6 +32,14 @@ export interface EditorStoreState {
   theme: ThemePreference;
   leftPanelCollapsed: boolean;
   rightPanelCollapsed: boolean;
+  /**
+   * `Space` 押下中フラグ。`useViewport` (一時パン) と `useGlobalShortcuts`
+   * (Space の keydown/keyup 監視元) の両方が読むため、どちらか一方の
+   * クロージャに閉じずここに置く。
+   */
+  spacePressed: boolean;
+  /** キャンバスの実ピクセルサイズ。「全体を表示」「選択にズーム」が使う。 */
+  viewportPx: { width: number; height: number };
 
   // 選択
   selectKey(id: string, multi: boolean): void;
@@ -59,6 +67,8 @@ export interface EditorStoreState {
   setTheme(theme: ThemePreference): void;
   toggleLeftPanel(): void;
   toggleRightPanel(): void;
+  setSpacePressed(pressed: boolean): void;
+  setViewportPx(size: { width: number; height: number }): void;
 }
 
 export const INITIAL_VIEWPORT = { scale: 1, panPx: { x: 0, y: 0 } as PointU };
@@ -77,6 +87,8 @@ export function createEditorStore() {
     theme: DEFAULT_EDITOR_PREFS.theme,
     leftPanelCollapsed: false,
     rightPanelCollapsed: false,
+    spacePressed: false,
+    viewportPx: { width: 0, height: 0 },
 
     selectKey(id, multi): void {
       const { selectedKeyIds } = get();
@@ -137,6 +149,13 @@ export function createEditorStore() {
     },
     toggleRightPanel(): void {
       set({ rightPanelCollapsed: !get().rightPanelCollapsed });
+    },
+    setSpacePressed(pressed): void {
+      if (get().spacePressed === pressed) return;
+      set({ spacePressed: pressed });
+    },
+    setViewportPx(size): void {
+      set({ viewportPx: size });
     },
   }));
 }

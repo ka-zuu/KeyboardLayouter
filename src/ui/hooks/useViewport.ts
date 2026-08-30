@@ -4,10 +4,13 @@
  *
  * - ホイール: カーソル位置を固定点にズーム
  * - `Shift` + ホイール: 横スクロール
- * - 中ボタンドラッグ / `Space` 押下中の左ドラッグ: パン
+ * - 中ボタンドラッグ / `Space` 押下中の左ドラッグ / Pan ツール選択中の左ドラッグ: パン
  *   (Select ツール中でもツールを切り替えずにパンできる、という仕様に従い
  *   ツールの種類を問わずここで処理する)
  * - 2 本指ピンチ: パンとズームを同時に
+ *
+ * `Space` 押下状態は `editorStore.spacePressed` で管理する (`ui/hooks/useGlobalShortcuts.ts`
+ * が keydown/keyup を監視して更新する)。ここでは読むだけ。
  */
 import { useEffect, useRef } from 'react';
 import { clampScale, scaleFromWheelDelta, zoomAt, type Viewport } from '@/core/geometry/viewport';
@@ -32,7 +35,6 @@ export function useViewport<T extends HTMLElement>(containerRef: React.RefObject
     const el = containerRef.current;
     if (!el) return;
 
-    let spacePressed = false;
     let panning = false;
     let panPointerId: number | null = null;
     let panStartClient: PointU = { x: 0, y: 0 };
@@ -73,9 +75,11 @@ export function useViewport<T extends HTMLElement>(containerRef: React.RefObject
         return;
       }
 
+      const editor = useEditorStore.getState();
       const isMiddleButton = e.button === 1;
-      const isSpacePan = e.button === 0 && spacePressed;
-      if (isMiddleButton || isSpacePan) {
+      const isSpacePan = e.button === 0 && editor.spacePressed;
+      const isPanTool = e.button === 0 && editor.activeTool === 'pan';
+      if (isMiddleButton || isSpacePan || isPanTool) {
         panning = true;
         panPointerId = e.pointerId;
         panStartClient = { x: e.clientX, y: e.clientY };
@@ -130,20 +134,11 @@ export function useViewport<T extends HTMLElement>(containerRef: React.RefObject
       }
     }
 
-    function onKeyDown(e: KeyboardEvent): void {
-      if (e.code === 'Space') spacePressed = true;
-    }
-    function onKeyUp(e: KeyboardEvent): void {
-      if (e.code === 'Space') spacePressed = false;
-    }
-
     el.addEventListener('wheel', onWheel, { passive: false });
     el.addEventListener('pointerdown', onPointerDown);
     el.addEventListener('pointermove', onPointerMove);
     el.addEventListener('pointerup', endPointer);
     el.addEventListener('pointercancel', endPointer);
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
 
     return () => {
       el.removeEventListener('wheel', onWheel);
@@ -151,8 +146,6 @@ export function useViewport<T extends HTMLElement>(containerRef: React.RefObject
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerup', endPointer);
       el.removeEventListener('pointercancel', endPointer);
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
     };
   }, [containerRef, setViewport]);
 }
