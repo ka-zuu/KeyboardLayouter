@@ -15,6 +15,7 @@ import { moveKeys as moveKeysCmd } from '@/core/commands/moveKeys';
 import { rotateKeys as rotateKeysCmd, type RotateKeysOptions } from '@/core/commands/rotateKeys';
 import { setMatrix as setMatrixCmd } from '@/core/commands/setMatrix';
 import { updateKeyProps as updateKeyPropsCmd } from '@/core/commands/updateKeyProps';
+import { updateProjectMeta as updateProjectMetaCmd, type UpdateProjectMetaPatch } from '@/core/commands/updateProjectMeta';
 import { autoAssignMatrix as autoAssignMatrixCmd, type AutoAssignOptions } from '@/core/matrix/autoAssign';
 import { defaultDeps, type ModelDeps } from '@/core/model/deps';
 import type { KeyModel, MatrixAddress, PointU, ProjectModel } from '@/core/model/types';
@@ -39,6 +40,7 @@ export interface ProjectStoreState {
   distributeKeys(ids: readonly string[], axis: DistributeAxis): void;
   setMatrix(id: string, matrix: MatrixAddress | null): void;
   updateKeyProps(ids: readonly string[], patch: Partial<KeyModel>, coalesceKey?: string | null): void;
+  updateProjectMeta(patch: UpdateProjectMetaPatch, coalesceKey?: string | null): void;
   autoAssignMatrix(targetIds: readonly string[] | null, options: AutoAssignOptions): void;
 
   undo(): void;
@@ -58,6 +60,7 @@ const LABELS = {
   distributeKeys: '分布',
   setMatrix: 'マトリクスの設定',
   updateKeyProps: 'プロパティの変更',
+  updateProjectMeta: 'プロジェクト設定の変更',
   autoAssignMatrix: 'マトリクスの自動割り当て',
 } as const;
 
@@ -123,6 +126,9 @@ export function createProjectStore(initial: ProjectModel, deps: ModelDeps = defa
       },
       updateKeyProps(ids, patch, coalesceKey = null): void {
         apply(LABELS.updateKeyProps, coalesceKey, (p) => updateKeyPropsCmd(p, ids, patch));
+      },
+      updateProjectMeta(patch, coalesceKey = null): void {
+        apply(LABELS.updateProjectMeta, coalesceKey, (p) => updateProjectMetaCmd(p, patch, deps));
       },
       autoAssignMatrix(targetIds, options): void {
         apply(LABELS.autoAssignMatrix, null, (p) => autoAssignMatrixCmd(p, targetIds, options));

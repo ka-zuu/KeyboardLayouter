@@ -7,3 +7,4 @@ export * from './rotateKeys';
 export * from './alignKeys';
 export * from './distributeKeys';
 export * from './setMatrix';
+export * from './updateProjectMeta';
