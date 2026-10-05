@@ -8,7 +8,8 @@ import { snapU } from '@/core/geometry/snap';
 import { screenToLayout } from '@/core/geometry/units';
 import { fitToAABB, zoomAt } from '@/core/geometry/viewport';
 import { presetPartials, type KeyPreset } from '@/core/model/presets';
-import type { KeyModel, MatrixAddress, PointU } from '@/core/model/types';
+import { replaceProjectContent } from '@/core/model/project';
+import type { KeyModel, MatrixAddress, PointU, ProjectModel } from '@/core/model/types';
 import { useEditorStore, useProjectStore } from './appState';
 import { selectionAABB } from './selectors';
 
@@ -132,4 +133,15 @@ export function fitSelection(): void {
   if (!aabb) return;
   const next = fitToAABB(aabb, editor.viewportPx, 1);
   editor.setViewport(next.scale, next.panPx);
+}
+
+/**
+ * 取り込んだプロジェクトで現在のプロジェクトを置き換える (docs/UI_SPEC.md#ツールバー の「取込」)。
+ * id は現在のものを保ち (`replaceProjectContent`)、履歴に 1 段積むので Undo で元に戻せる。
+ */
+export function importProject(imported: ProjectModel): void {
+  const projectStore = useProjectStore.getState();
+  projectStore.replaceProject(replaceProjectContent(projectStore.project, imported));
+  useEditorStore.getState().clearSelection();
+  fitAll();
 }

@@ -72,7 +72,6 @@ test.describe('キー追加プリセット', () => {
 
 test.describe('プロジェクト一覧', () => {
   test('新規作成 → 切替 → 削除', async ({ page }) => {
-    page.on('dialog', (dialog) => void dialog.accept());
     const list = page.getByTestId('project-list').locator('li');
 
     // 1 つ目にキーを 1 個置いてから、新規プロジェクトを作る。
@@ -96,6 +95,8 @@ test.describe('プロジェクト一覧', () => {
       .first()
       .getByRole('button', { name: /を削除/ })
       .click();
+    await expect(page.getByTestId('confirm-dialog')).toContainText('削除しますか');
+    await page.getByTestId('confirm-ok').click();
     await expect(list).toHaveCount(1);
     await expect(page.locator(KEYS)).toHaveCount(0);
   });

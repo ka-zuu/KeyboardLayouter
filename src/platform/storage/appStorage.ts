@@ -52,8 +52,11 @@ export interface AppStorage {
   saveProjects(projects: Record<string, ProjectModel>): void;
   saveCurrentProjectId(id: string): void;
   saveEditorPrefs(prefs: EditorPrefs): void;
-  /** デバウンス中の書き込みをすべて即座に反映する (テスト・ページ離脱時用)。 */
-  flush(): Promise<void>;
+  /**
+   * デバウンス中の書き込みをすべて即座に反映する (明示保存・テスト・ページ離脱時用)。
+   * 実行中のものも含め、すべての書き込みが成功すれば true (fallback への書き込みも成功扱い)。
+   */
+  flush(): Promise<boolean>;
 }
 
 export function createAppStorage(options: AppStorageOptions): AppStorage {
@@ -62,19 +65,22 @@ export function createAppStorage(options: AppStorageOptions): AppStorage {
 
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const pending = new Map<string, unknown>();
-  const inFlight: Promise<void>[] = [];
+  const inFlight: Promise<boolean>[] = [];
 
-  async function writeNow(key: string, value: unknown): Promise<void> {
+  async function writeNow(key: string, value: unknown): Promise<boolean> {
     onStatusChange?.('saving');
     try {
       await primary.set(key, value);
       onStatusChange?.('saved');
+      return true;
     } catch {
       try {
         await fallback.set(key, value);
         onStatusChange?.('saved');
+        return true;
       } catch {
         onStatusChange?.('failed');
+        return false;
       }
     }
   }
@@ -118,7 +124,8 @@ export function createAppStorage(options: AppStorageOptions): AppStorage {
         pending.delete(key);
         inFlight.push(writeNow(key, v));
       }
-      await Promise.all(inFlight);
+      const results = await Promise.all(inFlight);
+      return results.every(Boolean);
     },
   };
 }

@@ -94,4 +94,20 @@ describe('projectStore', () => {
     store.getState().autoAssignMatrix(null, { startRow: 0, startCol: 0 });
     expect(store.getState().project.keys.every((k) => k.matrix !== null)).toBe(true);
   });
+
+  it('replaceProject は履歴に「インポート」を 1 段積み、Undo で元のプロジェクトに戻る', () => {
+    const original = projectWith([createKey({ position: { x: 0, y: 0 } }, deps)]);
+    const store = createProjectStore(original, deps);
+    const replacement = { ...original, name: 'Imported', keys: [] };
+
+    store.getState().replaceProject(replacement);
+    expect(store.getState().project).toBe(replacement);
+    expect(store.getState().undoLabel).toBe('インポート');
+
+    store.getState().undo();
+    expect(store.getState().project).toBe(original);
+
+    store.getState().redo();
+    expect(store.getState().project).toBe(replacement);
+  });
 });

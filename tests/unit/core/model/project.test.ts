@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createKey } from '@/core/model/key';
-import { createProject, duplicateProject, findKey, normalizeOrigin, replaceKeys, sortKeysForOutput, touch } from '@/core/model/project';
+import { createProject, duplicateProject, findKey, normalizeOrigin, replaceKeys, replaceProjectContent, sortKeysForOutput, touch } from '@/core/model/project';
 
 const deps = { newId: () => 'new-id', now: () => 1700000000123 };
 
@@ -131,5 +131,24 @@ describe('duplicateProject', () => {
     expect(copy.keys[0]!.secondary).not.toBe(key.secondary);
     expect(copy.meta.usb).not.toBe(source.meta.usb);
     expect(copy.meta).toEqual(source.meta);
+  });
+});
+
+describe('replaceProjectContent', () => {
+  it('id と createdAt は現在のものを保ち、内容は取込側を使い、updatedAt を now にする', () => {
+    const current = { ...createProject('Current', { newId: () => 'cur', now: () => 100 }), keys: [] };
+    const imported = {
+      ...createProject('Imported', { newId: () => 'imp', now: () => 200 }),
+      keys: [createKey({ id: 'a' }, deps)],
+    };
+
+    const result = replaceProjectContent(current, imported, deps);
+
+    expect(result.id).toBe('cur');
+    expect(result.createdAt).toBe(100);
+    expect(result.updatedAt).toBe(1700000000123);
+    expect(result.name).toBe('Imported');
+    expect(result.meta).toEqual(imported.meta);
+    expect(result.keys).toEqual(imported.keys);
   });
 });

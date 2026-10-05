@@ -42,6 +42,20 @@ export function duplicateProject(project: ProjectModel, deps: ModelDeps = defaul
   };
 }
 
+/**
+ * 取込による置き換え (docs/UI_SPEC.md#ツールバー の「取込」)。
+ * 内容 (名前・メタ情報・キー) は `imported` から取り、`id` と `createdAt` は `current` を保つ。
+ * プロジェクト一覧の同じ枠を差し替えるため、取り込んだファイルの id が既存と衝突しない。
+ */
+export function replaceProjectContent(current: ProjectModel, imported: ProjectModel, deps: ModelDeps = defaultDeps): ProjectModel {
+  return {
+    ...imported,
+    id: current.id,
+    createdAt: current.createdAt,
+    updatedAt: deps.now(),
+  };
+}
+
 export function findKey(project: ProjectModel, id: string): KeyModel | null {
   return project.keys.find((k) => k.id === id) ?? null;
 }

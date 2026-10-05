@@ -55,7 +55,7 @@ describe('appStorage', () => {
     const storage = createAppStorage({ primary, fallback, debounceMs: 5, onStatusChange: (s) => statuses.push(s) });
 
     storage.saveCurrentProjectId('x');
-    await storage.flush();
+    await expect(storage.flush()).resolves.toBe(true);
 
     await expect(fallback.get('currentProjectId')).resolves.toBe('x');
     expect(statuses).toContain('saved');
@@ -69,7 +69,7 @@ describe('appStorage', () => {
     const storage = createAppStorage({ primary, fallback, debounceMs: 5, onStatusChange: (s) => statuses.push(s) });
 
     storage.saveCurrentProjectId('x');
-    await storage.flush();
+    await expect(storage.flush()).resolves.toBe(false);
 
     expect(statuses.at(-1)).toBe('failed');
   });

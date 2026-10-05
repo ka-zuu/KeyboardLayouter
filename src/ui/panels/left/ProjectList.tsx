@@ -47,7 +47,7 @@ function ProjectList() {
                   data-testid={`project-delete-${p.id}`}
                   aria-label={`「${p.name}」を削除`}
                   title="削除"
-                  onClick={() => confirmDeleteProject(p.id, p.name)}
+                  onClick={() => void confirmDeleteProject(p.id, p.name)}
                 >
                   ×
                 </button>

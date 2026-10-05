@@ -11,8 +11,15 @@
  */
 import { createProject, duplicateProject } from '@/core/model/project';
 import type { ProjectModel } from '@/core/model/types';
-import { forgetProject, getAppStorage, getProjectsCache, pickMostRecentlyUpdated, rememberProject } from '@/platform/storage/appStorageSingleton';
-import { useEditorStore, useProjectStore } from './appState';
+import {
+  forgetProject,
+  getAppStorage,
+  getProjectsCache,
+  isProjectsCacheLoaded,
+  pickMostRecentlyUpdated,
+  rememberProject,
+} from '@/platform/storage/appStorageSingleton';
+import { useEditorStore, useFeedbackStore, useProjectStore } from './appState';
 
 function activate(project: ProjectModel): void {
   // 切り替え前の内容を確実に一覧へ残す (自動保存の effect より先に一覧が読まれても欠けないように)。
@@ -58,4 +65,28 @@ export function deleteProjectById(id: string): void {
     useEditorStore.getState().clearSelection();
   }
   getAppStorage().saveProjects(getProjectsCache());
+}
+
+/**
+ * 明示保存 (`Cmd/Ctrl+S`、docs/UI_SPEC.md#キーボードショートカット)。
+ * 自動保存のデバウンスを待たずに、現在のプロジェクトを即座に書き込む。
+ * 起動時の読み込みが済む前は、読み込み中のプレースホルダで保存済みの一覧を上書きしないよう
+ * 何もせず 'not-ready' を返す (`useAutoSave` の `enabled` と同じ理由)。
+ */
+export async function saveNow(): Promise<'saved' | 'failed' | 'not-ready'> {
+  if (!isProjectsCacheLoaded()) return 'not-ready';
+  const storage = getAppStorage();
+  const project = useProjectStore.getState().project;
+  storage.saveProjects(rememberProject(project));
+  storage.saveCurrentProjectId(project.id);
+  return (await storage.flush()) ? 'saved' : 'failed';
+}
+
+/** 明示保存して結果をトーストで知らせる (ショートカットとプロジェクトメニューで共用)。 */
+export async function saveAndNotify(): Promise<void> {
+  const result = await saveNow();
+  const { pushToast } = useFeedbackStore.getState();
+  if (result === 'saved') pushToast({ kind: 'success', message: '保存しました' });
+  else if (result === 'failed') pushToast({ kind: 'error', message: '保存に失敗しました。ブラウザの保存領域が使えない可能性があります。' });
+  else pushToast({ kind: 'info', message: '読み込み中のため保存できません。少し待ってからもう一度お試しください。' });
 }

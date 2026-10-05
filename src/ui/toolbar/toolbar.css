@@ -88,3 +88,22 @@
 .kl-menu-item--danger {
   color: var(--danger);
 }
+
+.kl-menu-item:disabled {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.kl-menu-item:disabled:hover {
+  background: none;
+}
+
+.kl-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
