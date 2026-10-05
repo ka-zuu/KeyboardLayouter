@@ -1,14 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useProjectStore } from '@/state/appState';
 import { createNewProject, duplicateProjectById, renameCurrentProject, saveAndNotify } from '@/state/projectActions';
-import { confirmDeleteProject, PROJECT_LIST_SECTION_ID } from '@/ui/panels/left/projectListShared';
+import { confirmDeleteProject, openProjectList } from '@/ui/panels/left/projectListShared';
 import MenuPopover, { type MenuItem } from './MenuPopover';
-
-function openProjectList(): void {
-  const section = document.getElementById(PROJECT_LIST_SECTION_ID);
-  section?.scrollIntoView({ block: 'nearest' });
-  section?.focus();
-}
 
 /**
  * プロジェクト名のインライン編集 (Enter 確定 / Esc 取消) とプロジェクトメニュー (▾)。

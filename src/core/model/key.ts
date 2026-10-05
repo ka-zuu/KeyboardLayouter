@@ -1,5 +1,5 @@
 import { defaultDeps, type ModelDeps } from './deps';
-import type { KeyModel, KeyShape, SecondaryRect, SizeU } from './types';
+import type { KeyModel, KeyShape, Legends, LegendSlot, SecondaryRect, SizeU } from './types';
 
 /**
  * shape ごとの標準副矩形。size (主矩形の寸法) を基準に、キー左上を原点とした
@@ -62,4 +62,36 @@ export function cloneKey(key: KeyModel, deps: ModelDeps = defaultDeps): KeyModel
 /** キーの不変更新。patch に含まれるフィールドだけを差し替えた新しいオブジェクトを返す。 */
 export function withKey(key: KeyModel, patch: Partial<KeyModel>): KeyModel {
   return { ...key, ...patch };
+}
+
+/** 12 スロットの並び順 (上段 → 中段 → 下段 → 前面、各段は左 → 右)。KLE のスロット番号順とは異なる。 */
+export const LEGEND_SLOT_ORDER: readonly LegendSlot[] = [
+  'topLeft',
+  'topCenter',
+  'topRight',
+  'centerLeft',
+  'center',
+  'centerRight',
+  'bottomLeft',
+  'bottomCenter',
+  'bottomRight',
+  'frontLeft',
+  'frontCenter',
+  'frontRight',
+];
+
+/**
+ * 主刻印のスロット (docs/UI_SPEC.md#操作 のダブルクリック編集の対象)。
+ * `LEGEND_SLOT_ORDER` の順で最初に値が入っているスロット。刻印が 1 つも無ければ `center`。
+ */
+export function primaryLegendSlotOf(key: Pick<KeyModel, 'legends'>): LegendSlot {
+  return LEGEND_SLOT_ORDER.find((slot) => (key.legends[slot] ?? '') !== '') ?? 'center';
+}
+
+/** 1 スロットだけ差し替えた刻印を返す。空文字はスロットごと消す (`Legends` は空文字を持たない)。 */
+export function withLegend(legends: Legends, slot: LegendSlot, text: string): Legends {
+  const next = { ...legends };
+  if (text === '') delete next[slot];
+  else next[slot] = text;
+  return next;
 }

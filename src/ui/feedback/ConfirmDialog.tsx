@@ -1,48 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useFeedbackStore } from '@/state/appState';
 import type { ConfirmRequest } from '@/state/feedbackStore';
 import './feedback.css';
-
-function focusableIn(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>('button:not(:disabled)')];
-}
+import { useModalKeyboard } from './useModalKeyboard';
 
 function Dialog({ request }: { request: ConfirmRequest }) {
   const resolveConfirm = useFeedbackStore((s) => s.resolveConfirm);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const root = ref.current;
-    if (!root) return;
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  useModalKeyboard(ref, {
+    onClose: () => resolveConfirm(false),
     // 破壊的操作は Enter の押し間違いで実行されないよう、キャンセルに初期フォーカスを置く。
-    root.querySelector<HTMLElement>(request.danger ? '[data-testid="confirm-cancel"]' : '[data-testid="confirm-ok"]')?.focus();
-
-    // capture で受けて伝播を止め、グローバルショートカット (Esc の選択解除・Delete 等) に流さない
-    // (MenuPopover.tsx と同じ流儀)。ボタンの Enter / Space による押下は既定動作なので止まらない。
-    function onKeyDown(e: KeyboardEvent): void {
-      if (!root) return;
-      e.stopPropagation();
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        resolveConfirm(false);
-        return;
-      }
-      if (e.key === 'Tab') {
-        const items = focusableIn(root);
-        if (items.length === 0) return;
-        e.preventDefault();
-        const index = items.indexOf(document.activeElement as HTMLElement);
-        const next = (index + (e.shiftKey ? -1 : 1) + items.length) % items.length;
-        items[next]?.focus();
-      }
-    }
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown, true);
-      previouslyFocused?.focus();
-    };
-  }, [request, resolveConfirm]);
+    initialFocus: request.danger ? '[data-testid="confirm-cancel"]' : '[data-testid="confirm-ok"]',
+  });
 
   return (
     <div className="kl-dialog-backdrop" onPointerDown={(e) => e.target === e.currentTarget && resolveConfirm(false)}>

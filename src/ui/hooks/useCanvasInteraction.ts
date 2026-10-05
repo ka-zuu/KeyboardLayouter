@@ -19,7 +19,7 @@ import { round4, snapAngle, snapMoveDelta } from '@/core/geometry/snap';
 import { screenToLayout } from '@/core/geometry/units';
 import type { AABB } from '@/core/geometry/shape';
 import type { PointU } from '@/core/model/types';
-import { duplicateAndSelect } from '@/state/actions';
+import { duplicateAndSelect, startLegendEdit } from '@/state/actions';
 import { useEditorStore, useProjectStore } from '@/state/appState';
 import { selectionAABB } from '@/state/selectors';
 import type { RubberBandState } from '@/ui/canvas/RubberBand';
@@ -159,6 +159,8 @@ export function useCanvasInteraction<T extends HTMLElement>(containerRef: React.
       if (editor.spacePressed || editor.activeTool === 'pan') return;
 
       const targetEl = e.target as Element;
+      // キャンバス上に重ねた HTML (刻印の直接編集欄) の操作は、キャンバスの選択・ドラッグにしない。
+      if (targetEl.closest('[data-canvas-overlay]')) return;
       const isHandle = targetEl.closest('[data-testid="rotate-handle"]') !== null;
       const keyEl = targetEl.closest('[data-key-id]');
       const keyId = keyEl?.getAttribute('data-key-id') ?? null;
@@ -281,12 +283,25 @@ export function useCanvasInteraction<T extends HTMLElement>(containerRef: React.
       activePointerId = null;
     }
 
+    /**
+     * ダブルクリックで主刻印の直接編集に入る (docs/UI_SPEC.md#操作)。ポインタキャプチャ中は
+     * `dblclick` の target がコンテナになるため、座標から改めてキーを引く。
+     */
+    function onDoubleClick(e: MouseEvent): void {
+      const editor = useEditorStore.getState();
+      if (editor.activeTool !== 'select' || editor.spacePressed) return;
+      const keyId = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-key-id]')?.getAttribute('data-key-id');
+      if (keyId) startLegendEdit(keyId);
+    }
+
     el.addEventListener('pointerdown', onPointerDown);
     el.addEventListener('pointermove', onPointerMove);
     el.addEventListener('pointerup', endPointer);
     el.addEventListener('pointercancel', endPointer);
+    el.addEventListener('dblclick', onDoubleClick);
 
     return () => {
+      el.removeEventListener('dblclick', onDoubleClick);
       el.removeEventListener('pointerdown', onPointerDown);
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerup', endPointer);
