@@ -13,12 +13,10 @@
  * 自動保存は既に動作しており、フィードバック UI が無い状態で先に足す価値が薄いため)。
  */
 import { useEffect } from 'react';
-import { fitToAABB } from '@/core/geometry/viewport';
-import { aabbOfKeys } from '@/core/geometry/shape';
 import type { KeyModel, PointU, ProjectModel } from '@/core/model/types';
-import { duplicateAndSelect } from '@/state/actions';
+import { duplicateAndSelect, fitAll, fitSelection, resetZoom } from '@/state/actions';
 import { useEditorStore, useProjectStore } from '@/state/appState';
-import { selectedKeysOf, selectionAABB } from '@/state/selectors';
+import { selectedKeysOf } from '@/state/selectors';
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -97,7 +95,7 @@ function handleMetaShortcut(e: KeyboardEvent): void {
 
   if (e.code === 'Digit0') {
     e.preventDefault();
-    editor.setScale(1);
+    resetZoom();
   }
 }
 
@@ -107,10 +105,8 @@ function handlePlainShortcut(e: KeyboardEvent): void {
 
   if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2')) {
     e.preventDefault();
-    const aabb = e.code === 'Digit1' ? aabbOfKeys(projectStore.project.keys) : selectionAABB(projectStore.project, editor.selectedKeyIds);
-    if (!aabb) return;
-    const next = fitToAABB(aabb, editor.viewportPx, 1);
-    editor.setViewport(next.scale, next.panPx);
+    if (e.code === 'Digit1') fitAll();
+    else fitSelection();
     return;
   }
 

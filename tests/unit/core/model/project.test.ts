@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createKey } from '@/core/model/key';
-import { createProject, findKey, normalizeOrigin, replaceKeys, sortKeysForOutput, touch } from '@/core/model/project';
+import { createProject, duplicateProject, findKey, normalizeOrigin, replaceKeys, sortKeysForOutput, touch } from '@/core/model/project';
 
 const deps = { newId: () => 'new-id', now: () => 1700000000123 };
 
@@ -109,5 +109,27 @@ describe('sortKeysForOutput', () => {
     const original = [a, b];
     sortKeysForOutput(original);
     expect(original).toEqual([a, b]);
+  });
+});
+
+describe('duplicateProject', () => {
+  it('プロジェクトとキーの id を振り直し、名前に「のコピー」を付ける', () => {
+    let seq = 0;
+    const seqDeps = { newId: () => `dup-${(seq++).toString()}`, now: () => 1800000000000 };
+    const key = createKey({ id: 'a', matrix: { row: 1, col: 2 }, secondary: { x: 0, y: 1, w: 1, h: 1 } }, deps);
+    const source = { ...createProject('KB', deps), keys: [key] };
+
+    const copy = duplicateProject(source, seqDeps);
+
+    expect(copy.id).not.toBe(source.id);
+    expect(copy.name).toBe('KB のコピー');
+    expect(copy.createdAt).toBe(1800000000000);
+    expect(copy.updatedAt).toBe(1800000000000);
+    expect(copy.keys).toHaveLength(1);
+    expect(copy.keys[0]!.id).not.toBe('a');
+    expect(copy.keys[0]!.matrix).toEqual({ row: 1, col: 2 });
+    expect(copy.keys[0]!.secondary).not.toBe(key.secondary);
+    expect(copy.meta.usb).not.toBe(source.meta.usb);
+    expect(copy.meta).toEqual(source.meta);
   });
 });

@@ -1,6 +1,9 @@
-import { useEditorStore } from '@/state/appState';
+import { useEditorStore, useProjectStore } from '@/state/appState';
 import type { ThemePreference } from '@/platform/storage/appStorage';
 import type { ActiveTool } from '@/core/model/types';
+import ProjectControls from './ProjectControls';
+import './toolbar.css';
+import ZoomControls from './ZoomControls';
 
 const THEME_CYCLE: Record<ThemePreference, ThemePreference> = {
   system: 'light',
@@ -36,7 +39,6 @@ const buttonStyle: React.CSSProperties = {
 };
 
 function Toolbar() {
-  const scale = useEditorStore((s) => s.scale);
   const theme = useEditorStore((s) => s.theme);
   const setTheme = useEditorStore((s) => s.setTheme);
   const activeTool = useEditorStore((s) => s.activeTool);
@@ -45,6 +47,12 @@ function Toolbar() {
   const setGridSize = useEditorStore((s) => s.setGridSize);
   const snapEnabled = useEditorStore((s) => s.snapEnabled);
   const toggleSnap = useEditorStore((s) => s.toggleSnap);
+  const canUndo = useProjectStore((s) => s.canUndo);
+  const canRedo = useProjectStore((s) => s.canRedo);
+  const undoLabel = useProjectStore((s) => s.undoLabel);
+  const redoLabel = useProjectStore((s) => s.redoLabel);
+  const undo = useProjectStore((s) => s.undo);
+  const redo = useProjectStore((s) => s.redo);
 
   return (
     <header
@@ -62,6 +70,32 @@ function Toolbar() {
       }}
     >
       <strong>KeyboardLayouter</strong>
+      <ProjectControls />
+
+      <div role="group" aria-label="履歴" style={{ display: 'flex', gap: 2 }}>
+        <button
+          type="button"
+          className="kl-toolbar-button"
+          data-testid="undo-button"
+          disabled={!canUndo}
+          aria-label="元に戻す"
+          title={undoLabel ? `${undoLabel}を取り消す (Ctrl+Z)` : '元に戻す (Ctrl+Z)'}
+          onClick={undo}
+        >
+          ↶
+        </button>
+        <button
+          type="button"
+          className="kl-toolbar-button"
+          data-testid="redo-button"
+          disabled={!canRedo}
+          aria-label="やり直す"
+          title={redoLabel ? `${redoLabel}をやり直す (Ctrl+Shift+Z)` : 'やり直す (Ctrl+Shift+Z)'}
+          onClick={redo}
+        >
+          ↷
+        </button>
+      </div>
 
       <div role="group" aria-label="ツール" style={{ display: 'flex', gap: 2 }}>
         {TOOLS.map(({ tool, label, shortcut }) => (
@@ -125,9 +159,7 @@ function Toolbar() {
       </button>
 
       <span style={{ flex: 1 }} />
-      <span data-testid="zoom-display" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
-        {`${Math.round(scale * 100).toString()}%`}
-      </span>
+      <ZoomControls />
       <button
         type="button"
         data-testid="theme-toggle"
