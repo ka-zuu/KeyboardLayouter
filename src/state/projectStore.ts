@@ -30,6 +30,8 @@ export interface ProjectStoreState {
 
   /** プロジェクトを丸ごと差し替える (読み込み・インポート・切替)。履歴はリセットする。 */
   loadProject(project: ProjectModel): void;
+  /** 取込による置き換え。`loadProject` と違い履歴に積むので Undo で元に戻せる。 */
+  replaceProject(project: ProjectModel): void;
 
   addKeys(partials: readonly Partial<KeyModel>[], options?: AddKeysOptions): void;
   moveKeys(ids: readonly string[], deltaU: PointU, coalesceKey?: string | null): void;
@@ -62,6 +64,7 @@ const LABELS = {
   updateKeyProps: 'プロパティの変更',
   updateProjectMeta: 'プロジェクト設定の変更',
   autoAssignMatrix: 'マトリクスの自動割り当て',
+  replaceProject: 'インポート',
 } as const;
 
 /**
@@ -98,6 +101,9 @@ export function createProjectStore(initial: ProjectModel, deps: ModelDeps = defa
       loadProject(project: ProjectModel): void {
         history = createHistory(project);
         set({ project, ...historyFields() });
+      },
+      replaceProject(project): void {
+        apply(LABELS.replaceProject, null, () => project);
       },
 
       addKeys(partials, options = {}): void {

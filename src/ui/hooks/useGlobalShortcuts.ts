@@ -8,14 +8,13 @@
  * 矢印/`Delete`/`Tab` 等) を無効にする。`Esc` と `Cmd/Ctrl` 併用のものは常に有効
  * (UI_SPEC.md の記載どおり)。
  *
- * このセッションでは以下を意図的に対象外にしている (M2-4 で UI ごと追加する):
- * `Cmd/Ctrl+K` (コマンドパレット)、`?` (ショートカット一覧)、`Cmd/Ctrl+S` (明示保存 —
- * 自動保存は既に動作しており、フィードバック UI が無い状態で先に足す価値が薄いため)。
+ * 以下は未実装 (M2-7 で UI ごと追加する): `Cmd/Ctrl+K` (コマンドパレット)、`?` (ショートカット一覧)。
  */
 import { useEffect } from 'react';
 import type { KeyModel, PointU, ProjectModel } from '@/core/model/types';
 import { duplicateAndSelect, fitAll, fitSelection, resetZoom } from '@/state/actions';
 import { useEditorStore, useProjectStore } from '@/state/appState';
+import { saveAndNotify } from '@/state/projectActions';
 import { selectedKeysOf } from '@/state/selectors';
 
 function isEditableTarget(target: EventTarget | null): boolean {
@@ -59,6 +58,11 @@ function handleMetaShortcut(e: KeyboardEvent): void {
     case 'd':
       e.preventDefault();
       duplicateAndSelect(editor.selectedKeyIds, { x: editor.gridSize, y: editor.gridSize });
+      return;
+    case 's':
+      // ブラウザの「ページを保存」を出さないよう、常に既定動作を止める。
+      e.preventDefault();
+      void saveAndNotify();
       return;
     case 'g':
       e.preventDefault();

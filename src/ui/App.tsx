@@ -3,6 +3,8 @@ import LeftPanel from './panels/LeftPanel';
 import Inspector from './panels/Inspector';
 import StatusBar from './panels/StatusBar';
 import CanvasArea from './canvas/CanvasArea';
+import ConfirmDialog from './feedback/ConfirmDialog';
+import ToastHost from './feedback/ToastHost';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useBootstrap } from './hooks/useBootstrap';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
@@ -24,6 +26,8 @@ function App() {
         <Inspector />
       </div>
       <StatusBar saveStatus={saveStatus} />
+      <ToastHost />
+      <ConfirmDialog />
     </div>
   );
 }

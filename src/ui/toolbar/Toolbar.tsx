@@ -1,6 +1,8 @@
 import { useEditorStore, useProjectStore } from '@/state/appState';
 import type { ThemePreference } from '@/platform/storage/appStorage';
 import type { ActiveTool } from '@/core/model/types';
+import ExportMenu from './ExportMenu';
+import ImportButton from './ImportButton';
 import ProjectControls from './ProjectControls';
 import './toolbar.css';
 import ZoomControls from './ZoomControls';
@@ -160,6 +162,10 @@ function Toolbar() {
 
       <span style={{ flex: 1 }} />
       <ZoomControls />
+      <div role="group" aria-label="取込・書出" style={{ display: 'flex', gap: 2 }}>
+        <ImportButton />
+        <ExportMenu />
+      </div>
       <button
         type="button"
         data-testid="theme-toggle"

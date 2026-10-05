@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useProjectStore } from '@/state/appState';
-import { createNewProject, duplicateProjectById, renameCurrentProject } from '@/state/projectActions';
+import { createNewProject, duplicateProjectById, renameCurrentProject, saveAndNotify } from '@/state/projectActions';
 import { confirmDeleteProject, PROJECT_LIST_SECTION_ID } from '@/ui/panels/left/projectListShared';
 import MenuPopover, { type MenuItem } from './MenuPopover';
 
@@ -22,6 +22,7 @@ function ProjectControls() {
 
   const items: MenuItem[] = [
     { id: 'new', label: '新規プロジェクト', onSelect: createNewProject },
+    { id: 'save', label: '保存 (Ctrl+S)', onSelect: () => void saveAndNotify() },
     {
       id: 'duplicate',
       label: '複製',
@@ -33,7 +34,7 @@ function ProjectControls() {
       id: 'delete',
       label: '削除',
       danger: true,
-      onSelect: () => confirmDeleteProject(project.id, project.name),
+      onSelect: () => void confirmDeleteProject(project.id, project.name),
     },
   ];
 

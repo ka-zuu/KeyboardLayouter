@@ -5,6 +5,10 @@ export interface MenuItem {
   label: string;
   onSelect(): void;
   danger?: boolean;
+  /** 無効表示にする (未対応の書出形式など)。 */
+  disabled?: boolean;
+  /** ツールチップ (無効の理由など)。 */
+  title?: string;
 }
 
 interface MenuPopoverProps {
@@ -23,7 +27,7 @@ function MenuPopover({ items, onClose, testId, alignRight = false }: MenuPopover
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    ref.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    ref.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
 
     function onPointerDown(e: PointerEvent): void {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
@@ -46,7 +50,7 @@ function MenuPopover({ items, onClose, testId, alignRight = false }: MenuPopover
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     e.preventDefault();
     e.stopPropagation();
-    const buttons = [...(ref.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])];
+    const buttons = [...(ref.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])];
     const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
     const next = (index + (e.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
     buttons[next]?.focus();
@@ -61,6 +65,8 @@ function MenuPopover({ items, onClose, testId, alignRight = false }: MenuPopover
           role="menuitem"
           className={item.danger ? 'kl-menu-item kl-menu-item--danger' : 'kl-menu-item'}
           data-testid={`${testId}-${item.id}`}
+          disabled={item.disabled}
+          title={item.title}
           onClick={() => {
             onClose();
             item.onSelect();

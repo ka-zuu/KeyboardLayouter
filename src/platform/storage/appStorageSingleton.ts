@@ -15,6 +15,8 @@ import { createAppStorage, type AppStorage, type SaveStatus } from './appStorage
 
 let storage: AppStorage | null = null;
 let projectsCache: Record<string, ProjectModel> = {};
+/** 起動時の読み込み (`setProjectsCache`) が済んだか。済む前に書き込むと保存済みの一覧を消してしまう。 */
+let projectsCacheLoaded = false;
 const statusListeners = new Set<(status: SaveStatus) => void>();
 const projectsListeners = new Set<(projects: Record<string, ProjectModel>) => void>();
 
@@ -57,7 +59,12 @@ export function getProjectsCache(): Record<string, ProjectModel> {
 }
 
 export function setProjectsCache(projects: Record<string, ProjectModel>): void {
+  projectsCacheLoaded = true;
   updateProjectsCache(projects);
+}
+
+export function isProjectsCacheLoaded(): boolean {
+  return projectsCacheLoaded;
 }
 
 /** キャッシュに 1 件追加・上書きし、更新後の全体を返す。 */

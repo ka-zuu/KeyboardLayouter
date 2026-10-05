@@ -10,7 +10,9 @@
  */
 import { createProject } from '@/core/model/project';
 import { createEditorStore } from './editorStore';
+import { createFeedbackStore } from './feedbackStore';
 import { createProjectStore } from './projectStore';
 
 export const useProjectStore = createProjectStore(createProject());
 export const useEditorStore = createEditorStore();
+export const useFeedbackStore = createFeedbackStore();
