@@ -1,4 +1,7 @@
 import { useEffect, useMemo } from 'react';
+import { screenToLayout } from '@/core/geometry/units';
+import { findPreset } from '@/core/model/presets';
+import { addPresetKeys } from '@/state/actions';
 import { useEditorStore, useProjectStore } from '@/state/appState';
 import { selectionAABB } from '@/state/selectors';
 import { useCanvasInteraction } from '@/ui/hooks/useCanvasInteraction';
@@ -7,6 +10,31 @@ import { useViewport } from '@/ui/hooks/useViewport';
 import './canvas.css';
 import { buildScene } from './scene';
 import SvgLayoutRenderer from './SvgLayoutRenderer';
+import { PRESET_DRAG_MIME, type PresetDragPayload } from '@/ui/panels/left/presetDrag';
+
+/** 左パネルのプリセットをドロップされた位置 (キー全体の中心) に追加する。 */
+function handlePresetDrop(e: React.DragEvent<HTMLElement>): void {
+  const raw = e.dataTransfer.getData(PRESET_DRAG_MIME);
+  if (!raw) return;
+  e.preventDefault();
+  let payload: PresetDragPayload;
+  try {
+    payload = JSON.parse(raw) as PresetDragPayload;
+  } catch {
+    return;
+  }
+  const preset = findPreset(payload.id);
+  if (!preset) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const { scale, panPx } = useEditorStore.getState();
+  addPresetKeys(preset, payload.count, screenToLayout({ x: e.clientX - rect.left, y: e.clientY - rect.top }, scale, panPx));
+}
+
+function handlePresetDragOver(e: React.DragEvent<HTMLElement>): void {
+  if (!e.dataTransfer.types.includes(PRESET_DRAG_MIME)) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+}
 
 function CanvasArea() {
   const [containerRef, viewportPx] = useElementSize<HTMLDivElement>();
@@ -34,7 +62,14 @@ function CanvasArea() {
   const selectionBox = useMemo(() => selectionAABB(project, selectedKeyIds), [project, selectedKeyIds]);
 
   return (
-    <main ref={containerRef} className="kl-canvas-area" data-testid="canvas-area" data-tool={activeTool}>
+    <main
+      ref={containerRef}
+      className="kl-canvas-area"
+      data-testid="canvas-area"
+      data-tool={activeTool}
+      onDragOver={handlePresetDragOver}
+      onDrop={handlePresetDrop}
+    >
       <SvgLayoutRenderer scene={scene} viewportPx={viewportPx} selectionBox={selectionBox} rubberBand={rubberBand} />
     </main>
   );

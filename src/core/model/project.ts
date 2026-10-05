@@ -1,6 +1,7 @@
 import { aabbOfKeys } from '@/core/geometry/shape';
 import { round4 } from '@/core/geometry/snap';
 import { defaultDeps, type ModelDeps } from './deps';
+import { cloneKey } from './key';
 import { SCHEMA_VERSION, type KeyModel, type ProjectModel } from './types';
 
 export function createProject(name = 'Untitled', deps: ModelDeps = defaultDeps): ProjectModel {
@@ -19,6 +20,23 @@ export function createProject(name = 'Untitled', deps: ModelDeps = defaultDeps):
       diodeDirection: 'COL2ROW',
       split: false,
     },
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/**
+ * プロジェクトを複製する。id とキーの id はすべて振り直し、名前に「のコピー」を付ける。
+ * マトリクス割り当てやメタ情報はそのまま引き継ぐ。
+ */
+export function duplicateProject(project: ProjectModel, deps: ModelDeps = defaultDeps): ProjectModel {
+  const now = deps.now();
+  return {
+    ...project,
+    id: deps.newId(),
+    name: `${project.name} のコピー`,
+    keys: project.keys.map((k) => cloneKey(k, deps)),
+    meta: { ...project.meta, usb: { ...project.meta.usb } },
     createdAt: now,
     updatedAt: now,
   };

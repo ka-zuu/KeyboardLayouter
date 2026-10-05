@@ -16,6 +16,7 @@ import { createAppStorage, type AppStorage, type SaveStatus } from './appStorage
 let storage: AppStorage | null = null;
 let projectsCache: Record<string, ProjectModel> = {};
 const statusListeners = new Set<(status: SaveStatus) => void>();
+const projectsListeners = new Set<(projects: Record<string, ProjectModel>) => void>();
 
 function notify(status: SaveStatus): void {
   for (const listener of statusListeners) listener(status);
@@ -35,14 +36,42 @@ export function onSaveStatusChange(listener: (status: SaveStatus) => void): () =
   return () => statusListeners.delete(listener);
 }
 
+/**
+ * プロジェクト一覧キャッシュの変更を購読する (左パネルのプロジェクト一覧用)。
+ * 登録直後に現在の内容で 1 回呼ぶ。
+ */
+export function onProjectsChange(listener: (projects: Record<string, ProjectModel>) => void): () => void {
+  projectsListeners.add(listener);
+  listener(projectsCache);
+  return () => projectsListeners.delete(listener);
+}
+
+function updateProjectsCache(next: Record<string, ProjectModel>): Record<string, ProjectModel> {
+  projectsCache = next;
+  for (const listener of projectsListeners) listener(projectsCache);
+  return projectsCache;
+}
+
+export function getProjectsCache(): Record<string, ProjectModel> {
+  return projectsCache;
+}
+
 export function setProjectsCache(projects: Record<string, ProjectModel>): void {
-  projectsCache = projects;
+  updateProjectsCache(projects);
 }
 
 /** キャッシュに 1 件追加・上書きし、更新後の全体を返す。 */
 export function rememberProject(project: ProjectModel): Record<string, ProjectModel> {
-  projectsCache = { ...projectsCache, [project.id]: project };
-  return projectsCache;
+  if (projectsCache[project.id] === project) return projectsCache;
+  return updateProjectsCache({ ...projectsCache, [project.id]: project });
+}
+
+/** キャッシュから 1 件取り除き、更新後の全体を返す。 */
+export function forgetProject(id: string): Record<string, ProjectModel> {
+  if (!(id in projectsCache)) return projectsCache;
+  const rest = { ...projectsCache };
+  delete rest[id];
+  return updateProjectsCache(rest);
 }
 
 export function pickMostRecentlyUpdated(projects: Record<string, ProjectModel>): ProjectModel | undefined {
