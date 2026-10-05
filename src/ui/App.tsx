@@ -3,11 +3,14 @@ import LeftPanel from './panels/LeftPanel';
 import Inspector from './panels/Inspector';
 import StatusBar from './panels/StatusBar';
 import CanvasArea from './canvas/CanvasArea';
+import CommandPalette from './command/CommandPalette';
+import ShortcutHelpDialog from './command/ShortcutHelpDialog';
 import ConfirmDialog from './feedback/ConfirmDialog';
 import ToastHost from './feedback/ToastHost';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useBootstrap } from './hooks/useBootstrap';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
+import { useInitialPanelLayout } from './hooks/useInitialPanelLayout';
 import { useTheme } from './theme/useTheme';
 import './App.css';
 
@@ -16,6 +19,7 @@ function App() {
   const saveStatus = useAutoSave({ enabled: bootstrapStatus === 'ready' });
   useTheme();
   useGlobalShortcuts();
+  useInitialPanelLayout();
 
   return (
     <div className="app-shell" data-testid="app-shell">
@@ -27,6 +31,8 @@ function App() {
       </div>
       <StatusBar saveStatus={saveStatus} />
       <ToastHost />
+      <CommandPalette />
+      <ShortcutHelpDialog />
       <ConfirmDialog />
     </div>
   );

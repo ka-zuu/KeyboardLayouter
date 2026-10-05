@@ -3,7 +3,8 @@
  * (選択、ズーム、パン、グリッド、スナップ、アクティブツール、クリップボード) を実装する。
  *
  * `core/model/types.ts` の `EditorState` フィールドはそのまま持ち、
- * それ以外の UI 専用フィールド (テーマ・マトリクス番号表示・パネル折りたたみ) は
+ * それ以外の UI 専用フィールド (テーマ・マトリクス番号表示・パネル折りたたみ・
+ * コマンドパレット等のオーバーレイ・刻印の直接編集) は
  * ここで追加する。`core/model/types.ts` 自体は変更しない
  * (docs/DATA_MODEL.md と 1 対 1 に保つ制約があるため)。
  *
@@ -40,6 +41,13 @@ export interface EditorStoreState {
   spacePressed: boolean;
   /** キャンバスの実ピクセルサイズ。「全体を表示」「選択にズーム」が使う。 */
   viewportPx: { width: number; height: number };
+  /**
+   * 開いているオーバーレイ (コマンドパレット / ショートカット一覧)。同時に 1 つだけ。
+   * ショートカット (`Cmd/Ctrl+K` / `?`) とパレットの項目の両方から開くためここに置く。
+   */
+  overlay: 'commandPalette' | 'shortcutHelp' | null;
+  /** キャンバス上で主刻印を直接編集中のキー (ダブルクリック / `Enter`)。 */
+  editingLegendKeyId: string | null;
 
   // 選択
   selectKey(id: string, multi: boolean): void;
@@ -67,8 +75,11 @@ export interface EditorStoreState {
   setTheme(theme: ThemePreference): void;
   toggleLeftPanel(): void;
   toggleRightPanel(): void;
+  setLeftPanelCollapsed(collapsed: boolean): void;
   setSpacePressed(pressed: boolean): void;
   setViewportPx(size: { width: number; height: number }): void;
+  setOverlay(overlay: EditorStoreState['overlay']): void;
+  setEditingLegendKeyId(id: string | null): void;
 }
 
 export const INITIAL_VIEWPORT = { scale: 1, panPx: { x: 0, y: 0 } as PointU };
@@ -89,6 +100,8 @@ export function createEditorStore() {
     rightPanelCollapsed: false,
     spacePressed: false,
     viewportPx: { width: 0, height: 0 },
+    overlay: null,
+    editingLegendKeyId: null,
 
     selectKey(id, multi): void {
       const { selectedKeyIds } = get();
@@ -150,12 +163,21 @@ export function createEditorStore() {
     toggleRightPanel(): void {
       set({ rightPanelCollapsed: !get().rightPanelCollapsed });
     },
+    setLeftPanelCollapsed(collapsed): void {
+      set({ leftPanelCollapsed: collapsed });
+    },
     setSpacePressed(pressed): void {
       if (get().spacePressed === pressed) return;
       set({ spacePressed: pressed });
     },
     setViewportPx(size): void {
       set({ viewportPx: size });
+    },
+    setOverlay(overlay): void {
+      set({ overlay });
+    },
+    setEditingLegendKeyId(id): void {
+      set({ editingLegendKeyId: id });
     },
   }));
 }

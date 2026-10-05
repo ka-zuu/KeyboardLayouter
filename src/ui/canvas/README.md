@@ -9,6 +9,7 @@
 | `SelectionOverlay.tsx` | 選択範囲のバウンディングボックスと回転ハンドルの描画。ドラッグでの回転操作は `ui/hooks/useCanvasInteraction.ts` が配線する |
 | `RubberBand.tsx` | 矩形選択 (ラバーバンド) 中の選択範囲の見た目。ドラッグ中はストアを更新せず、ここの描画だけを行う |
 | `SvgLayoutRenderer.tsx` | 上記を束ねる。`docs/adr/0002-rendering.md` の `LayoutRenderer` 相当の責務をここに閉じ込め、`CanvasArea` からは `RenderScene` だけを渡す |
+| `LegendEditor.tsx` | ダブルクリック / `Enter` での主刻印の直接編集欄。SVG の上に HTML の入力欄を重ね、キーの見た目の中心に置く (`foreignObject` だとズームで文字まで拡縮されるため)。`data-canvas-overlay` の付いた要素はキャンバス操作の対象外 |
 | `CanvasArea.tsx` | ストアの購読とビューポート操作 (`ui/hooks/useViewport.ts`)・キャンバス操作 (`ui/hooks/useCanvasInteraction.ts`) の配線 |
 
 ワールド座標 (U) → 画面座標 (px) の変換は、ルートの `<g>` に載せる

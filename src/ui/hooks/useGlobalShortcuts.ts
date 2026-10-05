@@ -8,18 +8,31 @@
  * 矢印/`Delete`/`Tab` 等) を無効にする。`Esc` と `Cmd/Ctrl` 併用のものは常に有効
  * (UI_SPEC.md の記載どおり)。
  *
- * 以下は未実装 (M2-7 で UI ごと追加する): `Cmd/Ctrl+K` (コマンドパレット)、`?` (ショートカット一覧)。
+ * 表示用のショートカット一覧は `ui/command/shortcuts.ts`。ここを変えたらそちらも揃える。
  */
 import { useEffect } from 'react';
 import type { KeyModel, PointU, ProjectModel } from '@/core/model/types';
-import { duplicateAndSelect, fitAll, fitSelection, resetZoom } from '@/state/actions';
+import {
+  copySelection,
+  deleteSelection,
+  duplicateSelection,
+  fitAll,
+  fitSelection,
+  pasteClipboard,
+  resetZoom,
+  selectAll,
+  startLegendEditOfSelection,
+} from '@/state/actions';
 import { useEditorStore, useProjectStore } from '@/state/appState';
 import { saveAndNotify } from '@/state/projectActions';
-import { selectedKeysOf } from '@/state/selectors';
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+}
+
+function isActivatableTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && target.closest('button, a, select, summary, [role="button"], [role="menuitem"]') !== null;
 }
 
 function compareYThenX(a: KeyModel, b: KeyModel): number {
@@ -37,11 +50,30 @@ function cycleSelectionId(project: ProjectModel, selectedKeyIds: readonly string
   return sorted[nextIndex]!.id;
 }
 
+/**
+ * `\` キーか。`Alt` 併用時の Mac は `e.key` が別の文字になるため `e.code` も見る。
+ * JIS 配列の `\` (`IntlRo`) と `¥` (`IntlYen`) も受け付ける。
+ */
+function isBackslashKey(e: KeyboardEvent): boolean {
+  return e.key === '\\' || e.code === 'Backslash' || e.code === 'IntlRo' || e.code === 'IntlYen';
+}
+
 function handleMetaShortcut(e: KeyboardEvent): void {
   const projectStore = useProjectStore.getState();
   const editor = useEditorStore.getState();
 
+  if (isBackslashKey(e)) {
+    e.preventDefault();
+    if (e.altKey) editor.toggleRightPanel();
+    else editor.toggleLeftPanel();
+    return;
+  }
+
   switch (e.key.toLowerCase()) {
+    case 'k':
+      e.preventDefault();
+      editor.setOverlay('commandPalette');
+      return;
     case 'z':
       e.preventDefault();
       if (e.shiftKey) projectStore.redo();
@@ -53,11 +85,11 @@ function handleMetaShortcut(e: KeyboardEvent): void {
       return;
     case 'a':
       e.preventDefault();
-      editor.selectKeys(projectStore.project.keys.map((k) => k.id));
+      selectAll();
       return;
     case 'd':
       e.preventDefault();
-      duplicateAndSelect(editor.selectedKeyIds, { x: editor.gridSize, y: editor.gridSize });
+      duplicateSelection();
       return;
     case 's':
       // ブラウザの「ページを保存」を出さないよう、常に既定動作を止める。
@@ -72,27 +104,14 @@ function handleMetaShortcut(e: KeyboardEvent): void {
       e.preventDefault();
       editor.toggleShowMatrix();
       return;
-    case 'c': {
+    case 'c':
       e.preventDefault();
-      const keys = selectedKeysOf(projectStore.project, editor.selectedKeyIds);
-      if (keys.length > 0) editor.setClipboard(keys);
+      copySelection();
       return;
-    }
-    case 'v': {
+    case 'v':
       e.preventDefault();
-      if (editor.clipboard.length === 0) return;
-      const offset: PointU = { x: editor.gridSize, y: editor.gridSize };
-      const before = new Set(projectStore.project.keys.map((k) => k.id));
-      const partials = editor.clipboard.map((k) => ({
-        ...k,
-        position: { x: k.position.x + offset.x, y: k.position.y + offset.y },
-      }));
-      projectStore.addKeys(partials);
-      const after = useProjectStore.getState().project.keys;
-      const newIds = after.filter((k) => !before.has(k.id)).map((k) => k.id);
-      if (newIds.length > 0) editor.selectKeys(newIds);
+      pasteClipboard();
       return;
-    }
     default:
       break;
   }
@@ -132,12 +151,20 @@ function handlePlainShortcut(e: KeyboardEvent): void {
       editor.setActiveTool('pan');
       return;
     case 'Delete':
-    case 'Backspace': {
-      if (editor.selectedKeyIds.length === 0) return;
-      projectStore.deleteKeys(editor.selectedKeyIds);
-      editor.clearSelection();
+    case 'Backspace':
+      deleteSelection();
       return;
-    }
+    case 'Enter':
+      // キーボードだけで刻印編集に入れるようにする (docs/UI_SPEC.md#アクセシビリティ)。
+      // ボタン等にフォーカスがあるときは、その要素の Enter (押下) を優先する。
+      if (editor.selectedKeyIds.length !== 1 || isActivatableTarget(e.target)) return;
+      e.preventDefault();
+      startLegendEditOfSelection();
+      return;
+    case '?':
+      e.preventDefault();
+      editor.setOverlay('shortcutHelp');
+      return;
     case 'ArrowUp':
     case 'ArrowDown':
     case 'ArrowLeft':

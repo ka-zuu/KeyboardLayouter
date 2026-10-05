@@ -1,6 +1,7 @@
 import { useEditorStore, useProjectStore } from '@/state/appState';
 import type { ThemePreference } from '@/platform/storage/appStorage';
 import type { ActiveTool } from '@/core/model/types';
+import { formatShortcut } from '@/ui/command/shortcuts';
 import ExportMenu from './ExportMenu';
 import ImportButton from './ImportButton';
 import ProjectControls from './ProjectControls';
@@ -55,6 +56,11 @@ function Toolbar() {
   const redoLabel = useProjectStore((s) => s.redoLabel);
   const undo = useProjectStore((s) => s.undo);
   const redo = useProjectStore((s) => s.redo);
+  const leftPanelCollapsed = useEditorStore((s) => s.leftPanelCollapsed);
+  const rightPanelCollapsed = useEditorStore((s) => s.rightPanelCollapsed);
+  const toggleLeftPanel = useEditorStore((s) => s.toggleLeftPanel);
+  const toggleRightPanel = useEditorStore((s) => s.toggleRightPanel);
+  const setOverlay = useEditorStore((s) => s.setOverlay);
 
   return (
     <header
@@ -71,6 +77,17 @@ function Toolbar() {
         fontSize: 'var(--text-sm)',
       }}
     >
+      <button
+        type="button"
+        className="kl-toolbar-button"
+        data-testid="toggle-left-panel"
+        aria-pressed={!leftPanelCollapsed}
+        aria-label="左パネルを表示"
+        title={`左パネルの折りたたみ (${formatShortcut('Mod+\\')})`}
+        onClick={toggleLeftPanel}
+      >
+        ◧
+      </button>
       <strong>KeyboardLayouter</strong>
       <ProjectControls />
 
@@ -174,6 +191,27 @@ function Toolbar() {
         style={buttonStyle}
       >
         {THEME_LABEL[theme]}
+      </button>
+      <button
+        type="button"
+        className="kl-toolbar-button"
+        data-testid="open-command-palette"
+        aria-label="コマンドパレットを開く"
+        title={`コマンドパレット (${formatShortcut('Mod+K')})`}
+        onClick={() => setOverlay('commandPalette')}
+      >
+        {formatShortcut('Mod+K')}
+      </button>
+      <button
+        type="button"
+        className="kl-toolbar-button"
+        data-testid="toggle-right-panel"
+        aria-pressed={!rightPanelCollapsed}
+        aria-label="インスペクタを表示"
+        title={`インスペクタの折りたたみ (${formatShortcut('Mod+Alt+\\')})`}
+        onClick={toggleRightPanel}
+      >
+        ◨
       </button>
     </header>
   );

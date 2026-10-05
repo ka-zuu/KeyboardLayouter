@@ -5,3 +5,4 @@ export * from './sat';
 export * from './shape';
 export * from './select';
 export * from './viewport';
+export * from './overlap';

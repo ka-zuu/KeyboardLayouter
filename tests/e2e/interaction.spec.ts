@@ -5,8 +5,8 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 /**
  * docs/UI_SPEC.md#ツール / #キャンバス (操作表) / #キーボードショートカット の
  * うち、M2-3 で実装した範囲 (ツール切替・選択・矩形選択・ドラッグ移動・Alt 複製・
- * 回転ハンドル・主要ショートカット) を検証する。ダブルクリック刻印編集は対象外
- * (未実装、docs/MIGRATION 相当なし)。
+ * 回転ハンドル・主要ショートカット) を検証する。ダブルクリック刻印編集などの
+ * M2-7 の範囲は `palette-and-editing.spec.ts`。
  *
  * `tests/e2e/canvas.spec.ts` と同じ `seedProject` パターンを使う。
  */

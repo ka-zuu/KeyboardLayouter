@@ -8,6 +8,7 @@ import { useCanvasInteraction } from '@/ui/hooks/useCanvasInteraction';
 import { useElementSize } from '@/ui/hooks/useElementSize';
 import { useViewport } from '@/ui/hooks/useViewport';
 import './canvas.css';
+import LegendEditor from './LegendEditor';
 import { buildScene } from './scene';
 import SvgLayoutRenderer from './SvgLayoutRenderer';
 import { PRESET_DRAG_MIME, type PresetDragPayload } from '@/ui/panels/left/presetDrag';
@@ -71,6 +72,7 @@ function CanvasArea() {
       onDrop={handlePresetDrop}
     >
       <SvgLayoutRenderer scene={scene} viewportPx={viewportPx} selectionBox={selectionBox} rubberBand={rubberBand} />
+      <LegendEditor />
     </main>
   );
 }

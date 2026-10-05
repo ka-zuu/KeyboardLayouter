@@ -145,3 +145,25 @@
     transition: fill 0.1s ease;
   }
 }
+
+/* 刻印の直接編集欄 (LegendEditor.tsx)。top はキー中心なので、欄の高さの半分だけ上げる。 */
+
+.kl-legend-editor {
+  position: absolute;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.kl-legend-editor-input {
+  box-sizing: border-box;
+  width: 100%;
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: 2px 4px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+}

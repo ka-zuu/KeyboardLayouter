@@ -4,8 +4,11 @@ import './inspector/inspector.css';
 import MultiKeyInspector from './inspector/MultiKeyInspector';
 import ProjectInspector from './inspector/ProjectInspector';
 
+/** docs/UI_SPEC.md#インスペクタ。折りたたみ中は描画しない。 */
 function Inspector() {
   const selectedKeyIds = useEditorStore((s) => s.selectedKeyIds);
+  const collapsed = useEditorStore((s) => s.rightPanelCollapsed);
+  if (collapsed) return null;
 
   return (
     <aside

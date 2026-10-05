@@ -2,18 +2,11 @@
  * 単一選択時のインスペクタ = キープロパティ。docs/UI_SPEC.md#単一選択-キープロパティ。
  */
 import { rotationCenterOf } from '@/core/geometry/rect';
-import { defaultSecondaryFor } from '@/core/model/key';
-import type { KeyModel, KeyShape, LegendSlot } from '@/core/model/types';
+import { defaultSecondaryFor, LEGEND_SLOT_ORDER, withLegend } from '@/core/model/key';
+import type { KeyModel, KeyShape } from '@/core/model/types';
 import { useEditorStore, useProjectStore } from '@/state/appState';
 import { duplicateAndSelect } from '@/state/actions';
 import { ActionButton, CheckboxField, ColorField, DragNumberField, Section, SelectField } from './fields';
-
-const LEGEND_ROWS: LegendSlot[][] = [
-  ['topLeft', 'topCenter', 'topRight'],
-  ['centerLeft', 'center', 'centerRight'],
-  ['bottomLeft', 'bottomCenter', 'bottomRight'],
-  ['frontLeft', 'frontCenter', 'frontRight'],
-];
 
 const SHAPE_OPTIONS: { value: KeyShape; label: string }[] = [
   { value: 'rect', label: '矩形' },
@@ -65,18 +58,13 @@ function KeyInspector({ keyId }: KeyInspectorProps) {
     <div className="kl-inspector" data-testid="single-key-inspector">
       <Section title="刻印">
         <div className="kl-legend-grid" data-testid="legend-grid">
-          {LEGEND_ROWS.flat().map((slot) => (
+          {/* 4 行 3 列のグリッドに LEGEND_SLOT_ORDER (上段 → 前面、左 → 右) の順で流し込む。 */}
+          {LEGEND_SLOT_ORDER.map((slot) => (
             <input
               key={slot}
               data-testid={`legend-${slot}`}
               value={key.legends[slot] ?? ''}
-              onChange={(e) => {
-                const text = e.target.value;
-                const legends = { ...key.legends };
-                if (text === '') delete legends[slot];
-                else legends[slot] = text;
-                patch({ legends });
-              }}
+              onChange={(e) => patch({ legends: withLegend(key.legends, slot, e.target.value) })}
             />
           ))}
         </div>
