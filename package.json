@@ -9,9 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --project unit --project ui",
     "test:watch": "vitest",
-    "test:perf": "vitest run --dir tests/perf",
+    "test:perf": "vitest run --project perf",
     "test:e2e": "playwright test"
   },
   "dependencies": {

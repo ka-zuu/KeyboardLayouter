@@ -7,7 +7,7 @@ import { aabbOfKeys } from '@/core/geometry/shape';
 import { snapU } from '@/core/geometry/snap';
 import { screenToLayout } from '@/core/geometry/units';
 import { fitToAABB, zoomAt } from '@/core/geometry/viewport';
-import { primaryLegendSlotOf, withLegend } from '@/core/model/key';
+import { cloneKey, primaryLegendSlotOf, withLegend } from '@/core/model/key';
 import { presetPartials, type KeyPreset } from '@/core/model/presets';
 import { replaceProjectContent } from '@/core/model/project';
 import type { KeyModel, MatrixAddress, PointU, ProjectModel } from '@/core/model/types';
@@ -109,7 +109,13 @@ export function copySelection(): void {
 export function pasteClipboard(): void {
   const { clipboard, gridSize } = useEditorStore.getState();
   if (clipboard.length === 0) return;
-  addKeysAndSelect(clipboard.map((k) => ({ ...k, position: { x: k.position.x + gridSize, y: k.position.y + gridSize } })));
+  // addKeys は partial の id をそのまま使うので、cloneKey で id を振り直す (元のキーと id が重複しないように)。
+  addKeysAndSelect(
+    clipboard.map((k) => {
+      const copy = cloneKey(k);
+      return { ...copy, position: { x: k.position.x + gridSize, y: k.position.y + gridSize } };
+    }),
+  );
 }
 
 /**
