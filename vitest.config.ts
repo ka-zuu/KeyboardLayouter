@@ -32,6 +32,14 @@ export default defineConfig({
           setupFiles: ['./tests/unit/ui/setup.ts'],
         },
       },
+      {
+        resolve: { alias },
+        test: {
+          name: 'perf',
+          environment: 'node',
+          include: ['tests/perf/**/*.perf.test.ts'],
+        },
+      },
     ],
   },
 });

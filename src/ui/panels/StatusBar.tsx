@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { overlappingKeyIds } from '@/core/geometry/overlap';
+import { matrixReportOf, selectionAABB } from '@/state/selectors';
 import { useEditorStore, useProjectStore } from '@/state/appState';
 import type { SaveStatus } from '@/platform/storage/appStorage';
 
@@ -18,6 +19,10 @@ function StatusBar({ saveStatus }: StatusBarProps) {
   const selectedKeyIds = useEditorStore((s) => s.selectedKeyIds);
   const keys = useProjectStore((s) => s.project.keys);
   const selectedCount = selectedKeyIds.length;
+  const project = useProjectStore((s) => s.project);
+  // 選択範囲の左上 (U) と、マトリクスの推定サイズ (docs/UI_SPEC.md#画面構成)。
+  const selectionOrigin = useMemo(() => selectionAABB(project, selectedKeyIds), [project, selectedKeyIds]);
+  const matrixReport = useMemo(() => matrixReportOf(project), [project]);
   // 選択中のキーが他のキーと重なっていれば知らせる (docs/UI_SPEC.md#キーの重なり)。
   // 追加したキーは選択状態になるので、空きが見つからず重ねて置いた場合もここで分かる。
   const overlapCount = useMemo(() => overlappingKeyIds(keys, selectedKeyIds).length, [keys, selectedKeyIds]);
@@ -39,6 +44,16 @@ function StatusBar({ saveStatus }: StatusBarProps) {
       }}
     >
       <span data-testid="selection-count">{selectedCount > 0 ? `選択 ${selectedCount.toString()} 個` : '選択なし'}</span>
+      {selectionOrigin && (
+        <span data-testid="selection-position">
+          x {selectionOrigin.minX.toFixed(2)} y {selectionOrigin.minY.toFixed(2)}
+        </span>
+      )}
+      {matrixReport.estimatedRows > 0 && (
+        <span data-testid="matrix-size">
+          Matrix {matrixReport.estimatedRows.toString()}×{matrixReport.estimatedCols.toString()}
+        </span>
+      )}
       {overlapCount > 0 && (
         <span
           data-testid="overlap-warning"

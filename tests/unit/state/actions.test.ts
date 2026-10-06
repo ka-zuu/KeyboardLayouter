@@ -77,4 +77,13 @@ describe('コピー / 貼り付け', () => {
     expect(pasted.position).toEqual({ x: grid, y: grid });
     expect(useEditorStore.getState().selectedKeyIds).toEqual([pasted.id]);
   });
+
+  it('貼り付けたキーは元のキーと別の id になる (id が重複しない)', () => {
+    useEditorStore.getState().selectKeys(['a']);
+    copySelection();
+    pasteClipboard();
+    pasteClipboard();
+    const ids = useProjectStore.getState().project.keys.map((k) => k.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
 });
